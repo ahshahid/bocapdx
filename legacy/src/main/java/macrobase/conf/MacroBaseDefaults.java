@@ -45,15 +45,20 @@ public class MacroBaseDefaults {
     public static final Integer TRUNCATE_K = 10;
 
     // loader defaults
-    public static final DataIngesterType DATA_LOADER_TYPE = DataIngesterType.POSTGRES_LOADER;
+    //public static final DataIngesterType DATA_LOADER_TYPE = DataIngesterType.POSTGRES_LOADER;
+    public static final DataIngesterType DATA_LOADER_TYPE = DataIngesterType.SPARKSQL_LOADER;
     public static final Integer TIME_COLUMN = null;
     public static final MacroBaseConf.TransformType TRANSFORM_TYPE = MacroBaseConf.TransformType.MAD_OR_MCD;
     public static final CSVIngester.Compression CSV_COMPRESSION = CSVIngester.Compression.UNCOMPRESSED;
 
-    public static final String DB_USER = System.getProperty("user.name");
-    public static final String DB_PASSWORD = "";
-    public static final String DB_NAME = "postgres";
-    public static final String DB_URL = "localhost";
+    //public static final String DB_USER = System.getProperty("user.name");
+    //public static final String DB_PASSWORD = "";
+    //public static final String DB_NAME = "postgres";
+    //public static final String DB_URL = "localhost";
+    public static final String DB_USER = "app";
+    public static final String DB_PASSWORD = "app";
+    public static final String DB_NAME = "";
+    public static final String DB_URL = "localhost:1527";
     public static final Integer DB_CACHE_CHUNK_SIZE = 1000000;
 
     public static final Double OUTLIER_STATIC_THRESHOLD = 3.0;
