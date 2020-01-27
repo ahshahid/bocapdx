@@ -36,6 +36,7 @@ public class MacroBaseServer extends Application<MacroBaseConf> {
     public void run(MacroBaseConf configuration,
                     Environment environment) throws Exception {
         configuration.loadSystemProperties();
+        configuration.loadConfigProperties();
         environment.jersey().register(new AnalyzeResource(configuration));
         environment.jersey().register(new SchemaResource(configuration));
         environment.jersey().register(new RowSetResource(configuration));

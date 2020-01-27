@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import java.util.*;
@@ -64,7 +65,7 @@ public class MacroBaseConf extends Configuration {
     public static final String DB_URL = "macrobase.loader.db.url";
     public static final String DB_CACHE_DIR = "macrobase.loader.db.cacheDirectory";
     public static final String DB_CACHE_CHUNK_SIZE = "macrobase.loader.db.cacheChunkSizeTuples";
-
+    public static final String DB_DRIVER = "macrobase.loader.db.dbdriver";
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
     public static final String CSV_COMPRESSION = "macrobase.loader.csv.compression";
 
@@ -373,5 +374,14 @@ public class MacroBaseConf extends Configuration {
                 .stream()
                 .filter(e -> e.startsWith("macrobase"))
                 .forEach(e -> set(e, System.getProperty(e)));
+    }
+
+    public void loadConfigProperties() throws IOException {
+        InputStream is = getClass().getResourceAsStream("/config.properties");
+        Properties props = new Properties();
+        props.load(is);
+        props.keySet().stream().filter(e -> e.toString().startsWith("macrobase")).
+            forEach(e -> set(e.toString(), props.get(e)));
+
     }
 }
