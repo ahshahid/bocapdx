@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -108,6 +109,20 @@ public abstract class SQLIngester extends DataIngester {
         }
 
         return new Schema(columns);
+    }
+
+
+    public List<String> getTables()
+        throws SQLException {
+        initializeConnection();
+
+        DatabaseMetaData dmd = connection.getMetaData();
+        ResultSet rs = dmd.getTables(null, this.dbUser, "*", null );
+        List<String> tables = new ArrayList<>();
+        while(rs.next()) {
+            tables.add(rs.getString(3));
+        }
+        return tables;
     }
 
     public String getRowsSql(String baseQuery,

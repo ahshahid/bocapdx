@@ -21,14 +21,18 @@ abstract public class BaseResource {
     }
 
     protected DataIngester getLoader() throws ConfigurationException, SQLException, IOException {
-        // constructs ingester of type specified in conf file initially,
-        // ^ used to be initially, now it's just whatever it currently is to work for CSV
-        // or the default ingester
-        // by default, REST calls may not have these defined.
-        conf.set(MacroBaseConf.DATA_LOADER_TYPE, configuredIngester);
-        conf.set(MacroBaseConf.ATTRIBUTES, new ArrayList<>());
-        conf.set(MacroBaseConf.METRICS, new ArrayList<>());
-        return conf.constructIngester();
+       return this.getLoader(this.conf);
     }
+
+  protected DataIngester getLoader(MacroBaseConf confToUse) throws ConfigurationException, SQLException, IOException {
+    // constructs ingester of type specified in conf file initially,
+    // ^ used to be initially, now it's just whatever it currently is to work for CSV
+    // or the default ingester
+    // by default, REST calls may not have these defined.
+    confToUse.set(MacroBaseConf.DATA_LOADER_TYPE, configuredIngester);
+    confToUse.set(MacroBaseConf.ATTRIBUTES, new ArrayList<>());
+    confToUse.set(MacroBaseConf.METRICS, new ArrayList<>());
+    return conf.constructIngester();
+  }
 
 }

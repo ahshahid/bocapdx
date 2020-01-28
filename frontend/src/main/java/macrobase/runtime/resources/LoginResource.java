@@ -2,10 +2,14 @@ package macrobase.runtime.resources;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import macrobase.MacroBase;
@@ -13,6 +17,7 @@ import macrobase.analysis.pipeline.BasicBatchedPipeline;
 import macrobase.analysis.pipeline.Pipeline;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.conf.MacroBaseConf;
+import macrobase.ingest.SQLIngester;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,15 +25,14 @@ import org.slf4j.LoggerFactory;
 @Path("/login")
 @Produces(MediaType.APPLICATION_JSON)
 public class LoginResource extends BaseResource {
-  private static final Logger log = LoggerFactory.getLogger(SchemaResource.class);
+  private static final Logger log = LoggerFactory.getLogger(LoginResource.class);
 
-  static class LoginRequest {
-    public String user;
-    public String passwd;
-  }
+  @Context
+  private HttpServletRequest request;
 
-  static class AnalysisResponse {
-    public List<AnalysisResult> results;
+
+  static class LoginResponse {
+    public List<String> results;
     public String errorMessage;
   }
 
@@ -36,56 +40,28 @@ public class LoginResource extends BaseResource {
 
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
-  public AnalyzeResource.AnalysisResponse getAnalysis(AnalyzeResource.AnalysisRequest request) {
-    AnalyzeResource.AnalysisResponse response = new AnalyzeResource.AnalysisResponse();
-
+  public LoginResource.LoginResponse login(@FormParam("username") String username,
+      @FormParam("password") String password) {
+    LoginResource.LoginResponse response = new LoginResponse();
+    HttpSession ss = request.getSession();
+    ss.setAttribute(MacroBaseConf.DB_USER, username);
+    ss.setAttribute(MacroBaseConf.DB_PASSWORD, password);
     try {
-      List<String> allMetrics = new ArrayList<>();
-      allMetrics.addAll(request.highMetrics);
-      allMetrics.addAll(request.lowMetrics);
+      MacroBaseConf confNew = conf.copy();
+      confNew.set(MacroBaseConf.DB_USER, username);
+      confNew.set(MacroBaseConf.DB_PASSWORD, password);
+      SQLIngester ingester = (SQLIngester) getLoader(confNew);
+      ss.setAttribute(MacroBaseConf.SESSION_INGESTER, ingester);
+      response.results = ingester.getTables();
 
-      conf.set(MacroBaseConf.DB_URL, request.pgUrl);
-      conf.set(MacroBaseConf.BASE_QUERY, request.baseQuery);
-      conf.set(MacroBaseConf.ATTRIBUTES, request.attributes);
-      conf.set(MacroBaseConf.METRICS, allMetrics);
-      conf.set(MacroBaseConf.LOW_METRIC_TRANSFORM, request.lowMetrics);
-      conf.set(MacroBaseConf.USE_PERCENTILE, true);
-
-      // temp hack to enable CSV loading
-      if (request.baseQuery.contains("csv://")) {
-        conf.set(MacroBaseConf.CSV_INPUT_FILE, request.baseQuery.replace("csv://", ""));
-        conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER);
-      }
-
-      Class c = Class.forName(conf.getString(MacroBaseConf.PIPELINE_NAME, BasicBatchedPipeline.class.getName()));
-      Object ao = c.newInstance();
-
-      if (!(ao instanceof Pipeline)) {
-        log.error("{} is not an instance of Pipeline! Exiting...", ao);
-        response.errorMessage = "Requested pipeline of type "+c.getName()+ " is not a Pipeline";
-        return response;
-      }
-      Pipeline pipeline = (Pipeline) ao;
-
-      List<AnalysisResult> results = pipeline.initialize(conf).run();
-
-      for (AnalysisResult result : results) {
-        if (result.getItemSets().size() > 1000) {
-          log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
-          result.setItemSets(result.getItemSets().subList(0, 1000));
-        }
-      }
-
-      response.results = results;
-
-      MacroBase.reporter.report();
     } catch (Exception e) {
       log.error("An error occurred while processing a request: {}", e);
       response.errorMessage = ExceptionUtils.getStackTrace(e);
     }
-
     return response;
   }
+
+
   public LoginResource(MacroBaseConf conf) {
     super(conf);
   }

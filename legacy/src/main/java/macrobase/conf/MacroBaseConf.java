@@ -68,6 +68,7 @@ public class MacroBaseConf extends Configuration {
     public static final String DB_DRIVER = "macrobase.loader.db.dbdriver";
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
     public static final String CSV_COMPRESSION = "macrobase.loader.csv.compression";
+    public static final String SESSION_INGESTER = "macrobase.loader.ingester";
 
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
@@ -376,12 +377,10 @@ public class MacroBaseConf extends Configuration {
                 .forEach(e -> set(e, System.getProperty(e)));
     }
 
-    public void loadConfigProperties() throws IOException {
-        InputStream is = getClass().getResourceAsStream("/config.properties");
-        Properties props = new Properties();
-        props.load(is);
-        props.keySet().stream().filter(e -> e.toString().startsWith("macrobase")).
-            forEach(e -> set(e.toString(), props.get(e)));
-
+    public MacroBaseConf copy() {
+      MacroBaseConf newObj = new MacroBaseConf();
+      newObj._conf.putAll(this._conf);
+      return newObj;
     }
+
 }
