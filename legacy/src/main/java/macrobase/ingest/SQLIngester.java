@@ -64,9 +64,9 @@ public abstract class SQLIngester extends DataIngester {
         dbUser = conf.getString(MacroBaseConf.DB_USER, MacroBaseDefaults.DB_USER);
         dbPassword = conf.getString(MacroBaseConf.DB_PASSWORD, MacroBaseDefaults.DB_PASSWORD);
         dbName = conf.getString(MacroBaseConf.DB_NAME, MacroBaseDefaults.DB_NAME);
-        baseQuery = conf.getString(MacroBaseConf.BASE_QUERY);
+        baseQuery = "";//conf.getString(MacroBaseConf.BASE_QUERY);
         dbUrl = conf.getString(MacroBaseConf.DB_URL, MacroBaseDefaults.DB_URL);
-        timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
+        timeColumn = 0;//conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
 
         if (connection != null) {
             this.connection = connection;
@@ -197,7 +197,7 @@ public abstract class SQLIngester extends DataIngester {
 
     private void initializeResultSet() throws SQLException {
         initializeConnection();
-
+        /*
         if (resultSet == null) {
             String targetColumns = StreamSupport.stream(
                     Iterables.concat(attributes, metrics).spliterator(), false)
@@ -218,7 +218,7 @@ public abstract class SQLIngester extends DataIngester {
             for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); ++i) {
                 conf.getEncoder().recordAttributeName(i, resultSet.getMetaData().getColumnName(i));
             }
-        }
+        } */
     }
 
     @Override

@@ -89,6 +89,11 @@
           <artifactId>RoaringBitmap</artifactId>
           <version>0.7.0</version>
         </dependency>
+        <dependency>
+         <groupId>io.snappydata</groupId>
+         <artifactId>snappydata-jdbc_2.11</artifactId>
+         <version>1.2.0</version>
+        </dependency>
     </dependencies>
 
     <distributionManagement>
