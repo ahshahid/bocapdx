@@ -117,7 +117,7 @@ public abstract class SQLIngester extends DataIngester {
         initializeConnection();
 
         DatabaseMetaData dmd = connection.getMetaData();
-        ResultSet rs = dmd.getTables(null, this.dbUser, "*", null );
+        ResultSet rs = dmd.getTables(null, this.dbUser, "%", null );
         List<String> tables = new ArrayList<>();
         while(rs.next()) {
             tables.add(rs.getString(3));
