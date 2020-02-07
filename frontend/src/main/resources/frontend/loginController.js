@@ -234,8 +234,7 @@ myApp.controller('connectController', ['$scope', '$http', '$window', 'configServ
                configService.handleError(response.data.errorMessage);
 
                //response.data.schema.columns.sort(function (c1, c2) { return c1.name.localeCompare(c2.name); })
-       	    $scope.schema = response.data.schema;
-       	    $scope.datatypes = response.data.datatypes;
+       	    $scope.schemaCols = response.data.schema;
        	    //$scope.pg_url = $scope.postgresstr;
              //  $scope.spice = $scope.postgresstr;
        	    });
