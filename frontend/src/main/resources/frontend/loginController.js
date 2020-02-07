@@ -217,6 +217,8 @@ myApp.controller('connectController', ['$scope', '$http', '$window', 'configServ
 
     $scope.username ="app"
     $scope.password = "app"
+    $scope.tables = []
+    $scope.columns = []
     $scope.login = function() {
         $scope.get_tables()
     };
@@ -236,16 +238,13 @@ myApp.controller('connectController', ['$scope', '$http', '$window', 'configServ
 
         configService.handleError(response.data.errorMessage);
 
-	    if(!init)
-	        configService.clearSchema();
-
-        response.data.schema.columns.sort(function (c1, c2) { return c1.name.localeCompare(c2.name); })
-	    $scope.schemaCols = response.data.schema;
-	    $scope.pg_url = $scope.postgresstr;
-        $scope.spice = $scope.postgresstr;
+        //response.data.schema.columns.sort(function (c1, c2) { return c1.name.localeCompare(c2.name); })
+	    $scope.tables = response.data.results;
+	    //$scope.pg_url = $scope.postgresstr;
+      //  $scope.spice = $scope.postgresstr;
 	    });
     };
-
+    /*
     $scope.sampleRows = function() {
         explorerService.setItems(null)
 	configService.markForBasicQuery()
@@ -254,8 +253,7 @@ myApp.controller('connectController', ['$scope', '$http', '$window', 'configServ
 
       $scope.resetSchema = function() { configService.resetSchema(); $scope.updateDB(); }
       $scope.clearSchema = function() { configService.clearSchema(); }
-
-
+      */
 }]);
 
 
