@@ -77,9 +77,12 @@
 
                                 <div class="table-responsive">
 
-                                    <table class="table">
+                                    <table class="table" ng-show="false">
                                         <tr>
-                                            <th scope="col">XXX</th>
+                                            <th scope="column">XXX</th>
+                                        </tr>
+                                        <tr>
+                                            <th scope="datatype">XXX</th>
                                         </tr>
                                         <tr ng-repeat="x in columns">
                                             <td>{{x}}</td>
@@ -100,7 +103,7 @@
                                             <th scope="col">TABLES</th>
                                         </tr>
                                         <tr ng-repeat="x in tables">
-                                            <td>{{x}}</td>
+                                             <td><a href ng-click="getColumns(x)">{{x}}</a></td>
                                         </tr>
                                     </table>
                                 </div>

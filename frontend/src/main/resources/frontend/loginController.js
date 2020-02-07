@@ -223,6 +223,25 @@ myApp.controller('connectController', ['$scope', '$http', '$window', 'configServ
         $scope.get_tables()
     };
 
+    $scope.getColumns = function(tname) {
+         var data = {
+             tablename: tname
+           };
+       	$http.post("api/schema",
+       	    JSON.stringify(data))
+       	    .then(function(response) {
+
+               configService.handleError(response.data.errorMessage);
+
+               //response.data.schema.columns.sort(function (c1, c2) { return c1.name.localeCompare(c2.name); })
+       	    $scope.schema = response.data.schema;
+       	    $scope.datatypes = response.data.datatypes;
+       	    //$scope.pg_url = $scope.postgresstr;
+             //  $scope.spice = $scope.postgresstr;
+       	    });
+
+    };
+
     $scope.get_tables = function() {
 
         configService.setUser($scope.username)
