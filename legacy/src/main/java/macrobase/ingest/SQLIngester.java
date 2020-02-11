@@ -105,7 +105,8 @@ public abstract class SQLIngester extends DataIngester {
 
         for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
             columns.add(new Schema.SchemaColumn(rs.getMetaData().getColumnName(i),
-                    rs.getMetaData().getColumnTypeName(i)));
+                    rs.getMetaData().getColumnTypeName(i),
+                rs.getMetaData().getColumnType(i)));
         }
 
         return new Schema(columns);
@@ -173,6 +174,16 @@ public abstract class SQLIngester extends DataIngester {
         }
 
         return new RowSet(rows);
+    }
+
+    public ResultSet executeQuery(String query) throws SQLException {
+        initializeConnection();
+        // TODO handle time column here
+
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(query);
+        return rs;
+
     }
 
     private void initializeConnection() throws SQLException {
