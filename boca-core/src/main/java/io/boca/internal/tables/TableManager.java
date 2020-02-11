@@ -1,5 +1,6 @@
 package io.boca.internal.tables;
 
+import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
 import macrobase.ingest.SQLIngester;
 
@@ -13,7 +14,11 @@ public class TableManager {
   }
 
   public static TableData getTableData(String fqTableName, SQLIngester ingester) {
-    return singleton.tablesMap.computeIfAbsent(fqTableName, (key) -> new TableData(key, ingester));
+    return singleton.tablesMap.computeIfAbsent(fqTableName, (key) -> {try {
+      return new TableData(key, ingester);
+    } catch (SQLException sqle) {
+       throw new RuntimeException(sqle);
+    }});
   }
 
 }
