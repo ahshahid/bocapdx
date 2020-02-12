@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.sql.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import macrobase.ingest.SQLIngester;
@@ -16,6 +17,12 @@ public class TableData {
   private long totalRows;
   private final String tableName;
   private Map<Integer, ColumnData[]> columnMappings = new HashMap<>();
+  private ConcurrentHashMap<String, DependencyData >kpiDependencyMap =
+      new ConcurrentHashMap<>();
+
+  private Function<String, DependencyData> depedencyComputer = kpi -> {
+    return null;
+  };
   TableData(String tableName, SQLIngester ingester) throws SQLException {
     // filter columns of interest.
     // figure out if they are continuous or categorical
@@ -35,11 +42,9 @@ public class TableData {
        columnMappings.put(entry.getKey(), cds);
     }
   }
-  private ConcurrentHashMap<String, DependencyData >kpiDependencyMap =
-      new ConcurrentHashMap<>();
 
   public DependencyData getDependencyData(String kpiColumn) {
-    return null;
+    return kpiDependencyMap.computeIfAbsent(kpiColumn, depedencyComputer);
   }
 
   private ColumnData[] determineColumnData(int sqlType, List<Schema.SchemaColumn> scs,
