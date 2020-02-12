@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<!-- Lib imports -->
+<script src="js/angular.min.js"></script>
+<script src="js/angular-resource.min.js"></script>
+<script src="js/angular-route.min.js"></script>
+<script src="js/angular-ui-router.js"></script>
+<script src="js/ngStorage.min.js"></script>
+<script src="js/plotly.min.js"></script>
+
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="css/mb-frontend.css">
+<!-- Project imports -->
+<script src="modules/config.js"></script>
+<script src="routing/routing.js"></script>
+<script src="services/apiServices.js"></script>
+<!-- controller Import -->
+<script src="modules/login/loginController.js"></script>
+<script src="modules/dashboard/dashboardController.js"></script>
+
+
+
+<head>
+    <title></title>
+</head>
+
+<body  ng-app="bocaApp">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <data ui-view></ui-view>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+</html>
