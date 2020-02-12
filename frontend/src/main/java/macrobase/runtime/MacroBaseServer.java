@@ -31,7 +31,7 @@ public class MacroBaseServer extends Application<MacroBaseConf> {
 
     @Override
     public void initialize(Bootstrap<MacroBaseConf> bootstrap) {
-        bootstrap.addBundle(new AssetsBundle("/frontend", "/", "login.html"));
+        bootstrap.addBundle(new AssetsBundle("/frontend", "/", "index.html"));
     }
 
     @Override
