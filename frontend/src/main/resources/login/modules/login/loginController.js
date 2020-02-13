@@ -13,8 +13,8 @@ app.controller('loginController', ['$scope', '$http', 'ApiFactory', '$state', fu
         username: data.username,
         password: data.password
     }, function (response) {
-        $scope.tables = response.results;
-        $state.go('dashboard');
+        $scope.tables = response.results[0];
+        $state.go('dashboard', {table : $scope.tables});
     });
     }
 	/* $http.post("http://35.202.5.109:9090/api/login",
