@@ -6,7 +6,10 @@ app.config(function ($stateProvider){
         })
         .state('dashboard', {
             url: '/dashboard',
-            templateUrl: 'modules/dashboard/dashboard.html'
+            templateUrl: 'modules/dashboard/dashboard.html',
+            params: {
+                table: null
+            }
         })
 })
 // Default Landing

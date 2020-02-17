@@ -1,19 +1,15 @@
 <div ng-controller="dashboardController">
     <div class="panel panel-gray">
-        <div class="panel-heading">Login success ==> Dashborad Page</div>
+        <div class="panel-heading"><a style="cursor: pointer; text-decoration: underline;" ng-click="getData()">{{tableName}}</a></div>
         <div class="panel-body">
-            <table>
+            <table class="table" ng-if="schemaCols.length > 0">
                 <tr>
-                    <td nowrap style="width: 100px;">Data</td>
-                    <td style="margin: 2px; width: 100%">
-                        Data1
-                    </td>
+                    <th scope="col">COLUMN-NAME</th>
+                    <th scope="col">DATA-TYPE</th>
                 </tr>
-                <tr>
-                    <td nowrap style="width: 100px;">Data2/td>
-                    <td style="margin: 2px; width:100%">
-                        Data2
-                    </td>
+                <tr ng-repeat="data in schemaCols">
+                    <td>{{data.name}}</td>
+                    <td>{{data.type}}</td>
                 </tr>
             </table>
         </div>
