@@ -2,11 +2,13 @@ package io.boca.internal.tables;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.sql.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -16,13 +18,35 @@ import macrobase.ingest.result.Schema;
 public class TableData {
   private long totalRows;
   private final String tableName;
-  private Map<Integer, ColumnData[]> columnMappings = new HashMap<>();
+  private Map<Integer, ColumnData[]> sqlTypeToColumnMappings = new HashMap<>();
+  private Map<String, ColumnData> columnMappings = new HashMap<>();
   private ConcurrentHashMap<String, DependencyData >kpiDependencyMap =
       new ConcurrentHashMap<>();
 
+  /*private String doubleToDoubleCorr = "val tableDf = snappysession.table(%1s);" +
+      ""*/
+  private static ThreadLocal<SQLIngester> ingesterThreadLocal = new ThreadLocal<SQLIngester>();
+  private BiFunction<ColumnData, ColumnData, Double> kpiContToCont = (kpiCd, depCd) -> {
+   return null;
+
+  };
+
   private Function<String, DependencyData> depedencyComputer = kpi -> {
+    ColumnData kpiCol = columnMappings.get(kpi);
+
+    if (kpiCol.ft.equals(FeatureType.continuous)) {
+     for(ColumnData cd: columnMappings.values()) {
+       if (!cd.name.equals(kpi)) {
+         if (cd.ft.equals(FeatureType.continuous)) {
+           kpiContToCont.apply(kpiCol, cd);
+         }
+       }
+     }
+    }
     return null;
   };
+
+
   TableData(String tableName, SQLIngester ingester) throws SQLException {
     // filter columns of interest.
     // figure out if they are continuous or categorical
@@ -39,11 +63,15 @@ public class TableData {
     for(Map.Entry<Integer, List<Schema.SchemaColumn>> entry : groups.entrySet()) {
        ColumnData[] cds = determineColumnData(entry.getKey(), entry.getValue(),
            ingester);
-       columnMappings.put(entry.getKey(), cds);
+      sqlTypeToColumnMappings.put(entry.getKey(), cds);
+      for(ColumnData cd: cds) {
+        columnMappings.put(cd.name, cd);
+      }
     }
   }
 
-  public DependencyData getDependencyData(String kpiColumn) {
+  public DependencyData getDependencyData(String kpiColumn, SQLIngester ingester) {
+    ingesterThreadLocal.set(ingester);
     return kpiDependencyMap.computeIfAbsent(kpiColumn, depedencyComputer);
   }
 
