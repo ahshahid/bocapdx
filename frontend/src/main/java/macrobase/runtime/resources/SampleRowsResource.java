@@ -24,7 +24,7 @@ import java.util.List;
 @Path("/sampleRows")
 @Produces(MediaType.APPLICATION_JSON)
 
-public class SampleRowsSource extends BaseResource {
+public class SampleRowsResource extends BaseResource {
   private static final Logger log = LoggerFactory.getLogger(SchemaResource.class);
 
   @Context
@@ -37,7 +37,7 @@ public class SampleRowsSource extends BaseResource {
     public String errorMessage;
   }
 
-  public SampleRowsSource(MacroBaseConf conf) {
+  public SampleRowsResource(MacroBaseConf conf) {
     super(conf);
   }
 
