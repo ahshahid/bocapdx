@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="css/bootstrap.min.css">
 <link rel="stylesheet" href="css/bootstrap-theme.min.css">
 <link rel="stylesheet" href="css/mb-frontend.css">
+<link rel="stylesheet" href="modules/login/sidebar.css">
 <!-- Project imports -->
 <script src="modules/config.js"></script>
 <script src="routing/routing.js"></script>
@@ -28,10 +29,12 @@
 <body  ng-app="bocaApp">
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-12">
-                <data ui-view></ui-view>
+            <div class="col-md-12 no-padding-left">
+                <div  class="col-md-2 no-padding-left no-padding-right" ng-controller="loginController" ng-show="isAuthenticated" data-ng-include="'/modules/login/sidebar.html'" class="md-toolbar-tools"></div>
+                <data class="col-md-10 no-padding-left" ui-view></ui-view>
             </div>
         </div>
+
     </div>
 
 

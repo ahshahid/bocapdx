@@ -1,8 +1,9 @@
 app.factory('ApiFactory', ['$resource',
 	function ($resource) {
+        const server = 'http://35.224.182.196:9090/';
         return {
-            login: $resource('http://35.202.5.109:9090/api/login'),
-            schema: $resource('http://35.202.5.109:9090/api/schema')
+            login: $resource(server +'api/login'),
+            schema: $resource(server +'api/schema')
         }
 		
 	}
