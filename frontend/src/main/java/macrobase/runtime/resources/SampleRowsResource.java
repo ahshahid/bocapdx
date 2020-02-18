@@ -210,6 +210,7 @@ public class SampleRowsResource extends BaseResource {
             case Types.LONGVARBINARY :
             case Types.LONGVARCHAR :
             case Types.CHAR :
+            case Types.VARCHAR :
             case Types.BINARY :
               {
               String temp = rs.getString(i);

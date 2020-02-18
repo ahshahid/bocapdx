@@ -18,7 +18,13 @@
         <groupId>edu.stanford.futuredata</groupId>
         <artifactId>macrobase-legacy</artifactId>
        <version>0.1-SNAPSHOT</version>
-    </dependency> 
+    </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.8</version>
+        </dependency>
+
         <dependency>
           <groupId>io.snappydata</groupId>
           <artifactId>snappydata-jdbc_2.11</artifactId>

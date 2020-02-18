@@ -42,7 +42,7 @@ public class MacroBaseServer extends Application<MacroBaseConf> {
         environment.jersey().register(new MultipleRowSetResource(configuration));
         environment.jersey().register(new LoginResource(configuration));
         environment.jersey().register(new RefreshTablesResource(configuration));
-      environment.jersey().register(new SampleRowsResource(configuration));
+        environment.jersey().register(new SampleRowsResource(configuration));
         environment.healthChecks().register("basic", new HealthCheck() {
             @Override
             protected Result check() throws Exception {
