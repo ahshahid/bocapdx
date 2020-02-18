@@ -1,0 +1,41 @@
+.sidebar-menu {
+    display: block;
+    position: relative;
+    width: 100%;
+    background: #e4e4e4;
+    height: 100vh;
+  }
+  .sidebar-menu .logo-env {
+    padding: 30px 45px;
+    border-bottom: 1px solid #313437;
+  }
+  .sidebar-menu .logo-env .logo {
+    float: left;
+  }
+  .sidebar-menu .main-menu {
+    padding-left: 40px;
+    padding-right: 40px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    list-style: none;
+  }
+  .sidebar-menu .main-menu a {
+    color: #333333;
+    text-decoration: none;
+    display: block;
+    padding: 13px 5px;
+    border-bottom: 1px solid #a3a7ab;
+  }
+  .sidebar-menu .main-menu a > span {
+    display: inline-block;
+  }
+  .sidebar-menu .main-menu li.active > a, .sidebar-menu .main-menu a:hover {
+    color: #000000;
+  }
+  
+  .no-padding-left{
+      padding-left: 0;
+  }
+  .no-padding-right{
+    padding-right: 0;
+}
