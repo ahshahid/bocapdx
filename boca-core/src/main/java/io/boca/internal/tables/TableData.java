@@ -18,16 +18,22 @@ import macrobase.ingest.result.Schema;
 public class TableData {
   private long totalRows;
   private final String tableName;
+  private final Schema schema;
   private Map<Integer, ColumnData[]> sqlTypeToColumnMappings = new HashMap<>();
   private Map<String, ColumnData> columnMappings = new HashMap<>();
   private ConcurrentHashMap<String, DependencyData >kpiDependencyMap =
       new ConcurrentHashMap<>();
-
-  /*private String doubleToDoubleCorr = "val tableDf = snappysession.table(%1s);" +
-      ""*/
+/*
+  private String contiToContiCorr = "val tableDf = snappysession.table(%1s);" +
+      "import org.apache.spark.ml.linalg._;" +
+      "val inputRdd = tableDf.map[Vector](row => {" +
+         + "val dep: AnyVal = row(%2s).asIntanceOf[AnyVal];" +
+         + "val targ: AnyVal = row(%3s).asIntanceOf[AnyVal]; " */
+  
   private static ThreadLocal<SQLIngester> ingesterThreadLocal = new ThreadLocal<SQLIngester>();
   private BiFunction<ColumnData, ColumnData, Double> kpiContToCont = (kpiCd, depCd) -> {
-   return null;
+    String scalaCodeToExecute = null;
+    return 1d;
 
   };
 
@@ -51,7 +57,7 @@ public class TableData {
     // filter columns of interest.
     // figure out if they are continuous or categorical
     this.tableName = tableName;
-    Schema schema = ingester.getSchema("select * from " + tableName);
+    this.schema = ingester.getSchema("select * from " + tableName);
     // get total rows
     ResultSet rs = ingester.executeQuery("select count(*) from " + tableName);
     rs.next();
@@ -118,6 +124,7 @@ public class TableData {
         }
         return cds;
       }
+      case Types.NCHAR:
       case Types.CHAR:{
         int i = 0;
         for (Schema.SchemaColumn sc : scs) {
@@ -128,7 +135,6 @@ public class TableData {
       }
       case Types.LONGNVARCHAR:
       case Types.LONGVARCHAR:
-      case Types.NCHAR:
       case Types.NVARCHAR:
       case Types.VARCHAR:
       {
