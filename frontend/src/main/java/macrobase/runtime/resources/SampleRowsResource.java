@@ -125,7 +125,7 @@ public class SampleRowsResource extends BaseResource {
                 int numRead = 0;
                 int totalRead = 0;
                 while((numRead = reader.read(buff, totalRead,
-                    intLength - totalRead)) != -1) {
+                    intLength - totalRead)) != -1 && totalRead < intLength) {
                   totalRead += numRead;
                 }
                 row.add(new String(buff));
@@ -146,7 +146,7 @@ public class SampleRowsResource extends BaseResource {
                 int numRead = 0;
                 int totalRead = 0;
                 while((numRead = reader.read(buff, totalRead,
-                    intLength - totalRead)) != -1) {
+                    intLength - totalRead)) != -1 && totalRead < intLength) {
                   totalRead += numRead;
                 }
                 row.add(new String(buff));
