@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import org.apache.http.util.EntityUtils;
 
 public class ResponseTester {
-
+  String host = "35.224.182.196";
   @Test
   public void testResponse() throws Exception {
     HttpPost httpPost = null;
@@ -32,7 +32,7 @@ public class ResponseTester {
       CookieStore cookieStore = new BasicCookieStore();
       HttpContext httpContext = new BasicHttpContext();
       httpContext.setAttribute(COOKIE_STORE, cookieStore);
-      String loginUrl = "http://localhost:9090/api/login";
+      String loginUrl = "http://" + host + ":9090/api/login";
       HttpClient client = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
       httpPost = new HttpPost(loginUrl);
       httpPost.addHeader("content-type", "application/json;charset=UTF-8");
@@ -50,7 +50,7 @@ public class ResponseTester {
       System.out.println("\n\n");
 
       // Test schema fetch
-      String schemaUrl = "http://localhost:9090/api/schema";
+      String schemaUrl = "http://" + host + ":9090/api/schema";
       httpPost = new HttpPost(schemaUrl);
       httpPost.addHeader("content-type", "application/json;charset=UTF-8");
       data = new StringEntity("{\"tablename\":\"test\"}");
@@ -66,7 +66,7 @@ public class ResponseTester {
       System.out.println("\n\n");
 
       // Test sampleRows fetch
-      String sampleUrl = "http://localhost:9090/api/sampleRows";
+      String sampleUrl = "http://" + host + ":9090/api/sampleRows";
       httpPost = new HttpPost(sampleUrl);
       httpPost.addHeader("content-type", "application/json;charset=UTF-8");
       data = new StringEntity("{\"tablename\":\"test\"}");
@@ -83,7 +83,7 @@ public class ResponseTester {
 
 
       // Test refreshTables fetch
-      String refreshUrl = "http://localhost:9090/api/refreshTables";
+      String refreshUrl = "http://" + host + ":9090/api/refreshTables";
       httpGet = new HttpGet(refreshUrl);
       httpGet.addHeader("content-type", "application/json;charset=UTF-8");
       httpGet.addHeader("User-Agent", "Apache HTTPClient");
