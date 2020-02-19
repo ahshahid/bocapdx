@@ -60,5 +60,10 @@ element {
     border-color: #dcddd7;
 }
 
+/* Temp CSS */
+tr th {
+    width: 50%;
+}
+
 
 
