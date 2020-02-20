@@ -15,6 +15,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.sql.*;
@@ -115,7 +116,19 @@ public class SampleRowsResource extends BaseResource {
             {
               NClob temp = rs.getNClob(i);
               if (!rs.wasNull()) {
-                row.add(temp.toString());
+                long length = temp.length();
+                int intLength = length > Integer.MAX_VALUE? Integer.MAX_VALUE: (int)length;
+
+                char [] buff = new char[intLength];
+
+                Reader reader = temp.getCharacterStream();
+                int numRead = 0;
+                int totalRead = 0;
+                while((numRead = reader.read(buff, totalRead,
+                    intLength - totalRead)) != -1 && totalRead < intLength) {
+                  totalRead += numRead;
+                }
+                row.add(new String(buff));
               } else {
                 row.add(null);
               }
@@ -124,7 +137,19 @@ public class SampleRowsResource extends BaseResource {
             case Types.CLOB : {
               Clob temp = rs.getClob(i);
               if (!rs.wasNull()) {
-                row.add(temp.toString());
+                long length = temp.length();
+                int intLength = length > Integer.MAX_VALUE? Integer.MAX_VALUE: (int)length;
+
+                char [] buff = new char[intLength];
+
+                Reader reader = temp.getCharacterStream();
+                int numRead = 0;
+                int totalRead = 0;
+                while((numRead = reader.read(buff, totalRead,
+                    intLength - totalRead)) != -1 && totalRead < intLength) {
+                  totalRead += numRead;
+                }
+                row.add(new String(buff));
               } else {
                 row.add(null);
               }

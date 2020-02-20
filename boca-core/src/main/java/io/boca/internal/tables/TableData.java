@@ -23,17 +23,55 @@ public class TableData {
   private Map<String, ColumnData> columnMappings = new HashMap<>();
   private ConcurrentHashMap<String, DependencyData >kpiDependencyMap =
       new ConcurrentHashMap<>();
-/*
-  private String contiToContiCorr = "val tableDf = snappysession.table(%1s);" +
-      "import org.apache.spark.ml.linalg._;" +
-      "val inputRdd = tableDf.map[Vector](row => {" +
-         + "val dep: AnyVal = row(%2s).asIntanceOf[AnyVal];" +
-         + "val targ: AnyVal = row(%3s).asIntanceOf[AnyVal]; " */
-  
+
+  private static String contiToContiCorr = "val tableDf = snappysession.table(%1s);"
+      + "import org.apache.spark.ml.linalg._;"
+      + "implicit val vectorEncoder = org.apache.spark.sql.Encoders.kryo[DenseVector]"
+      + "val inputDataSet = tableDf.map[Vector](row => {"
+      + "val arr = Array(row(%2s),row(%3s));"
+      + "val doubleArr = arr.map[Double](elem => {"
+      +  " elem match {"
+      +     "case x: Short => x.toDouble;"
+      +     "case x: Int => x.toDouble;"
+      +     "case x: Long => x.toDouble;"
+      +     "case x: Float => x.toDouble;"
+      +     "case x: Double => x;"
+      +     "case x: Decimal => x.toDouble;"
+      +     "}"
+      +   "})"
+      +   "Vectors.dense(doubleArr);"
+      +  "});"
+      +  "val rsDf = Correlation.corr(inputDataSet,inputDataSet.schema(0).name )"
+      +  "val valueDf = rsDf.map[Row](row => Row(row(0).asInstanceOf[Matrix](0,0)))";
+
   private static ThreadLocal<SQLIngester> ingesterThreadLocal = new ThreadLocal<SQLIngester>();
+
   private BiFunction<ColumnData, ColumnData, Double> kpiContToCont = (kpiCd, depCd) -> {
-    String scalaCodeToExecute = null;
-    return 1d;
+    int depColIndex = -1, kpiColIndex = -1;
+    List<Schema.SchemaColumn> cols = getSchema().getColumns();
+    for(int i = 0 ; i < cols.size(); ++i) {
+      Schema.SchemaColumn sc = cols.get(i);
+      if (depColIndex == -1 ||  kpiColIndex == -1) {
+        if (sc.getName().equalsIgnoreCase(kpiCd.name)) {
+          kpiColIndex = i;
+        } else if (sc.getName().equalsIgnoreCase(depCd.name)) {
+          depColIndex = i;
+        }
+      } else {
+        break;
+      }
+    }
+
+    String scalaCodeToExecute = String.format(contiToContiCorr,
+        this.getTableName(), depColIndex, kpiColIndex);
+    SQLIngester ingester = ingesterThreadLocal.get();
+    try {
+      ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
+      rs.next();
+      return rs.getDouble(1);
+    } catch(SQLException sqle) {
+      throw new RuntimeException(sqle);
+    }
 
   };
 
@@ -74,6 +112,14 @@ public class TableData {
         columnMappings.put(cd.name, cd);
       }
     }
+  }
+
+  private Schema getSchema() {
+    return this.schema;
+  }
+
+  private String getTableName() {
+    return this.tableName;
   }
 
   public DependencyData getDependencyData(String kpiColumn, SQLIngester ingester) {
