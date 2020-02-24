@@ -76,18 +76,20 @@ public class TableData {
   };
 
   private Function<String, DependencyData> depedencyComputer = kpi -> {
+    DependencyData dd = new DependencyData();
     ColumnData kpiCol = columnMappings.get(kpi);
 
     if (kpiCol.ft.equals(FeatureType.continuous)) {
      for(ColumnData cd: columnMappings.values()) {
        if (!cd.name.equals(kpi)) {
          if (cd.ft.equals(FeatureType.continuous)) {
-           kpiContToCont.apply(kpiCol, cd);
+           double corr = kpiContToCont.apply(kpiCol, cd);
+           dd.add(cd.name, corr);
          }
        }
      }
     }
-    return null;
+    return dd;
   };
 
 
