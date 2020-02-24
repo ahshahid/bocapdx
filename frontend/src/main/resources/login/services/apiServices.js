@@ -1,6 +1,11 @@
 app.factory('ApiFactory', ['$resource',
 	function ($resource) {
-        const server = 'http://35.224.182.196:9090/';
+
+        /* for server comment below const */
+        //const server = 'http://35.225.65.49:9090/';
+
+        /* For local comment below const */
+        const server = ''; 
         return {
             login: $resource(server +'api/login'),
             schema: $resource(server +'api/schema'),

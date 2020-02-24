@@ -1,17 +1,17 @@
 <div ng-controller="dashboardController as dashboard">
     <div class="panel panel-gray">
-        <div class="panel-heading"><a style="cursor: pointer; text-decoration: underline;" ng-click="getData()">{{tableName}}</a></div>
+        <div class="panel-heading"><a style="cursor: pointer; text-decoration: underline; margin: 20px;" ng-click="getData(table)"  ng-repeat="table in tableNames track by $index">{{table}}</a></div>
         <div class="panel-body" ng-if="schemaCols.length > 0">
             <table class="table" style="margin-bottom: 0;">
             <tr>
-                <th ng-repeat="column in schemaCols">{{column.type}}</th>
+                <th ng-repeat="column in schemaCols">{{column.name}} ( {{column.type}} )</th>
             </tr>
         </table>
-            <table class="table" show-filter="true" ng-table="schemaRows">
+            <table class="table" show-filter="true" ng-table="schemaRows"  ng-table-columns-binding="schemaCols">
                 
                 <tr ng-repeat="data in $data">
-                    <td filter="{ data: 'text'}" sortable="'name'">{{data[0]}}</td>
-                    <td filter="{ dataa: 'number'}" sortable="'type'">{{data[1]}}</td>
+                    <td ng-repeat="d in data  track by $index" filter="{ d: 'text'}" sortable="'d'">{{d}}</td>
+                   <!--  <td filter="{ $in: 'number'}" sortable="'type'">{{data[1]}}</td> -->
                 </tr>
             </table>
         </div>

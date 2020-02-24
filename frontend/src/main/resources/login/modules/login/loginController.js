@@ -13,7 +13,7 @@ app.controller('loginController', ['$scope', '$rootScope', '$http', 'ApiFactory'
         username: data.username,
         password: data.password
     }, function (response) {
-        $scope.tables = response.results[0];
+        $scope.tables = response.results;
         $state.go('dashboard', {table : $scope.tables});
         $rootScope.isAuthenticated= true;
     });

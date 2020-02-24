@@ -3,9 +3,10 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     $scope.tableName = $stateParams.table;
         $scope.schemaCols = {};
         $scope.schemaRows = {};
-        $scope.getData = function() {
+        $scope.tableNames  = $stateParams.table;
+        $scope.getData = function(table) {
             ApiFactory.schema.save({
-                tablename: $stateParams.table
+                tablename: table
             }, function (response) {
                 $scope.schemaCols = response.schema.columns;
                /*  $scope.schemaCols =  new NgTableParams({page: 1,
@@ -14,7 +15,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
                     sorting: {}}, {dataset: data}); */
             });
             ApiFactory.getRows.save({
-                tablename: $stateParams.table
+                tablename: table
             }, function (response) {
                 var data = response.rows;
                 console.log(response.rows);
