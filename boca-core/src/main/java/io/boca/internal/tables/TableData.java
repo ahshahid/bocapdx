@@ -77,11 +77,11 @@ public class TableData {
 
   private Function<String, DependencyData> depedencyComputer = kpi -> {
     DependencyData dd = new DependencyData();
-    ColumnData kpiCol = columnMappings.get(kpi);
+    ColumnData kpiCol = columnMappings.get(kpi.toLowerCase());
 
     if (kpiCol.ft.equals(FeatureType.continuous)) {
      for(ColumnData cd: columnMappings.values()) {
-       if (!cd.name.equals(kpi)) {
+       if (!cd.name.equalsIgnoreCase(kpi)) {
          if (cd.ft.equals(FeatureType.continuous)) {
            double corr = kpiContToCont.apply(kpiCol, cd);
            dd.add(cd.name, corr);
@@ -111,7 +111,7 @@ public class TableData {
            ingester);
       sqlTypeToColumnMappings.put(entry.getKey(), cds);
       for(ColumnData cd: cds) {
-        columnMappings.put(cd.name, cd);
+        columnMappings.put(cd.name.toLowerCase(), cd);
       }
     }
   }
@@ -156,7 +156,7 @@ public class TableData {
             skip = false;
             ft = FeatureType.continuous;
           }
-          cds[i - 1] = new ColumnData(sc.getName(), ft, skip, sqlType);
+          cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType);
           ++i;
         }
         return cds;
@@ -167,7 +167,7 @@ public class TableData {
       case Types.DOUBLE: {
         int i = 0;
         for (Schema.SchemaColumn sc : scs) {
-          cds[i++] = new ColumnData(sc.getName(), FeatureType.continuous, false,
+          cds[i++] = new ColumnData(sc.getName().toLowerCase(), FeatureType.continuous, false,
               sqlType);
         }
         return cds;
@@ -176,7 +176,7 @@ public class TableData {
       case Types.CHAR:{
         int i = 0;
         for (Schema.SchemaColumn sc : scs) {
-          cds[i++] = new ColumnData(sc.getName(), FeatureType.categorical, false,
+          cds[i++] = new ColumnData(sc.getName().toLowerCase(), FeatureType.categorical, false,
               sqlType);
         }
         return cds;
@@ -186,7 +186,7 @@ public class TableData {
       case Types.NVARCHAR:
       case Types.VARCHAR:
       {
-        String countClause = scs.stream().map(sc -> sc.getName()).reduce("", (str1, str2)
+        String countClause = scs.stream().map(sc -> sc.getName().toLowerCase()).reduce("", (str1, str2)
             -> str1 + "," + " count(distinct " + str2 + ")").substring(1);
         String query = "select  %1$s from %2$s";
         ResultSet rs = ingester.executeQuery(String.format(query, countClause, this.tableName));
@@ -203,7 +203,7 @@ public class TableData {
             ft = FeatureType.categorical;
             skip = false;
           }
-          cds[i - 1] = new ColumnData(sc.getName(), ft, skip, sqlType);
+          cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType);
           ++i;
         }
         return cds;
@@ -211,7 +211,7 @@ public class TableData {
       default: {
         int i = 0;
         for (Schema.SchemaColumn sc : scs) {
-          cds[i++] = new ColumnData(sc.getName(), null, true, sqlType);
+          cds[i++] = new ColumnData(sc.getName().toLowerCase(), null, true, sqlType);
         }
         return cds;
       }
