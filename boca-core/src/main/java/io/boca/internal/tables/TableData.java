@@ -24,12 +24,14 @@ public class TableData {
   private ConcurrentHashMap<String, DependencyData >kpiDependencyMap =
       new ConcurrentHashMap<>();
 
-  private static String contiToContiCorr = "val tableDf = snappysession.table(%1s);"
-      + "import org.apache.spark.ml.linalg._;"
-      + "implicit val vectorEncoder = org.apache.spark.sql.Encoders.kryo[DenseVector]"
-      + "val inputDataSet = tableDf.map[Vector](row => {"
+  private static String contiToContiCorr = "import org.apache.spark.mllib.linalg._;"
+      + "import org.apache.spark.sql._;"
+      + "import org.apache.spark.sql.types._;"
+      + "import org.apache.spark.mllib.stat._;"
+      + "val tableDf = snappysession.table(\"%1s\");"
+      + "val inputVectorRDD = tableDf.rdd.map[Vector](row => {"
       + "val arr = Array(row(%2s),row(%3s));"
-      + "val doubleArr = arr.map[Double](elem => {"
+      + "val doubleArr = arr.map(elem => {"
       +  " elem match {"
       +     "case x: Short => x.toDouble;"
       +     "case x: Int => x.toDouble;"
@@ -37,12 +39,21 @@ public class TableData {
       +     "case x: Float => x.toDouble;"
       +     "case x: Double => x;"
       +     "case x: Decimal => x.toDouble;"
+      +     "case _ => throw new RuntimeException(\"unknown type\");"
       +     "}"
-      +   "})"
+      +   "});"
       +   "Vectors.dense(doubleArr);"
       +  "});"
-      +  "val rsDf = Correlation.corr(inputDataSet,inputDataSet.schema(0).name )"
-      +  "val valueDf = rsDf.map[Row](row => Row(row(0).asInstanceOf[Matrix](0,0)))";
+      //+ "val elementType1 = new ObjectType(classOf[Vector]);"
+      //+ "val inputDataFrame = snappysession.createDataFrame(inputRowRDD, StructType(Seq(StructField(\"feature\", elementType1, false))));"
+      + "val matrix = Statistics.corr(inputVectorRDD, \"pearson\");"
+      + "val corrValue = matrix(0,0);"
+      + "val dfStrct = StructType(Seq(StructField(\"corr\", DoubleType, false)));"
+      + "val valueDf = snappysession.sqlContext.createDataFrame(java.util.Collections.singletonList(Row(corrValue)), dfStrct);";
+
+  //+ "val valueDf = snappysession.sqlContext.createDataFrame(java.util.Collections.singletonList(Row(corrValue)), dfStrct)";
+     // + "val rsDf = org.apache.spark.ml.stat.Correlation.corr(inputDataFrame, \"feature\" );"
+     // + "val valueDf = rsDf.map[Row](row => Row(row(0).asInstanceOf[Matrix](0,0)))(Encoders.Double);";
 
   private static ThreadLocal<SQLIngester> ingesterThreadLocal = new ThreadLocal<SQLIngester>();
 
@@ -156,6 +167,7 @@ public class TableData {
             skip = false;
             ft = FeatureType.continuous;
           }
+        //  ft = FeatureType.continuous;
           cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType);
           ++i;
         }
