@@ -1,26 +1,14 @@
 <div ng-controller="loginController">
-    <div class="panel panel-gray">
-        <div class="panel-heading">Database Configuration</div>
-        <div class="panel-body">
-            <table>
-                <tr>
-                    <td nowrap style="width: 100px;">UserName:</td>
-                    <td style="margin: 2px; width: 100%">
-                        <input ng-model="username" style="width:100%">
-                    </td>
-                </tr>
-                <tr>
-                    <td nowrap style="width: 100px;">Password:</td>
-                    <td style="margin: 2px; width:100%">
-                        <input ng-model="password" style="width:100%">
-                    </td>
-                    <td>
-                        <button ng-click="login()">submit</button>
-                    </td>
-                </tr>
-            </table>
-        </div>
+    <div class="panel-heading login-panel-heading">
+        Sign in
     </div>
+        <div class="panel-body no-padding-top">
+                    <div class="login-panel">
+                        <input ng-model="username" placeholder="Username" style="width:100%">
+                        <input ng-model="password" placeholder="Password" style="width:100%">
+                        <button ng-click="login()" class="btn btn-light">Sign In</button>
+                    </div>
+        </div>
 
 
 </div>
