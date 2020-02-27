@@ -1,0 +1,17 @@
+pipeline: "BasicBatchPipeline"
+
+inputURI: "csv://core/demo/sample.csv"
+
+classifier: "predicate"
+metric: "usage"
+predicate: ">="
+cutoff: 53.0
+
+
+summarizer: "aplinear"
+attributes:
+  - "location"
+  - "version"
+ratioMetric: "globalratio"
+minRatioMetric: 1.5
+minSupport: 0.2

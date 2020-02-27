@@ -1,0 +1,22 @@
+pipeline: "BasicBatchPipeline"
+
+inputURI: "csv:///Users/jramnara/Downloads/data/diabetes/diabetes.csv"
+
+classifier: "predicate"
+metric: "Outcome"
+predicate: "=="
+cutoff: "1"
+
+
+# summarizer: "aplinear"
+summarizer: "fpgrowth"
+# summarizer: "countmeanshift"
+
+attributes:
+  - "Glucose"
+  - "BloodPressure"
+  - "Insulin"
+  - "SkinThickness"
+ratioMetric: "globalratio"
+minRatioMetric: 1.5
+minSupport: 0.02

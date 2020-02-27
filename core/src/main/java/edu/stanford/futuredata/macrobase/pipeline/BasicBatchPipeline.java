@@ -22,6 +22,7 @@ public class BasicBatchPipeline implements Pipeline {
     Logger log = LoggerFactory.getLogger(Pipeline.class);
 
     private String inputURI = null;
+    private final String baseTable;
 
     private String classifierType;
     private String metric;
@@ -49,6 +50,7 @@ public class BasicBatchPipeline implements Pipeline {
     public BasicBatchPipeline (PipelineConfig conf) {
         inputURI = conf.get("inputURI");
 
+        baseTable = conf.get("baseTable", "NULL");
         classifierType = conf.get("classifier", "percentile");
         metric = conf.get("metric");
 
@@ -186,7 +188,7 @@ public class BasicBatchPipeline implements Pipeline {
 
         }
         requiredColumns.add(metric);
-        return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns);
+        return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns, baseTable);
     }
 
     @Override

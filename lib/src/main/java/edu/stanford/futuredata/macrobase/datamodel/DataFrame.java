@@ -353,6 +353,12 @@ public class DataFrame {
         return doubleCols.get(indexToTypeIndex.get(columnIdx));
     }
     public double[] getDoubleColumnByName(String columnName) {
+        System.out.println("=============================");
+        System.out.println("===>> Col name fetched " + columnName);
+        System.out.println("schema.getColumnIndex(columnName)" + schema.getColumnIndex(columnName));
+        System.out.println("indexToTypeIndex.size" + indexToTypeIndex.size());
+        System.out.println("doublecols size" + doubleCols.size());
+        System.out.println("=============================");
         return doubleCols.get(indexToTypeIndex.get(schema.getColumnIndex(columnName)));
     }
     public ArrayList<double[]> getDoubleCols(List<Integer> columns) {

@@ -1,0 +1,32 @@
+pipeline: "BasicBatchPipeline"
+
+inputURI: "jdbc:snappydata://dev2:1527"
+
+baseTable: "telecom_churn_mem"
+
+classifier: "predicate"
+metric: "churn"
+predicate: "=="
+cutoff: "1"
+
+
+summarizer: "aplinear"
+#summarizer: "fpgrowth"
+# summarizer: "countmeanshift"
+########
+## fpgrowth doesn't test with attribute combinations ... need to fix ...
+########
+
+attributes:
+  - "crclscod"
+  - "hnd_price"
+  - "avgqty1"
+  - "adjmou1"
+  - "uniqsubs"
+  - "callwait_range"
+  - "drop_vce_range"
+  - "rev_range1"
+
+ratioMetric: "globalratio"
+minRatioMetric: 1.5
+minSupport: 0.01
