@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 /**
  * First cut implementation with several shortcomings.
@@ -27,7 +28,7 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
     private final boolean convertNulls;
 
     public JDBCDataFrameLoader(String url, String tableName, List<String> requiredColumns) throws IOException {
-        this.requiredColumns = requiredColumns;
+        this.requiredColumns = requiredColumns.stream().map(String::toLowerCase).collect(Collectors.toList());
         this.tableName = tableName;
         this.dburl = url;
         this.convertNulls = true;
@@ -59,9 +60,8 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
                 case Types.FLOAT:
                     t = Schema.ColType.DOUBLE ;
             }
-            schema.addColumn(t, colName);
+            schema.addColumn(t, colName.toLowerCase());
         }
-        schema.
         return  schema;
     }
 

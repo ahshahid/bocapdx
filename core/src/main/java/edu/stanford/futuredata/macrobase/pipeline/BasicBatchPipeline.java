@@ -52,7 +52,7 @@ public class BasicBatchPipeline implements Pipeline {
 
         baseTable = conf.get("baseTable", "NULL");
         classifierType = conf.get("classifier", "percentile");
-        metric = conf.get("metric");
+        metric = ((String)conf.get("metric")).toLowerCase();
 
         if (classifierType.equals("predicate") || classifierType.equals("countmeanshift")){
             Object rawCutoff = conf.get("cutoff");
