@@ -1,3 +1,6 @@
+body{
+  background-color: #c5f9f9;
+}
 .sidebar-menu {
     display: block;
     position: relative;
@@ -38,4 +41,30 @@
   }
   .no-padding-right{
     padding-right: 0;
+}
+.login-panel{
+  width: 30%;
+  margin: auto;
+  display: block;
+  text-align: center;
+}
+.login-panel input {
+  height: 40px;
+  margin: 5px;
+  padding-left: 15px;
+  border: 1px solid #61dcdc;
+}
+.btn-light{
+  background: #61dcdc;
+  margin-top: 30px;
+  padding: 10px 45px;
+}
+.login-panel-heading{
+  text-align: center;
+    font-size: 30px;
+    margin-bottom: 0px;
+    margin-top: 50px;
+}
+.no-padding-top{
+  padding-top: 0 !important;
 }
