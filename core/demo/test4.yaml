@@ -1,5 +1,7 @@
 pipeline: "BasicBatchPipeline"
 
+objective: "Factors causing churn"
+
 inputURI: "jdbc:snappydata://dev2:1527"
 
 baseTable: "telecom_churn_mem"
@@ -29,4 +31,4 @@ attributes:
 
 ratioMetric: "globalratio"
 minRatioMetric: 1.5
-minSupport: 0.01
+minSupport: 0.005
