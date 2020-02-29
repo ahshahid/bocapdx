@@ -60,5 +60,26 @@ element {
     border-color: #dcddd7;
 }
 
-
-
+.navbar-brand{
+    background: #2799fa;
+    color: #ffffff;
+    padding-left: 40px;
+    padding-right: 40px;
+}
+.navbar-boca{
+    border-bottom: 1px solid #dae1e7;
+    margin-bottom: 0;    
+}
+.navbar-boca input{
+    background: #7fc4fd;
+    border-radius: 16px;
+    padding: 0px 20px;
+    color: #ffffff !important;
+}
+.navbar-boca input::placeholder{
+    color: #ffffff !important;
+}
+.custom-color li a{
+    color: #555a5d;
+    font-weight: 700;
+}

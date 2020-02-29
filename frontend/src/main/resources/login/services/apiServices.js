@@ -2,7 +2,7 @@ app.factory('ApiFactory', ['$resource',
 	function ($resource) {
 
         /* for server comment below const */
-       //const server = 'http://34.69.42.63:9090/';
+        // const server = 'http://34.69.42.63:9090/';
 
         /* For local comment below const */
         const server = ''; 
