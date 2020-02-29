@@ -24,13 +24,37 @@ public class TableData {
   private ConcurrentHashMap<String, DependencyData >kpiDependencyMap =
       new ConcurrentHashMap<>();
 
+  private static String catToCatCorr = "import org.apache.spark.mllib.linalg._;"
+      + "import org.apache.spark.sql._;"
+      + "import org.apache.spark.sql.types._;"
+      + "import org.apache.spark.mllib.stat._;"
+      + "val tableDf = snappysession.table(\"%1$s\");"
+      + "val inputSchema = StructType(Seq(tableDf.schema(%2$s), tableDf.schema(%3$s)));"
+      + "import org.apache.spark.sql.catalyst.encoders.RowEncoder;"
+      + "implicit val encoder = RowEncoder(inputSchema);"
+      + "val inputDf = tableDf.map(row => Row(row(%2$s),row(%3$s)));"
+      + "println(\"col1 =\"+ tableDf.schema(%2$s).name + \"col2 = \" + tableDf.schema(%3$s).name);"
+      + "val contingency_table=inputDf.stat.crosstab(tableDf.schema(%2$s).name, tableDf.schema(%3$s).name);"
+      + "contingency_table.show;"
+      + "val contingency_df=contingency_table.drop(tableDf.schema(%2$s).name + \"_\" + tableDf.schema(%3$s).name);"
+      + "val row_count = contingency_df.count().toInt;"
+      + "val column_count = contingency_df.columns.size;"
+      + "val valuesArr = contingency_df.rdd.map(row => row.toSeq).flatMap(seq => seq.map(_.asInstanceOf[Long].toDouble)).collect;"
+      + "val mat: Matrix = org.apache.spark.mllib.linalg.Matrices.dense(row_count, column_count, valuesArr).transpose;"
+      + "val chiRes = Statistics.chiSqTest(mat.copy);"
+      + "val ouputSchema = StructType(Seq(StructField(\"degreesoffreedome\", IntegerType, false),"
+      + "StructField(\"method\", StringType, false), StructField(\"nullhypothesis\", StringType, false),"
+      + "StructField(\"pvalue\", DoubleType, false), StructField(\"statistic\", DoubleType, false)));"
+      + "val valueDf = snappysession.sqlContext.createDataFrame(java.util.Collections.singletonList("
+      + "Row(chiRes.degreesOfFreedom, chiRes.method, chiRes.nullHypothesis, chiRes.pValue, chiRes.statistic)), ouputSchema);";
+
   private static String contiToContiCorr = "import org.apache.spark.mllib.linalg._;"
       + "import org.apache.spark.sql._;"
       + "import org.apache.spark.sql.types._;"
       + "import org.apache.spark.mllib.stat._;"
-      + "val tableDf = snappysession.table(\"%1s\");"
+      + "val tableDf = snappysession.table(\"%1$s\");"
       + "val inputVectorRDD = tableDf.rdd.map[Vector](row => {"
-      + "val arr = Array(row(%2s),row(%3s));"
+      + "val arr = Array(row(%2$s),row(%3$s));"
       + "val doubleArr = arr.map(elem => {"
       +  " elem match {"
       +     "case x: Short => x.toDouble;"
@@ -86,6 +110,35 @@ public class TableData {
 
   };
 
+  private BiFunction<ColumnData, ColumnData, Double> categoricalToCategorical = (kpiCd, depCd) -> {
+    int depColIndex = -1, kpiColIndex = -1;
+    List<Schema.SchemaColumn> cols = getSchema().getColumns();
+    for(int i = 0 ; i < cols.size(); ++i) {
+      Schema.SchemaColumn sc = cols.get(i);
+      if (depColIndex == -1 ||  kpiColIndex == -1) {
+        if (sc.getName().equalsIgnoreCase(kpiCd.name)) {
+          kpiColIndex = i;
+        } else if (sc.getName().equalsIgnoreCase(depCd.name)) {
+          depColIndex = i;
+        }
+      } else {
+        break;
+      }
+    }
+
+    String scalaCodeToExecute = String.format(catToCatCorr,
+        this.getTableName(), depColIndex, kpiColIndex);
+    SQLIngester ingester = ingesterThreadLocal.get();
+    try {
+      ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
+      rs.next();
+      return rs.getDouble(1);
+    } catch(SQLException sqle) {
+      throw new RuntimeException(sqle);
+    }
+
+  };
+
   private Function<String, DependencyData> depedencyComputer = kpi -> {
     DependencyData dd = new DependencyData();
     ColumnData kpiCol = columnMappings.get(kpi.toLowerCase());
@@ -99,6 +152,15 @@ public class TableData {
          }
        }
      }
+    } else if (kpiCol.ft.equals(FeatureType.categorical)) {
+      for(ColumnData cd: columnMappings.values()) {
+        if (!cd.name.equalsIgnoreCase(kpi)) {
+          if (cd.ft.equals(FeatureType.categorical)) {
+            double corr = categoricalToCategorical.apply(kpiCol, cd);
+            dd.add(cd.name, corr);
+          }
+        }
+      }
     }
     return dd;
   };
@@ -167,7 +229,7 @@ public class TableData {
             skip = false;
             ft = FeatureType.continuous;
           }
-        //  ft = FeatureType.continuous;
+
           cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType);
           ++i;
         }
