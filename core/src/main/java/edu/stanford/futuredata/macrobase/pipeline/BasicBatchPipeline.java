@@ -22,6 +22,7 @@ import java.util.*;
  * Only supports operating over a single metric
  */
 public class BasicBatchPipeline implements Pipeline {
+    private final PipelineConfig conf;
     Logger log = LoggerFactory.getLogger(Pipeline.class);
 
     private String inputURI = null;
@@ -51,6 +52,7 @@ public class BasicBatchPipeline implements Pipeline {
 
 
     public BasicBatchPipeline (PipelineConfig conf) {
+        this.conf = conf;
         inputURI = conf.get("inputURI");
 
         baseTable = conf.get("baseTable", "NULL");
@@ -218,9 +220,13 @@ public class BasicBatchPipeline implements Pipeline {
         Explanation output = summarizer.getResults();
 
         //TODO : Hack ... this savetoDB needs to be somewhere else ...
-        if (inputURI.contains("jdbc"))
-            saveDataFrameToJDBC(getConnection(), baseTable +"_Explained",
-                getExplanationAsDataFrame(output), true);
+        if (inputURI.contains("jdbc")) {
+            String outputTable = baseTable + "_Explained" ;
+            saveDataFrameToJDBC(getConnection(), outputTable,
+                    getExplanationAsDataFrame(output), true);
+            SimpleExplanationNLG e = new SimpleExplanationNLG(conf, (APLExplanation) output , outputTable );
+            System.out.println(e.explainAsText());
+        }
         return output;
     }
 
