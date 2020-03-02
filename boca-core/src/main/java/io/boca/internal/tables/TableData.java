@@ -31,8 +31,10 @@ public class TableData {
       + "import org.apache.spark.mllib.stat._;"
       + "import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer};"
       + "val tableDf = snappysession.table(\"%1$s\");"
+      + "val pValueThreshold = %4$s;"
       + "val tableSchema = tableDf.schema;"
       + "val stringIndexer_suffix = \"_boca_index\";"
+      + "val featuresCol = \"features\" + stringIndexer_suffix;"
       + "val depsColIndxs = Array[Int](%2$s);"
       + "val kpiColsIndex = %3$s;"
       + "// split the cols indexes into string & numerical for now"
@@ -54,8 +56,36 @@ public class TableData {
       + "import org.apache.spark.ml.feature.VectorAssembler;"
       + "import org.apache.spark.ml.linalg.Vectors;"
       + "val featureArray = depNonStringCols.map(i => tableSchema(i).name) ++ indexcolsname;"
-      + "val assembler = new VectorAssembler().setInputCols(featureArray)).setOutputCol(\"features\");"
+      + "val assembler = new VectorAssembler().setInputCols(featureArray).setOutputCol(featuresCol);"
       + "val dfWithFeature = assembler.transform(preparedDf);"
+      + "import org.apache.spark.mllib.regression.{LabeledPoint => OldLabeledPoint};"
+      + "import org.apache.spark.ml.linalg.Vector;"
+      + "import org.apache.spark.mllib.linalg.{Vectors => OldVectors}"
+      + "val input: RDD[OldLabeledPoint] ="
+      + "dfWithFeature.select(col(kpiIndexerCol.getOrElse(tableSchema(kpiColsIndex).name))."
+      + "cast(DoubleType), col(featuresCol)).rdd.map {"
+      + "case Row(label: Double, features: Vector) =>"
+      + "OldLabeledPoint(label, OldVectors.fromML(features));"
+      + "};"
+      + "val chiSqTestResult = Statistics.chiSqTest(input).zipWithIndex;"
+      + "val features = chiSqTestResult.filter { case (res, _) => res.pValue < pValueThreshold};"
+      + "//convert column indexes to column names & pvalue dataframe"
+      + "val outputSchema = StructType(Seq(StructField(\"depCol\", StringType, false),"
+      + "StructField(\"pValue\", DoubleType, false)));"
+      + "val rows = features.map {"
+      + "     case (test, index) => {"
+      + "      val name = featureArray(index)"
+      + "      val realName = if (name.endsWith(stringIndexer_suffix))"
+      + "         name.substring(0,name.length - stringIndexer_suffix.length) else name;"
+      + "       Row(realName, test.pValue);"
+      + "     }"
+      + "}"
+      + "import collection.JavaConverters._;"
+      + "val valueDf = snappysession.sqlContext.createDataFrame(rows.asJava, outputSchema);";
+
+
+
+      /*
       + "import org.apache.spark.ml.feature.ChiSqSelector;"
       + "val selector = new ChiSqSelector().setNumTopFeatures(depsColIndxs.length) .setFeaturesCol(\"features\")."
       + "setLabelCol(kpiIndexerCol.getOrElse(tableSchema(kpiColsIndex).name)) .setOutputCol(\"selectedFeatures\");"
@@ -78,7 +108,7 @@ public class TableData {
       + "StructField(\"pvalue\", DoubleType, false), StructField(\"statistic\", DoubleType, false)));"
       + "val valueDf = snappysession.sqlContext.createDataFrame(java.util.Collections.singletonList("
       + "Row(chiRes.degreesOfFreedom, chiRes.method, chiRes.nullHypothesis, chiRes.pValue, chiRes.statistic)), ouputSchema);";
-
+      */
   private static String contiToContiCorr = "import org.apache.spark.mllib.linalg._;"
       + "import org.apache.spark.sql._;"
       + "import org.apache.spark.sql.types._;"
