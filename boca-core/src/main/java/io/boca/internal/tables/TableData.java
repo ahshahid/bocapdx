@@ -11,6 +11,7 @@ import java.sql.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
@@ -28,7 +29,37 @@ public class TableData {
       + "import org.apache.spark.sql._;"
       + "import org.apache.spark.sql.types._;"
       + "import org.apache.spark.mllib.stat._;"
+      + "import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer};"
       + "val tableDf = snappysession.table(\"%1$s\");"
+      + "val tableSchema = tableDf.schema;"
+      + "val stringIndexer_suffix = \"_boca_index\";"
+      + "val depsColIndxs = Array[Int](%2$s);"
+      + "val kpiColsIndex = %3$s;"
+      + "// split the cols indexes into string & numerical for now"
+      + "val (depStringCols, depNonStringCols) = depsColIndxs.partition(i => tableSchema(i).dataType.equals(StringType));"
+      + "// create string indexers for string type dependent cols"
+      + "val (stringColIndexers, indexcolsname) = depStringCols.map(colIndx => {"
+      +     "val colName = tableSchema(colIndx).name;"
+      +     "val outPutColName = colName + stringIndexer_suffix;"
+      + "   new StringIndexer().setInputCol(colName).setOutputCol(outPutColName) -> outPutColName ;"
+      + "}).unzip;"
+      + "val preparedDf_1 = stringColIndexers.foldLeft[DataFrame](tableDf)((df, indexer) => indexer.fit(df).transform(df));"
+      + "val (preparedDf, kpiIndexerCol) = if (tableSchema(kpiColsIndex).dataType.equals(StringType))"
+      + "                    {"
+      + "                       val kpiFtCol = tableSchema(kpiColsIndex).name + stringIndexer_suffix;"
+      + "                       val kpiIndexer =  new StringIndexer().setInputCol(tableSchema(kpiColsIndex).name)."
+      + "                          setOutputCol(kpiFtCol);"
+      + "                       kpiIndexer.fit(preparedDf_1).transform(preparedDf_1) -> Some(kpiFtCol);"
+      + "                    } else preparedDf_1 -> None"
+      + "import org.apache.spark.ml.feature.VectorAssembler;"
+      + "import org.apache.spark.ml.linalg.Vectors;"
+      + "val featureArray = depNonStringCols.map(i => tableSchema(i).name) ++ indexcolsname;"
+      + "val assembler = new VectorAssembler().setInputCols(featureArray)).setOutputCol(\"features\");"
+      + "val dfWithFeature = assembler.transform(preparedDf);"
+      + "import org.apache.spark.ml.feature.ChiSqSelector;"
+      + "val selector = new ChiSqSelector().setNumTopFeatures(depsColIndxs.length) .setFeaturesCol(\"features\")."
+      + "setLabelCol(kpiIndexerCol.getOrElse(tableSchema(kpiColsIndex).name)) .setOutputCol(\"selectedFeatures\");"
+      + "val result = selector.fit(dfWithFeature).transform(dfWithFeature);"
       + "val inputSchema = StructType(Seq(tableDf.schema(%2$s), tableDf.schema(%3$s)));"
       + "import org.apache.spark.sql.catalyst.encoders.RowEncoder;"
       + "implicit val encoder = RowEncoder(inputSchema);"
@@ -110,24 +141,31 @@ public class TableData {
 
   };
 
-  private BiFunction<ColumnData, ColumnData, Double> categoricalToCategorical = (kpiCd, depCd) -> {
-    int depColIndex = -1, kpiColIndex = -1;
+  private BiFunction<ColumnData, List<ColumnData>, Map<Integer,Double>> categoricalToCategorical = (kpiCd, depCds) -> {
     List<Schema.SchemaColumn> cols = getSchema().getColumns();
+
+    int kpiColIndex = -1;
+    List<Integer> depColsIndex = new ArrayList<>();
+
+    Stream<ColumnData> stream = depCds.stream();
     for(int i = 0 ; i < cols.size(); ++i) {
       Schema.SchemaColumn sc = cols.get(i);
-      if (depColIndex == -1 ||  kpiColIndex == -1) {
+      if (kpiColIndex == -1) {
         if (sc.getName().equalsIgnoreCase(kpiCd.name)) {
           kpiColIndex = i;
-        } else if (sc.getName().equalsIgnoreCase(depCd.name)) {
-          depColIndex = i;
+        } else if (stream.anyMatch(elem -> elem.name.equalsIgnoreCase(sc.getName()))) {
+          depColsIndex.add(i);
         }
-      } else {
-        break;
+      } else  if (stream.anyMatch(elem -> elem.name.equalsIgnoreCase(sc.getName()))) {
+          depColsIndex.add(i);
       }
     }
-
+    StringBuilder sb = new StringBuilder();
+    depColsIndex.stream().forEach(i -> sb.append(i).append(','));
+    sb.deleteCharAt(sb.length() -1);
+    String depsColindxsStr = sb.toString();
     String scalaCodeToExecute = String.format(catToCatCorr,
-        this.getTableName(), depColIndex, kpiColIndex);
+        this.getTableName(), depsColindxsStr, kpiColIndex);
     SQLIngester ingester = ingesterThreadLocal.get();
     try {
       ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
@@ -153,14 +191,18 @@ public class TableData {
        }
      }
     } else if (kpiCol.ft.equals(FeatureType.categorical)) {
-      for(ColumnData cd: columnMappings.values()) {
+      // get all the categorical cols
+      List<ColumnData> deps = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
+          && ele.ft.equals(FeatureType.categorical)).collect(Collectors.toList());
+      categoricalToCategorical.apply(kpiCol, deps);
+      /*for(ColumnData cd: columnMappings.values()) {
         if (!cd.name.equalsIgnoreCase(kpi)) {
           if (cd.ft.equals(FeatureType.categorical)) {
             double corr = categoricalToCategorical.apply(kpiCol, cd);
             dd.add(cd.name, corr);
           }
         }
-      }
+      }*/
     }
     return dd;
   };
