@@ -83,3 +83,17 @@ element {
     color: #555a5d;
     font-weight: 700;
 }
+.tab-container{
+    padding-top: 5px;
+    padding-left: 5px;
+}
+.worksheet-tab{
+    min-height: 260px;
+}
+#worksheet{
+    min-height: 260px;
+    padding: 0;
+}
+#data-table{
+    min-height: 100vh;
+}

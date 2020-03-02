@@ -29,5 +29,8 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
             
             });
         }
+        $scope.goToTab = function(tableName){
+            
+        }
 
 }])

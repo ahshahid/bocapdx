@@ -33,8 +33,8 @@
                     </div>
                 </header>
                 
-                <ul id="main-menu" class="main-menu">
-                    <li ng-click="getData(table)"  ng-repeat="table in tableNames track by $index">
+                <ul id="data-table" class="main-menu" drop-on-me>
+                    <li drag-me ng-click="getData(table)"  id="{{table}}" ng-repeat="table in tableNames track by $index">
                         <input type="checkbox" id="{{table}}" ng-model="myTable.selected[table]" class="pull-right" >
                         <label for="{{table}}" class="title">{{table}}</label>
                     </li>
@@ -42,23 +42,34 @@
             </div>
         </div>
       </div>
-    <div class="col-md-10">
-      <div class="panel panel-gray">
-        <div class="panel-body" ng-if="schemaCols.length > 0">
-            <table class="table" style="margin-bottom: 0;">
-            <tr>
-                <th ng-repeat="column in schemaCols">{{column.name}} ( {{column.type}} )</th>
-            </tr>
-        </table>
-            <table class="table" show-filter="false" ng-table="schemaRows"  ng-table-columns-binding="schemaCols">
-                
-                <tr ng-repeat="data in $data">
-                    <td ng-repeat="d in data  track by $index" filter="{ d: 'text'}" sortable="'d'">{{d}}</td>
-                   <!--  <td filter="{ $in: 'number'}" sortable="'type'">{{data[1]}}</td> -->
-                </tr>
-            </table>
+    <div class="col-md-10 tab-container">
+
+      <ul class="nav nav-tabs">
+        <li role="presentation" class="active"><a ng-click="goToTab('home')">My Worksheet</a></li>
+      </ul>
+      <div class="panel panel-gray worksheet-tab">
+        
+        <div class="panel-body" id="worksheet"  drop-on-me>
+
         </div>
+        <div class="panel-body"  ng-if="schemaCols.length > 0">
+          <table class="table" style="margin-bottom: 0;" >
+          <tr>
+              <th ng-repeat="column in schemaCols">{{column.name}} ( {{column.type}} )</th>
+          </tr>
+          </table>
+          <table class="table" show-filter="false" ng-table="schemaRows"  ng-table-columns-binding="schemaCols">
+              
+              <tr ng-repeat="data in $data">
+                  <td ng-repeat="d in data  track by $index" filter="{ d: 'text'}" sortable="'d'">{{d}}</td>
+                 <!--  <td filter="{ $in: 'number'}" sortable="'type'">{{data[1]}}</td> -->
+              </tr>
+          </table>
       </div>
+      </div>
+
+
+
     </div>
     </div>
 
