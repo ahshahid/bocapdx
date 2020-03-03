@@ -18,6 +18,7 @@ import macrobase.ingest.result.Schema;
 
 public class TableData {
   private long totalRows;
+  private static final double pValueThreshold = 0.05d;
   private final String tableName;
   private final Schema schema;
   private Map<Integer, ColumnData[]> sqlTypeToColumnMappings = new HashMap<>();
@@ -30,6 +31,7 @@ public class TableData {
       + "import org.apache.spark.sql.types._;"
       + "import org.apache.spark.mllib.stat._;"
       + "import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer};"
+      + "import org.apache.spark.sql.functions._;"
       + "val tableDf = snappysession.table(\"%1$s\");"
       + "val pValueThreshold = %4$s;"
       + "val tableSchema = tableDf.schema;"
@@ -37,9 +39,7 @@ public class TableData {
       + "val featuresCol = \"features\" + stringIndexer_suffix;"
       + "val depsColIndxs = Array[Int](%2$s);"
       + "val kpiColsIndex = %3$s;"
-      + "// split the cols indexes into string & numerical for now"
       + "val (depStringCols, depNonStringCols) = depsColIndxs.partition(i => tableSchema(i).dataType.equals(StringType));"
-      + "// create string indexers for string type dependent cols"
       + "val (stringColIndexers, indexcolsname) = depStringCols.map(colIndx => {"
       +     "val colName = tableSchema(colIndx).name;"
       +     "val outPutColName = colName + stringIndexer_suffix;"
@@ -52,7 +52,7 @@ public class TableData {
       + "                       val kpiIndexer =  new StringIndexer().setInputCol(tableSchema(kpiColsIndex).name)."
       + "                          setOutputCol(kpiFtCol);"
       + "                       kpiIndexer.fit(preparedDf_1).transform(preparedDf_1) -> Some(kpiFtCol);"
-      + "                    } else preparedDf_1 -> None"
+      + "                    } else preparedDf_1 -> None;"
       + "import org.apache.spark.ml.feature.VectorAssembler;"
       + "import org.apache.spark.ml.linalg.Vectors;"
       + "val featureArray = depNonStringCols.map(i => tableSchema(i).name) ++ indexcolsname;"
@@ -60,7 +60,8 @@ public class TableData {
       + "val dfWithFeature = assembler.transform(preparedDf);"
       + "import org.apache.spark.mllib.regression.{LabeledPoint => OldLabeledPoint};"
       + "import org.apache.spark.ml.linalg.Vector;"
-      + "import org.apache.spark.mllib.linalg.{Vectors => OldVectors}"
+      + "import org.apache.spark.mllib.linalg.{Vectors => OldVectors};"
+      + "import org.apache.spark.rdd.RDD;"
       + "val input: RDD[OldLabeledPoint] ="
       + "dfWithFeature.select(col(kpiIndexerCol.getOrElse(tableSchema(kpiColsIndex).name))."
       + "cast(DoubleType), col(featuresCol)).rdd.map {"
@@ -69,19 +70,18 @@ public class TableData {
       + "};"
       + "val chiSqTestResult = Statistics.chiSqTest(input).zipWithIndex;"
       + "val features = chiSqTestResult.filter { case (res, _) => res.pValue < pValueThreshold};"
-      + "//convert column indexes to column names & pvalue dataframe"
       + "val outputSchema = StructType(Seq(StructField(\"depCol\", StringType, false),"
       + "StructField(\"pValue\", DoubleType, false)));"
       + "val rows = features.map {"
       + "     case (test, index) => {"
-      + "      val name = featureArray(index)"
+      + "      val name = featureArray(index);"
       + "      val realName = if (name.endsWith(stringIndexer_suffix))"
       + "         name.substring(0,name.length - stringIndexer_suffix.length) else name;"
       + "       Row(realName, test.pValue);"
       + "     }"
-      + "}"
-      + "import collection.JavaConverters._;"
-      + "val valueDf = snappysession.sqlContext.createDataFrame(rows.asJava, outputSchema);";
+      + "};"
+      + "import scala.collection.JavaConverters._;"
+      + "val valueDf = snappysession.sqlContext.createDataFrame(rows.toSeq.asJava, outputSchema);";
 
 
 
@@ -171,22 +171,22 @@ public class TableData {
 
   };
 
-  private BiFunction<ColumnData, List<ColumnData>, Map<Integer,Double>> categoricalToCategorical = (kpiCd, depCds) -> {
+  private BiFunction<ColumnData, List<ColumnData>, Map<String, Double>> categoricalToCategorical = (kpiCd, depCds) -> {
     List<Schema.SchemaColumn> cols = getSchema().getColumns();
 
     int kpiColIndex = -1;
     List<Integer> depColsIndex = new ArrayList<>();
 
-    Stream<ColumnData> stream = depCds.stream();
+
     for(int i = 0 ; i < cols.size(); ++i) {
       Schema.SchemaColumn sc = cols.get(i);
       if (kpiColIndex == -1) {
         if (sc.getName().equalsIgnoreCase(kpiCd.name)) {
           kpiColIndex = i;
-        } else if (stream.anyMatch(elem -> elem.name.equalsIgnoreCase(sc.getName()))) {
+        } else if (depCds.stream().anyMatch(elem -> elem.name.equalsIgnoreCase(sc.getName()))) {
           depColsIndex.add(i);
         }
-      } else  if (stream.anyMatch(elem -> elem.name.equalsIgnoreCase(sc.getName()))) {
+      } else  if (depCds.stream().anyMatch(elem -> elem.name.equalsIgnoreCase(sc.getName()))) {
           depColsIndex.add(i);
       }
     }
@@ -195,12 +195,15 @@ public class TableData {
     sb.deleteCharAt(sb.length() -1);
     String depsColindxsStr = sb.toString();
     String scalaCodeToExecute = String.format(catToCatCorr,
-        this.getTableName(), depsColindxsStr, kpiColIndex);
+        this.getTableName(), depsColindxsStr, kpiColIndex, String.valueOf(pValueThreshold));
     SQLIngester ingester = ingesterThreadLocal.get();
     try {
       ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
-      rs.next();
-      return rs.getDouble(1);
+      Map<String, Double> corrData = new HashMap<>();
+      while(rs.next()) {
+        corrData.put(rs.getString(1), rs.getDouble(2));
+      }
+      return corrData;
     } catch(SQLException sqle) {
       throw new RuntimeException(sqle);
     }
@@ -224,15 +227,10 @@ public class TableData {
       // get all the categorical cols
       List<ColumnData> deps = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
           && ele.ft.equals(FeatureType.categorical)).collect(Collectors.toList());
-      categoricalToCategorical.apply(kpiCol, deps);
-      /*for(ColumnData cd: columnMappings.values()) {
-        if (!cd.name.equalsIgnoreCase(kpi)) {
-          if (cd.ft.equals(FeatureType.categorical)) {
-            double corr = categoricalToCategorical.apply(kpiCol, cd);
-            dd.add(cd.name, corr);
-          }
-        }
-      }*/
+      Map<String, Double> corrData = categoricalToCategorical.apply(kpiCol, deps);
+      for(Map.Entry<String, Double> entry: corrData.entrySet()) {
+        dd.add(entry.getKey(), entry.getValue());
+      }
     }
     return dd;
   };
