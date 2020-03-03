@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import org.apache.http.util.EntityUtils;
 
 public class ResponseTester {
-  String host = "35.224.182.196";
+  String host = "localhost";
   @Test
   public void testResponse() throws Exception {
     HttpPost httpPost = null;
@@ -53,7 +53,7 @@ public class ResponseTester {
       String schemaUrl = "http://" + host + ":9090/api/schema";
       httpPost = new HttpPost(schemaUrl);
       httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-      data = new StringEntity("{\"tablename\":\"test\"}");
+      data = new StringEntity("{\"tablename\":\"airline_ext\"}");
       httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
       httpPost.setEntity(data);
@@ -69,7 +69,7 @@ public class ResponseTester {
       String sampleUrl = "http://" + host + ":9090/api/sampleRows";
       httpPost = new HttpPost(sampleUrl);
       httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-      data = new StringEntity("{\"tablename\":\"test\"}");
+      data = new StringEntity("{\"tablename\":\"airline_ext\"}");
       httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
       httpPost.setEntity(data);
@@ -96,6 +96,22 @@ public class ResponseTester {
       System.out.println(content);
       System.out.println("\n\n");
 
+
+      // dependency fetch
+      String fastInsightUrl = "http://" + host + ":9090/api/fastInsight";
+      httpPost = new HttpPost(fastInsightUrl);
+      httpPost.addHeader("content-type", "application/json;charset=UTF-8");
+      data = new StringEntity("{\"tablename\":\"airline_ext\", \"kpicols\":[\"weatherdelay\"]}");
+      httpPost.addHeader("User-Agent", "Apache HTTPClient");
+
+      httpPost.setEntity(data);
+      response = client.execute(httpPost, httpContext);
+
+      entity = response.getEntity();
+      content = EntityUtils.toString(entity);
+      System.out.println("\n\n");
+      System.out.println(content);
+      System.out.println("\n\n");
 
 
     } finally {

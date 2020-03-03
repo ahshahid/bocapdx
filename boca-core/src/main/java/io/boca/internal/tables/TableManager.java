@@ -16,8 +16,8 @@ public class TableManager {
   public static TableData getTableData(String fqTableName, SQLIngester ingester) {
     return singleton.tablesMap.computeIfAbsent(fqTableName, (key) -> {try {
       return new TableData(key, ingester);
-    } catch (SQLException sqle) {
-       throw new RuntimeException(sqle);
+    } catch (Exception e) {
+       throw new RuntimeException(e);
     }});
   }
 

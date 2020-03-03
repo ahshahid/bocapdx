@@ -1,5 +1,7 @@
 package macrobase.runtime.resources;
 
+import io.boca.internal.tables.TableData;
+import io.boca.internal.tables.TableManager;
 import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
@@ -46,16 +48,12 @@ public class SchemaResource extends BaseResource {
         HttpSession ss = request.getSession();
          try {
             SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
-            response.schema = ingester.getSchema("select * from "
-                + schmaReq.tablename + " LIMIT 1");
-
+             TableData td = TableManager.getTableData(schmaReq.tablename, ingester);
+             response.schema = td.getSchema();
         } catch (Exception e) {
             log.error("An error occurred while processing a request: {}", e);
             response.errorMessage = ExceptionUtils.getStackTrace(e);
         }
-
-
-
         return response;
     }
 }
