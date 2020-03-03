@@ -1,13 +1,56 @@
 <div ng-controller="dashboardController as dashboard">
-    <div class="panel panel-gray">
-        <div class="panel-heading"><a style="cursor: pointer; text-decoration: underline; margin: 20px;" ng-click="getData(table)"  ng-repeat="table in tableNames track by $index">{{table}}</a></div>
+    <nav class="navbar navbar-boca">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" ng-href="/#!/dashboard">Logo</a>
+              </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+          <div class="" id="bs-example-navbar-collapse-1">
+            <form class="navbar-form navbar-left" role="search">
+              <div class="form-group">
+                <input type="text" class="form-control" placeholder="question entered by user">
+              </div>
+            </form>
+            <ul class="nav navbar-nav navbar-right custom-color">
+              <li><a ng-href="/#!/dashboard">New Question</a></li>
+              <li><a ng-href="/#!/dashboard">Help</a></li>
+              <li><a ng-href="/#!/login">Signout</a></li>
+            </ul>
+          </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+      </nav>
+      <div class="row">
+      <div class="col-md-2 no-padding-left no-padding-right" class="md-toolbar-tools">
+        <div class="sidebar-menu toggle-others">
+			
+            <div class="sidebar-menu-inner">	
+                
+                <header class="logo-env">
+                    <div class="logo">
+                        <a ng-href="/#!/dashboard" class="logo-expanded">
+                            Data Tables
+                        </a>
+                    </div>
+                </header>
+                
+                <ul id="main-menu" class="main-menu">
+                    <li ng-click="getData(table)"  ng-repeat="table in tableNames track by $index">
+                        <input type="checkbox" id="{{table}}" ng-model="myTable.selected[table]" class="pull-right" >
+                        <label for="{{table}}" class="title">{{table}}</label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+      </div>
+    <div class="col-md-10">
+      <div class="panel panel-gray">
         <div class="panel-body" ng-if="schemaCols.length > 0">
             <table class="table" style="margin-bottom: 0;">
             <tr>
                 <th ng-repeat="column in schemaCols">{{column.name}} ( {{column.type}} )</th>
             </tr>
         </table>
-            <table class="table" show-filter="true" ng-table="schemaRows"  ng-table-columns-binding="schemaCols">
+            <table class="table" show-filter="false" ng-table="schemaRows"  ng-table-columns-binding="schemaCols">
                 
                 <tr ng-repeat="data in $data">
                     <td ng-repeat="d in data  track by $index" filter="{ d: 'text'}" sortable="'d'">{{d}}</td>
@@ -15,6 +58,8 @@
                 </tr>
             </table>
         </div>
+      </div>
+    </div>
     </div>
 
 

@@ -1,6 +1,9 @@
 app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateParams', 'NgTableParams', function($scope, $http, ApiFactory, $stateParams, NgTableParams) {
 
     $scope.tableName = $stateParams.table;
+    $scope.myTable = {
+        selected:{}
+    };
         $scope.schemaCols = {};
         $scope.schemaRows = {};
         $scope.tableNames  = $stateParams.table;

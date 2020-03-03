@@ -30,9 +30,12 @@
 <body  ng-app="bocaApp">
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-12 no-padding-left">
-                <div  class="col-md-2 no-padding-left no-padding-right" ng-controller="loginController" ng-show="isAuthenticated" data-ng-include="'/modules/login/sidebar.html'" class="md-toolbar-tools"></div>
+            <!-- <div  ng-show="isAuthenticated" class="col-md-12 no-padding-left">
+                
                 <data class="col-md-10 no-padding-left" ui-view></ui-view>
+            </div> -->
+            <div class="col-md-12 no-padding-left  no-padding-right">
+                <data class="col-md-12  no-padding-left no-padding-right" ui-view></ui-view>
             </div>
         </div>
 
