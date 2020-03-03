@@ -26,7 +26,7 @@ function dropOnMe() {
       element.on('drop', function(event) {
         event.preventDefault();
         var data = event.dataTransfer.getData("text");
-        event.target.appendChild(document.getElementById(data));
+        //event.target.appendChild(document.getElementById(data));
       });
     }
   };
