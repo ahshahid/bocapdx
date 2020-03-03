@@ -1,5 +1,6 @@
-
-
+body{
+    overflow-x: hidden;
+}
 .itemsetHidden{
     display:none;
 }
@@ -25,9 +26,6 @@
     border-radius: 5px;
 }
 
-
-element {
-}
 .active-schema {
     background-color: #ABC9AF !important;
     background-image: none !important;
@@ -82,4 +80,62 @@ element {
 .custom-color li a{
     color: #555a5d;
     font-weight: 700;
+}
+.tab-container{
+    padding-top: 5px;
+    padding-left: 5px;
+}
+.worksheet-tab{
+    min-height: 260px;
+}
+#worksheet{
+    min-height: 260px;
+    padding: 0;
+    border-bottom: 1px solid #c4dff5;
+}
+#data-table{
+    min-height: 100vh;
+}
+.table-details {
+    width: 200px;
+    padding: 20px;
+}
+.table-details p:first-child{
+    border-bottom: 2px solid #ffffff;
+}
+.table-details p{
+    background-color: #f1f8fe;
+    margin: 0;
+    padding: 10px;
+}
+.table-rows-section{
+    background: #f1f8fe;
+}
+.table-rows-section table{
+    background: #ffffff;
+}
+.pull-left{
+    float: left;
+}
+.blue-btn{
+    background: #2799f6;
+    padding: 0px 10px;
+    color: #ffffff;
+    margin-left: 10px;
+}
+.row-search-panel{
+    margin-bottom: 10px;
+}
+
+.table-drop-message p{
+    width: 250px;
+    text-align: center;
+    margin: auto;
+    margin-top: 100px;
+}
+.blue-color{
+    color: #95c3eb;
+}
+.nav-tabs>li.active{
+    border-bottom: 2px solid #8dc6f4;
 }

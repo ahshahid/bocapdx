@@ -1,4 +1,5 @@
 <div ng-controller="dashboardController as dashboard">
+  <!-- Header start -->
     <nav class="navbar navbar-boca">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -19,7 +20,10 @@
           </div><!-- /.navbar-collapse -->
         </div><!-- /.container-fluid -->
       </nav>
+      <!-- Header Ends -->
+      <!-- main container -->
       <div class="row">
+        <!-- Sidebar start -->
       <div class="col-md-2 no-padding-left no-padding-right" class="md-toolbar-tools">
         <div class="sidebar-menu toggle-others">
 			
@@ -31,34 +35,82 @@
                             Data Tables
                         </a>
                     </div>
+                    <a ng-href="/#!/dashboard"><i class="glyphicon glyphicon-refresh pull-right blue-color" ></i></a>
                 </header>
                 
-                <ul id="main-menu" class="main-menu">
-                    <li ng-click="getData(table)"  ng-repeat="table in tableNames track by $index">
+                <ul id="data-table" class="main-menu" drop-on-me>
+                    <li ng-click="getData(table)" ng-repeat="table in tableNames track by $index">
                         <input type="checkbox" id="{{table}}" ng-model="myTable.selected[table]" class="pull-right" >
-                        <label for="{{table}}" class="title">{{table}}</label>
+                        <label drag-me for="{{table}}" id="{{table}}s" class="title">{{table}}</label>
                     </li>
                 </ul>
             </div>
         </div>
       </div>
-    <div class="col-md-10">
-      <div class="panel panel-gray">
-        <div class="panel-body" ng-if="schemaCols.length > 0">
-            <table class="table" style="margin-bottom: 0;">
-            <tr>
-                <th ng-repeat="column in schemaCols">{{column.name}} ( {{column.type}} )</th>
-            </tr>
-        </table>
-            <table class="table" show-filter="false" ng-table="schemaRows"  ng-table-columns-binding="schemaCols">
-                
-                <tr ng-repeat="data in $data">
-                    <td ng-repeat="d in data  track by $index" filter="{ d: 'text'}" sortable="'d'">{{d}}</td>
-                   <!--  <td filter="{ $in: 'number'}" sortable="'type'">{{data[1]}}</td> -->
-                </tr>
-            </table>
+      <!-- Sidebar Ends -->
+    <div class="col-md-10 tab-container">
+
+      <ul class="nav nav-tabs">
+        <li role="presentation" class="active"><a ng-click="goToTab('home')">My Worksheet</a></li>
+      </ul>
+      <div class="panel panel-gray worksheet-tab">
+        
+        <div class="panel-body" id="worksheet"  drop-on-me>
+          <div class="table-details" ng-if="worksheet">
+            <p>Name of the <br>
+            {{tableName}}</p>
+            <p>Number of Columns<br>
+            {{schemaCols.length}}</p>
+            <p>Number of Rows<br>
+            2000</p>
+
+          </div>
+          <div class="table-drop-message" ng-if="!worksheet">
+            <p>Drag and Drop tables from the left panel or select with the help of checkoboxes to add to the worksheet</p>
+          </div>
         </div>
+
+        <div class="panel-body table-rows-section"  ng-if="schemaCols.length > 0">
+          <div class="row-search-panel">
+            Select columns to analyse 
+            <!-- Single button -->
+            <button type="button" class="btn blue-btn" >
+              Show fast Insight
+            </button>
+            <div class="btn-group ">
+              <button type="button" class="btn blue-btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Detect outliers <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu">
+                <li><a href="#">option 1</a></li>
+                <li><a href="#">option 2</a></li>
+                <li role="separator" class="divider"></li>
+                <li><a href="#">option 3</a></li>
+              </ul>
+            </div>
+            <button type="button" class="btn blue-btn pull-right" >
+              Run Deep Explanations
+            </button>
+
+
+          </div>
+          <table class="table" style="margin-bottom: 0;" >
+          <tr>
+              <th ng-repeat="column in schemaCols">{{column.name}} ( {{column.type}} )</th>
+          </tr>
+          </table>
+          <table class="table" show-filter="false" ng-table="schemaRows"  ng-table-columns-binding="schemaCols">
+              
+              <tr ng-repeat="data in $data">
+                  <td ng-repeat="d in data  track by $index" filter="{ d: 'text'}" sortable="'d'">{{d}}</td>
+                 <!--  <td filter="{ $in: 'number'}" sortable="'type'">{{data[1]}}</td> -->
+              </tr>
+          </table>
       </div>
+      </div>
+
+
+
     </div>
     </div>
 
