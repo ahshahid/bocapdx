@@ -1,7 +1,7 @@
 pipeline: "BasicBatchPipeline"
 
 #inputURI: "csv:///Users/jramnara/Downloads/data/diabetes/diabetes.csv"
-inputURI: "jdbc:snappydata://dev2:1527"
+inputURI: "jdbc:snappydata://10.80.141.102:1527"
 
 baseTable: "diabetes_ext"
 

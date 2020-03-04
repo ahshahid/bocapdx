@@ -2,7 +2,7 @@ pipeline: "BasicBatchPipeline"
 
 objective: "What is driving AirBnB prices high?"
 
-inputURI: "jdbc:snappydata://dev2:1527"
+inputURI: "jdbc:snappydata://10.80.141.102:1527"
 
 baseTable: "airbnb"
 
@@ -28,4 +28,4 @@ attributes:
 
 ratioMetric: "globalratio"
 minRatioMetric: 1.5
-minSupport: 0.08
+minSupport: 0.01

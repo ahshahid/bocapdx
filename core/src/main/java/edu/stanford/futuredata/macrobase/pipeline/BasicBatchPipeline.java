@@ -285,4 +285,5 @@ public class BasicBatchPipeline implements Pipeline {
         p.close();
         s.close();
     }
+
 }
