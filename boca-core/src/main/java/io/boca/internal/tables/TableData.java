@@ -120,19 +120,12 @@ public class TableData {
       + "import org.apache.spark.sql.types._;"
       + "import org.apache.spark.mllib.stat._;"
       + "val tableDf = snappysession.table(\"%1$s\");"
+      + "var biserialValue = null;"
       + "val inputVectorRDD = tableDf.rdd.map[Vector](row => {"
-      + "val arr = Array(row(%2$s),row(%3$s));"
-      + "val doubleArr = arr.map(elem => {"
-      +  " elem match {"
-      +     "case x: Short => x.toDouble;"
-      +     "case x: Int => x.toDouble;"
-      +     "case x: Long => x.toDouble;"
-      +     "case x: Float => x.toDouble;"
-      +     "case x: Double => x;"
-      +     "case x: Decimal => x.toDouble;"
-      +     "case _ => throw new RuntimeException(\"unknown type\");"
-      +     "}"
-      +   "});"
+      + "val arr = Array(row(%2$s)-> 0,row(%3$s) -> 1);"
+      + "val doubleArr = arr.map{case(elem, index) => {"
+      +      "%4$s"
+      +   "}};"
       +   "Vectors.dense(doubleArr);"
       +  "});"
       //+ "val elementType1 = new ObjectType(classOf[Vector]);"
@@ -163,9 +156,44 @@ public class TableData {
         break;
       }
     }
+    boolean isBiserial = depCd.ft.equals(FeatureType.categorical)||
+        kpiCd.ft.equals(FeatureType.categorical);
+    String elementTransformationCode = null;
+    if (isBiserial) {
+      int indexOfCatCol = -1;
+      if (depCd.ft.equals(FeatureType.categorical)) {
+        assert depCd.numDistinctValues == 2;
+        indexOfCatCol = 0;
+      } else {
+        assert kpiCd.numDistinctValues == 2;
+        indexOfCatCol = 1;
+      }
+      elementTransformationCode = " if (biserialValue == null && index == " + indexOfCatCol +") biserialValue = elem;"
+          + "val isCatCol = index == " + indexOfCatCol + ";"
+          +" elem match {"
+          +     "case x: Short => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else x.toDouble;"
+          +     "case x: Int => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else x.toDouble;"
+          +     "case x: Long => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else x.toDouble;"
+          +     "case x: Float => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else x.toDouble;"
+          +     "case x: Double => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else x;"
+          +     "case x: Decimal => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else x.toDouble;"
+          +     "case x: String => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else throw new RuntimeException(\"continuous var as string\");"
+          +     "case _ => throw new RuntimeException(\"unknown type\");"
+          +     "}";
+    } else {
+      elementTransformationCode = " elem match {"
+          +     "case x: Short => x.toDouble;"
+          +     "case x: Int => x.toDouble;"
+          +     "case x: Long => x.toDouble;"
+          +     "case x: Float => x.toDouble;"
+          +     "case x: Double => x;"
+          +     "case x: Decimal => x.toDouble;"
+          +     "case _ => throw new RuntimeException(\"unknown type\");"
+          +     "}";
+    }
 
     String scalaCodeToExecute = String.format(contiToContiCorr,
-        this.getTableName(), depColIndex, kpiColIndex);
+        this.getTableName(), depColIndex, kpiColIndex, elementTransformationCode);
     SQLIngester ingester = ingesterThreadLocal.get();
     try {
       ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
@@ -225,7 +253,13 @@ public class TableData {
        if (!cd.name.equalsIgnoreCase(kpi)) {
          if (cd.ft.equals(FeatureType.continuous)) {
            double corr = kpiContToCont.apply(kpiCol, cd);
-           dd.add(cd.name, corr);
+           dd.addToPearson(cd.name, corr);
+         } else if (cd.ft.equals(FeatureType.categorical)) {
+           // get the distinct values count of
+           if (cd.numDistinctValues == 2) {
+             // can use pearson correlation with a transformation
+
+           }
          }
        }
      }
@@ -235,7 +269,7 @@ public class TableData {
           && ele.ft.equals(FeatureType.categorical)).collect(Collectors.toList());
       Map<String, Double> corrData = categoricalToCategorical.apply(kpiCol, deps);
       for(Map.Entry<String, Double> entry: corrData.entrySet()) {
-        dd.add(entry.getKey(), entry.getValue());
+        dd.addToChiSqCorrelation(entry.getKey(), entry.getValue());
       }
     }
     return dd;
@@ -551,10 +585,10 @@ public class TableData {
         rs.next();
         int i = 1;
         for (Schema.SchemaColumn sc : scs) {
-          long num = rs.getLong(i);
+          long distinctValues = rs.getLong(i);
           boolean skip = false;
           FeatureType ft = null;
-          int percent = (int)((100 * num) / totalRows);
+          int percent = (int)((100 * distinctValues) / totalRows);
           if (percent > 80) {
             skip = true;
           } else if (percent < 10) {
@@ -565,7 +599,8 @@ public class TableData {
             ft = FeatureType.continuous;
           }
 
-          cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType);
+          cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
+              distinctValues);
           ++i;
         }
         return cds;
@@ -577,11 +612,11 @@ public class TableData {
         int i = 0;
         for (Schema.SchemaColumn sc : scs) {
           cds[i++] = new ColumnData(sc.getName().toLowerCase(), FeatureType.continuous, false,
-              sqlType);
+              sqlType, -1);
         }
         return cds;
       }
-      case Types.NCHAR:
+     /* case Types.NCHAR:
       case Types.CHAR:{
         int i = 0;
         for (Schema.SchemaColumn sc : scs) {
@@ -589,7 +624,9 @@ public class TableData {
               sqlType);
         }
         return cds;
-      }
+      } */
+      case Types.NCHAR:
+      case Types.CHAR:
       case Types.LONGNVARCHAR:
       case Types.LONGVARCHAR:
       case Types.NVARCHAR:
@@ -602,17 +639,18 @@ public class TableData {
         rs.next();
         int i = 1;
         for (Schema.SchemaColumn sc : scs) {
-          long num = rs.getLong(i);
+          long distinctCount = rs.getLong(i);
           boolean skip = false;
           FeatureType ft = null;
-          int percent = (int)((100 * num) / totalRows);
+          int percent = (int)((100 * distinctCount) / totalRows);
           if (percent > 80) {
             skip = true;
           } else {
             ft = FeatureType.categorical;
             skip = false;
           }
-          cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType);
+          cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
+              distinctCount);
           ++i;
         }
         return cds;
@@ -620,7 +658,8 @@ public class TableData {
       default: {
         int i = 0;
         for (Schema.SchemaColumn sc : scs) {
-          cds[i++] = new ColumnData(sc.getName().toLowerCase(), null, true, sqlType);
+          cds[i++] = new ColumnData(sc.getName().toLowerCase(), null, true,
+              sqlType, -1);
         }
         return cds;
       }
@@ -633,12 +672,15 @@ public class TableData {
     boolean skip;
     int sqlType;
     String name;
+    long numDistinctValues;
 
-    ColumnData(String name, FeatureType ft, boolean skip, int sqlType) {
+    ColumnData(String name, FeatureType ft, boolean skip, int sqlType,
+        long numDistinctValues) {
       this.ft = ft;
       this.skip = skip;
       this.sqlType = sqlType;
       this.name = name;
+      this.numDistinctValues = numDistinctValues;
     }
   }
 
