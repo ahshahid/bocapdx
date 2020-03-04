@@ -7,6 +7,10 @@ import java.sql.SQLException;
 
 public class SparkSQLIngester extends SQLIngester{
 
+    static {
+        //load the driver class so that shaded jar ibcludes it
+         io.snappydata.jdbc.ClientDriver.class.getName();
+    }
     public SparkSQLIngester(MacroBaseConf conf) throws ConfigurationException, SQLException {
         super(conf);
     }

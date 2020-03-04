@@ -1,0 +1,141 @@
+body{
+    overflow-x: hidden;
+}
+.itemsetHidden{
+    display:none;
+}
+
+.high-risk{
+    border-color: #D66F5E;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 5px;
+}
+
+.med-risk{
+    border-color: #E2AA85;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 5px;
+}
+
+.low-risk{
+    border-color: #ABC9AF;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 5px;
+}
+
+.active-schema {
+    background-color: #ABC9AF !important;
+    background-image: none !important;
+}
+
+.panel-brown {
+    border-color: #DFCFB5;
+}
+.panel-brown > .panel-heading {
+    background-image: none;    
+    background: #E1E5D5; 
+    border-color: #E1E5D5;
+}
+
+.panel-green {
+    border-color: #DCEBD9;
+}
+.panel-green > .panel-heading {
+    background-image: none;    
+    background: #DCEBD9; 
+    border-color: #DCEBD9;
+}
+
+.panel-gray {
+    border-color: #dcddd7;
+}
+.panel-gray > .panel-heading {
+    background-image: none;    
+    background: #dcddd7; 
+    border-color: #dcddd7;
+}
+
+.navbar-brand{
+    background: #2799fa;
+    color: #ffffff;
+    padding-left: 40px;
+    padding-right: 40px;
+}
+.navbar-boca{
+    border-bottom: 1px solid #dae1e7;
+    margin-bottom: 0;    
+}
+.navbar-boca input{
+    background: #7fc4fd;
+    border-radius: 16px;
+    padding: 0px 20px;
+    color: #ffffff !important;
+}
+.navbar-boca input::placeholder{
+    color: #ffffff !important;
+}
+.custom-color li a{
+    color: #555a5d;
+    font-weight: 700;
+}
+.tab-container{
+    padding-top: 5px;
+    padding-left: 5px;
+}
+.worksheet-tab{
+    min-height: 260px;
+}
+#worksheet{
+    min-height: 260px;
+    padding: 0;
+    border-bottom: 1px solid #c4dff5;
+}
+#data-table{
+    min-height: 100vh;
+}
+.table-details {
+    width: 200px;
+    padding: 20px;
+}
+.table-details p:first-child{
+    border-bottom: 2px solid #ffffff;
+}
+.table-details p{
+    background-color: #f1f8fe;
+    margin: 0;
+    padding: 10px;
+}
+.table-rows-section{
+    background: #f1f8fe;
+}
+.table-rows-section table{
+    background: #ffffff;
+}
+.pull-left{
+    float: left;
+}
+.blue-btn{
+    background: #2799f6;
+    padding: 0px 10px;
+    color: #ffffff;
+    margin-left: 10px;
+}
+.row-search-panel{
+    margin-bottom: 10px;
+}
+
+.table-drop-message p{
+    width: 250px;
+    text-align: center;
+    margin: auto;
+    margin-top: 100px;
+}
+.blue-color{
+    color: #95c3eb;
+}
+.nav-tabs>li.active{
+    border-bottom: 2px solid #8dc6f4;
+}

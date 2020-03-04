@@ -44,6 +44,7 @@
       <module>sql</module>
       <module>lib</module>
       <module>core</module>
+      <module>boca-core</module>
     </modules>
 
   <dependencies>

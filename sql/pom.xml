@@ -18,6 +18,13 @@
   </properties>
 
   <dependencies>
+
+    <dependency>
+      <groupId>io.snappydata</groupId>
+      <artifactId>snappydata-jdbc_2.11</artifactId>
+      <version>1.2.0</version>
+    </dependency>
+
     <dependency>
       <groupId>net.sourceforge.argparse4j</groupId>
       <artifactId>argparse4j</artifactId>
