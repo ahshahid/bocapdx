@@ -258,7 +258,8 @@ public class TableData {
            // get the distinct values count of
            if (cd.numDistinctValues == 2) {
              // can use pearson correlation with a transformation
-
+             double corr = kpiContToCont.apply(kpiCol, cd);
+             dd.addToPearson(cd.name, corr);
            }
          }
        }
@@ -271,6 +272,16 @@ public class TableData {
       for(Map.Entry<String, Double> entry: corrData.entrySet()) {
         dd.addToChiSqCorrelation(entry.getKey(), entry.getValue());
       }
+      if (kpiCol.numDistinctValues == 2) {
+        // get all the continous cols
+        List<ColumnData> contiCols = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
+            && ele.ft.equals(FeatureType.continuous)).collect(Collectors.toList());
+        contiCols.stream().forEach(contiCol -> {
+          double corr = kpiContToCont.apply(kpiCol, contiCol);
+          dd.addToPearson(contiCol.name, corr);
+        });
+      }
+
     }
     return dd;
   };
