@@ -2,7 +2,7 @@ pipeline: "BasicBatchPipeline"
 
 objective: "Factors causing churn"
 
-inputURI: "jdbc:snappydata://dev2:1527"
+inputURI: "jdbc:snappydata://10.80.141.102:1527"
 
 baseTable: "telecom_churn_mem"
 
