@@ -21,6 +21,8 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Path("/fastInsight")
 @Produces(MediaType.APPLICATION_JSON)
@@ -37,10 +39,26 @@ public class FastInsightResource extends BaseResource {
   }
 
   static class FastInsightResponse {
-    public List<String> depcols;
-    public List<Double> corrs;
+    public List<KpiData> kpidata;
     public String errorMessage;
+    static class KpiData {
+      public String kpicolname;
+      public List<PredictorData> continuousfeatures;
+      public List<PredictorData> categoricalfeatures;
+      static class PredictorData {
+        public String predictorname;
+        public double corr;
+        public PredictorData(String name, double val) {
+          predictorname = name;
+          corr = val;
+        }
+      }
+    }
   }
+
+
+
+
 
   public FastInsightResource(MacroBaseConf conf) {
     super(conf);
@@ -54,10 +72,27 @@ public class FastInsightResource extends BaseResource {
     try {
       SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
       TableData td = TableManager.getTableData(fir.tablename, ingester);
-      DependencyData[] dd = new DependencyData[fir.kpicols.size()];
+
       int index = 0;
+      response.kpidata = new ArrayList<>(fir.kpicols.size());
       for(String kpiCol: fir.kpicols) {
-        dd[index] = td.getDependencyData(kpiCol, ingester);
+        DependencyData dd = td.getDependencyData(kpiCol, ingester);
+        FastInsightResponse.KpiData kpid = new FastInsightResponse.KpiData();
+        kpid.kpicolname = kpiCol;
+        Map<String, Double> contiMap = dd.getContinousFeatureMap();
+        Map<String, Double> catMap = dd.getCategoricalFeatureMap();
+        if (!contiMap.isEmpty()) {
+          kpid.continuousfeatures = contiMap.entrySet().stream().map(entry ->
+              new FastInsightResponse.KpiData.PredictorData(entry.getKey(),
+                  entry.getValue())).collect(Collectors.toList());
+        }
+
+        if (!catMap.isEmpty()) {
+          kpid.categoricalfeatures = catMap.entrySet().stream().map(entry ->
+              new FastInsightResponse.KpiData.PredictorData(entry.getKey(),
+                  entry.getValue())).collect(Collectors.toList());
+        }
+        response.kpidata.add(kpid);
       }
 
     } catch (Exception e) {
@@ -67,3 +102,4 @@ public class FastInsightResource extends BaseResource {
     return response;
   }
 }
+
