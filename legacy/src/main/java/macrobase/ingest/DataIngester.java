@@ -7,6 +7,7 @@ import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.result.RowSet;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -19,9 +20,9 @@ public abstract class DataIngester implements MBProducer<Datum> {
     public DataIngester(MacroBaseConf conf) throws ConfigurationException {
         this.conf = conf;
 
-        timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
-        attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);
-        metrics = conf.getStringList(MacroBaseConf.METRICS);
+        timeColumn = -1;//conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
+        attributes = Collections.emptyList();//conf.getStringList(MacroBaseConf.ATTRIBUTES);
+        metrics = Collections.emptyList();//conf.getStringList(MacroBaseConf.METRICS);
     }
 
     //Meant to be overridden. Hack for CSV plot/explore fix

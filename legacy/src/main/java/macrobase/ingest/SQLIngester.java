@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -63,9 +64,9 @@ public abstract class SQLIngester extends DataIngester {
         dbUser = conf.getString(MacroBaseConf.DB_USER, MacroBaseDefaults.DB_USER);
         dbPassword = conf.getString(MacroBaseConf.DB_PASSWORD, MacroBaseDefaults.DB_PASSWORD);
         dbName = conf.getString(MacroBaseConf.DB_NAME, MacroBaseDefaults.DB_NAME);
-        baseQuery = conf.getString(MacroBaseConf.BASE_QUERY);
+        baseQuery = "";//conf.getString(MacroBaseConf.BASE_QUERY);
         dbUrl = conf.getString(MacroBaseConf.DB_URL, MacroBaseDefaults.DB_URL);
-        timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
+        timeColumn = 0;//conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
 
         if (connection != null) {
             this.connection = connection;
@@ -100,14 +101,35 @@ public abstract class SQLIngester extends DataIngester {
         String sql = String.format("%s LIMIT 1", removeSqlJunk(removeLimit(baseQuery)));
         ResultSet rs = stmt.executeQuery(sql);
 
+       return this.getSchema(rs);
+    }
+
+    public Schema getSchema(ResultSet rs) throws SQLException {
+
+
         List<Schema.SchemaColumn> columns = Lists.newArrayList();
 
         for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
             columns.add(new Schema.SchemaColumn(rs.getMetaData().getColumnName(i),
-                    rs.getMetaData().getColumnTypeName(i)));
+                rs.getMetaData().getColumnTypeName(i),
+                rs.getMetaData().getColumnType(i)));
         }
 
         return new Schema(columns);
+    }
+
+
+    public List<String> getTables()
+        throws SQLException {
+        initializeConnection();
+
+        DatabaseMetaData dmd = connection.getMetaData();
+        ResultSet rs = dmd.getTables(null, this.dbUser, "%", null );
+        List<String> tables = new ArrayList<>();
+        while(rs.next()) {
+            tables.add(rs.getString(3));
+        }
+        return tables;
     }
 
     public String getRowsSql(String baseQuery,
@@ -160,6 +182,16 @@ public abstract class SQLIngester extends DataIngester {
         return new RowSet(rows);
     }
 
+    public ResultSet executeQuery(String query) throws SQLException {
+        initializeConnection();
+        // TODO handle time column here
+
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(query);
+        return rs;
+
+    }
+
     private void initializeConnection() throws SQLException {
         if (connection == null) {
             DataSourceFactory factory = new DataSourceFactory();
@@ -182,7 +214,7 @@ public abstract class SQLIngester extends DataIngester {
 
     private void initializeResultSet() throws SQLException {
         initializeConnection();
-
+        /*
         if (resultSet == null) {
             String targetColumns = StreamSupport.stream(
                     Iterables.concat(attributes, metrics).spliterator(), false)
@@ -203,7 +235,7 @@ public abstract class SQLIngester extends DataIngester {
             for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); ++i) {
                 conf.getEncoder().recordAttributeName(i, resultSet.getMetaData().getColumnName(i));
             }
-        }
+        } */
     }
 
     @Override

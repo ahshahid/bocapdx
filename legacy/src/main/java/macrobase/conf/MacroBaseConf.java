@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import java.util.*;
@@ -64,9 +65,10 @@ public class MacroBaseConf extends Configuration {
     public static final String DB_URL = "macrobase.loader.db.url";
     public static final String DB_CACHE_DIR = "macrobase.loader.db.cacheDirectory";
     public static final String DB_CACHE_CHUNK_SIZE = "macrobase.loader.db.cacheChunkSizeTuples";
-
+    public static final String DB_DRIVER = "macrobase.loader.db.dbdriver";
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
     public static final String CSV_COMPRESSION = "macrobase.loader.csv.compression";
+    public static final String SESSION_INGESTER = "macrobase.loader.ingester";
 
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
@@ -374,4 +376,11 @@ public class MacroBaseConf extends Configuration {
                 .filter(e -> e.startsWith("macrobase"))
                 .forEach(e -> set(e, System.getProperty(e)));
     }
+
+    public MacroBaseConf copy() {
+      MacroBaseConf newObj = new MacroBaseConf();
+      newObj._conf.putAll(this._conf);
+      return newObj;
+    }
+
 }

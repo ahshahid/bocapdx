@@ -8,10 +8,12 @@ public class Schema {
     public static class SchemaColumn {
         private String name;
         private String type;
+        private int sqlType;
 
-        public SchemaColumn(String name, String type) {
+        public SchemaColumn(String name, String type, int sqlType) {
             this.name = name;
             this.type = type;
+            this.sqlType = sqlType;
         }
 
         @JsonProperty
@@ -26,6 +28,10 @@ public class Schema {
 
         public SchemaColumn() {
             // Jackson
+        }
+
+        public int sqlType() {
+          return this.sqlType;
         }
     }
 
