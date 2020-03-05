@@ -1,5 +1,9 @@
 package io.boca.response;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.http.Header;
 import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
@@ -15,6 +19,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.junit.Test;
+
+import java.util.Iterator;
 import java.util.List;
 
 import static org.apache.http.client.protocol.HttpClientContext.COOKIE_STORE;
@@ -49,21 +55,58 @@ public class ResponseTester {
       System.out.println(content);
       System.out.println("\n\n");
 
-      // Test schema fetch
-      String schemaUrl = "http://" + host + ":9090/api/schema";
-      httpPost = new HttpPost(schemaUrl);
-      httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-      data = new StringEntity("{\"tablename\":\"airline_ext\"}");
-      httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
-      httpPost.setEntity(data);
-      response = client.execute(httpPost, httpContext);
+      ObjectMapper objectMapper = new ObjectMapper();
 
-      entity = response.getEntity();
-      content = EntityUtils.toString(entity);
-      System.out.println("\n\n");
-      System.out.println(content);
-      System.out.println("\n\n");
+//read JSON like DOM Parser
+      JsonNode rootNode = objectMapper.readTree(content);
+      ArrayNode tables = (ArrayNode)rootNode.path("results");
+      Iterator<JsonNode> iter = tables.iterator();
+    /*  while(iter.hasNext()) {
+        TextNode table = (TextNode)iter.next();
+        // Test schema fetch
+        String schemaUrl = "http://" + host + ":9090/api/schema";
+        httpPost = new HttpPost(schemaUrl);
+        httpPost.addHeader("content-type", "application/json;charset=UTF-8");
+        data = new StringEntity("{\"tablename\":\"" + table.textValue()+ "\"}");
+        httpPost.addHeader("User-Agent", "Apache HTTPClient");
+
+        httpPost.setEntity(data);
+        response = client.execute(httpPost, httpContext);
+
+        entity = response.getEntity();
+        content = EntityUtils.toString(entity);
+        System.out.println("\n\n");
+        System.out.println("for table = " + table.textValue());
+        System.out.println(content);
+        System.out.println("\n\n");
+
+      }*/
+
+      iter = tables.iterator();
+      while(iter.hasNext()) {
+        TextNode table = (TextNode)iter.next();
+        // Test schema fetch
+        String schemaUrl = "http://" + host + ":9090/api/sampleRows";
+        httpPost = new HttpPost(schemaUrl);
+        httpPost.addHeader("content-type", "application/json;charset=UTF-8");
+        data = new StringEntity("{\"tablename\":\"" + table.textValue()+ "\"}");
+        httpPost.addHeader("User-Agent", "Apache HTTPClient");
+
+        httpPost.setEntity(data);
+        response = client.execute(httpPost, httpContext);
+
+        entity = response.getEntity();
+        content = EntityUtils.toString(entity);
+        System.out.println("\n\n");
+        System.out.println("for table = " + table.textValue());
+        System.out.println(content);
+        System.out.println("\n\n");
+
+      }
+
+
+     /*
 
       // Test sampleRows fetch
       String sampleUrl = "http://" + host + ":9090/api/sampleRows";
@@ -112,7 +155,7 @@ public class ResponseTester {
       System.out.println("\n\n");
       System.out.println(content);
       System.out.println("\n\n");
-
+   */
 
     } finally {
 
