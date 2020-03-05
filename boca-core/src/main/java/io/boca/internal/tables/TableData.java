@@ -598,16 +598,20 @@ public class TableData {
         for (Schema.SchemaColumn sc : scs) {
           long distinctValues = rs.getLong(i);
           boolean skip = false;
-          FeatureType ft = null;
-          int percent = (int)((100 * distinctValues) / totalRows);
-          if (percent > 80) {
-            skip = true;
-          } else if (percent < 10) {
-            ft = FeatureType.categorical;
-            skip = false;
+          FeatureType ft = FeatureType.unknown;
+          int percent = totalRows > 0 ?(int)((100 * distinctValues) / totalRows): -1;
+          if (percent != -1) {
+            if (percent > 80) {
+              skip = true;
+            } else if (percent < 10) {
+              ft = FeatureType.categorical;
+              skip = false;
+            } else {
+              skip = false;
+              ft = FeatureType.continuous;
+            }
           } else {
-            skip = false;
-            ft = FeatureType.continuous;
+            skip = true;
           }
 
           cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
@@ -652,13 +656,18 @@ public class TableData {
         for (Schema.SchemaColumn sc : scs) {
           long distinctCount = rs.getLong(i);
           boolean skip = false;
-          FeatureType ft = null;
-          int percent = (int)((100 * distinctCount) / totalRows);
-          if (percent > 80) {
-            skip = true;
+          FeatureType ft = FeatureType.unknown;
+          int percent = totalRows > 0 ?(int)((100 * distinctCount) / totalRows): -1;
+          if (percent != -1) {
+            if (percent > 80) {
+              skip = true;
+            } else {
+              ft = FeatureType.categorical;
+              skip = false;
+            }
           } else {
-            ft = FeatureType.categorical;
-            skip = false;
+            skip = true;
+
           }
           cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
               distinctCount);
@@ -698,5 +707,5 @@ public class TableData {
 }
 
 enum FeatureType {
- categorical, continuous, date
+ categorical, continuous, date, unknown
 }
