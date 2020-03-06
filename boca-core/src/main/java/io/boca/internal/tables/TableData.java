@@ -89,9 +89,32 @@ public class TableData {
       + "import scala.collection.JavaConverters._;"
       + "val valueDf = snappysession.sqlContext.createDataFrame(rows.toSeq.asJava, outputSchema);";
 
+  private static String catToContCorr = "import org.apache.spark.sql._;"
+      + "import org.apache.spark.sql.types._;"
+      + "import org.apache.spark.sql.functions._;"
+      + "val tableDf = snappysession.table(\"%1$s\");"
+      + "val tableSchema = tableDf.schema;"
+      + "val tableName = \"%1$s\";"
+      + "val catVarName = \"%2$s\";"
+      + "val contVarName = \"%3$s\";"
+      + "val catMeanSql = s\"select avg($contVarName), count(*), $catVarName from $tableName group by $catVarName\";"
+      + "val catMeanDf = snappyession.sql(catMeanSql);"
+      + "val catMeanResult = catMeanDf.collect;"
+      + "val overAllMeanDf = snappysession.sql(s\"select avg($contVarName) from $tableName\");"
+      + "val overAllMean = overAllMeanDf.collect(0).getDouble;"
+      + "val Ai_categoryMeanDiffData = catMeanResult.map(row => (row.getDouble(0) - overAllMean) -> row.getLong(1));"
+      + "val SStreatmentBetweenGroups = Ai_categoryMeanDiff.foldLeft(0d)((sum,tup) => sum + tup._1 * tup._1 * tup._2);"
+      + "val SStotal = snappysession.sql(s\"select "
+      + " sum(($contVarName - $overAllMean) * ($contVarName - $overAllMean)) from $tableName\").collect(0).getDouble;"
+      + "val SSresidual = SStotal - SStreatmentBetweenGroups;"
+      + "val rsq = SStreatmentBetweenGroups / SStotal; "
+      + "val outputSchema = StructType(Seq(StructField(\"rsq\", DoubleType, false)));"
+      + "import scala.collection.JavaConverters._;"
+      + "val valueDf = snappysession.sqlContext.createDataFrame(java.util.Collections.singletonList(Row(rsq)),"
+      + " outputSchema);";
 
 
-      /*
+  /*
       + "import org.apache.spark.ml.feature.ChiSqSelector;"
       + "val selector = new ChiSqSelector().setNumTopFeatures(depsColIndxs.length) .setFeaturesCol(\"features\")."
       + "setLabelCol(kpiIndexerCol.getOrElse(tableSchema(kpiColsIndex).name)) .setOutputCol(\"selectedFeatures\");"
@@ -205,6 +228,22 @@ public class TableData {
 
   };
 
+
+  private BiFunction<ColumnData, ColumnData, Double> catToCont = (catCol, contCol) -> {
+    String scalaCodeToExecute = String.format(catToContCorr,
+        this.getTableName(), catCol.name, contCol.name);
+    SQLIngester ingester = ingesterThreadLocal.get();
+    try {
+      ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
+      rs.next();
+      return rs.getDouble(1);
+    } catch(SQLException sqle) {
+      throw new RuntimeException(sqle);
+    }
+
+  };
+
+
   private BiFunction<ColumnData, List<ColumnData>, Map<String, Double>> categoricalToCategorical = (kpiCd, depCds) -> {
     List<Schema.SchemaColumn> cols = getSchema().getColumns();
 
@@ -260,6 +299,9 @@ public class TableData {
              // can use pearson correlation with a transformation
              double corr = kpiContToCont.apply(kpiCol, cd);
              dd.addToPearson(cd.name, corr);
+           } else {
+             double corr = catToCont.apply(cd, kpiCol);
+             dd.addToAnova(cd.name, corr);
            }
          }
        }
@@ -272,13 +314,18 @@ public class TableData {
       for(Map.Entry<String, Double> entry: corrData.entrySet()) {
         dd.addToChiSqCorrelation(entry.getKey(), entry.getValue());
       }
+      // get all the continous cols
+      List<ColumnData> contiCols = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
+          && ele.ft.equals(FeatureType.continuous)).collect(Collectors.toList());
       if (kpiCol.numDistinctValues == 2) {
-        // get all the continous cols
-        List<ColumnData> contiCols = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
-            && ele.ft.equals(FeatureType.continuous)).collect(Collectors.toList());
         contiCols.stream().forEach(contiCol -> {
           double corr = kpiContToCont.apply(kpiCol, contiCol);
           dd.addToPearson(contiCol.name, corr);
+        });
+      } else {
+        contiCols.stream().forEach(contiCol -> {
+          double corr = catToCont.apply(kpiCol, contiCol);
+          dd.addToAnova(contiCol.name, corr);
         });
       }
 
