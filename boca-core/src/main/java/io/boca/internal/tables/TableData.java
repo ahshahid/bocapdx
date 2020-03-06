@@ -245,9 +245,9 @@ public class TableData {
   };
 
   private Function<String, DependencyData> depedencyComputer = kpi -> {
-    DependencyData dd = new DependencyData();
-    ColumnData kpiCol = columnMappings.get(kpi.toLowerCase());
 
+    ColumnData kpiCol = columnMappings.get(kpi.toLowerCase());
+    DependencyData dd = new DependencyData(kpiCol.name, kpiCol.ft);
     if (kpiCol.ft.equals(FeatureType.continuous)) {
      for(ColumnData cd: columnMappings.values()) {
        if (!cd.name.equalsIgnoreCase(kpi)) {
@@ -704,8 +704,4 @@ public class TableData {
     }
   }
 
-}
-
-enum FeatureType {
- categorical, continuous, date, unknown
 }

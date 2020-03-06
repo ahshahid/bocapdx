@@ -7,6 +7,12 @@ import java.util.Map;
 public class DependencyData {
   private Map<String, Double> pearsonCorrelationMapping = new HashMap<>();
   private Map<String, Double> chisqCorrelationMapping = new HashMap<>();
+  private final FeatureType kpiType;
+  private final String kpiColName;
+  public DependencyData(String kpiColName, FeatureType kpiType) {
+    this.kpiColName = kpiColName;
+    this.kpiType = kpiType;
+  }
 
   public void addToPearson(String depCol, double corr) {
     this.pearsonCorrelationMapping.put(depCol, corr);
@@ -22,6 +28,10 @@ public class DependencyData {
 
   public Map<String, Double> getCategoricalFeatureMap() {
     return Collections.unmodifiableMap(this.chisqCorrelationMapping);
+  }
+
+  public FeatureType getKpiColFeatureType() {
+    return this.kpiType;
   }
 
 }

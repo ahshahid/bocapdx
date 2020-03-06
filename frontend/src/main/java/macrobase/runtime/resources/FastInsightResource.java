@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+import io.boca.internal.tables.FeatureType;
 @Path("/fastInsight")
 @Produces(MediaType.APPLICATION_JSON)
 
@@ -43,6 +43,7 @@ public class FastInsightResource extends BaseResource {
     public String errorMessage;
     static class KpiData {
       public String kpicolname;
+      public String kpitype;
       public List<PredictorData> continuousfeatures;
       public List<PredictorData> categoricalfeatures;
       static class PredictorData {
@@ -73,12 +74,12 @@ public class FastInsightResource extends BaseResource {
       SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
       TableData td = TableManager.getTableData(fir.tablename, ingester);
 
-      int index = 0;
+
       response.kpidata = new ArrayList<>(fir.kpicols.size());
       for(String kpiCol: fir.kpicols) {
         DependencyData dd = td.getDependencyData(kpiCol, ingester);
         FastInsightResponse.KpiData kpid = new FastInsightResponse.KpiData();
-        kpid.kpicolname = kpiCol;
+        kpid.kpitype = dd.getKpiColFeatureType().name();
         Map<String, Double> contiMap = dd.getContinousFeatureMap();
         Map<String, Double> catMap = dd.getCategoricalFeatureMap();
         if (!contiMap.isEmpty()) {
