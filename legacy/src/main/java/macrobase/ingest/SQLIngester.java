@@ -101,11 +101,17 @@ public abstract class SQLIngester extends DataIngester {
         String sql = String.format("%s LIMIT 1", removeSqlJunk(removeLimit(baseQuery)));
         ResultSet rs = stmt.executeQuery(sql);
 
+       return this.getSchema(rs);
+    }
+
+    public Schema getSchema(ResultSet rs) throws SQLException {
+
+
         List<Schema.SchemaColumn> columns = Lists.newArrayList();
 
         for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
             columns.add(new Schema.SchemaColumn(rs.getMetaData().getColumnName(i),
-                    rs.getMetaData().getColumnTypeName(i),
+                rs.getMetaData().getColumnTypeName(i),
                 rs.getMetaData().getColumnType(i)));
         }
 

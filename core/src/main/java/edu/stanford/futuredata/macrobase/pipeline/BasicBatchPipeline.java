@@ -3,15 +3,18 @@ package edu.stanford.futuredata.macrobase.pipeline;
 import edu.stanford.futuredata.macrobase.analysis.classify.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLCountMeanShiftSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.*;
 import java.util.*;
 
 /**
@@ -19,9 +22,11 @@ import java.util.*;
  * Only supports operating over a single metric
  */
 public class BasicBatchPipeline implements Pipeline {
+    private final PipelineConfig conf;
     Logger log = LoggerFactory.getLogger(Pipeline.class);
 
     private String inputURI = null;
+    private final String baseTable;
 
     private String classifierType;
     private String metric;
@@ -47,10 +52,12 @@ public class BasicBatchPipeline implements Pipeline {
 
 
     public BasicBatchPipeline (PipelineConfig conf) {
+        this.conf = conf;
         inputURI = conf.get("inputURI");
 
+        baseTable = conf.get("baseTable", "NULL");
         classifierType = conf.get("classifier", "percentile");
-        metric = conf.get("metric");
+        metric = ((String)conf.get("metric")).toLowerCase();
 
         if (classifierType.equals("predicate") || classifierType.equals("countmeanshift")){
             Object rawCutoff = conf.get("cutoff");
@@ -186,7 +193,7 @@ public class BasicBatchPipeline implements Pipeline {
 
         }
         requiredColumns.add(metric);
-        return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns);
+        return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns, baseTable);
     }
 
     @Override
@@ -212,6 +219,71 @@ public class BasicBatchPipeline implements Pipeline {
         log.info("Summarization time: {} ms", elapsed);
         Explanation output = summarizer.getResults();
 
+        //TODO : Hack ... this savetoDB needs to be somewhere else ...
+        if (inputURI.contains("jdbc")) {
+            String outputTable = baseTable + "_Explained" ;
+            saveDataFrameToJDBC(getConnection(), outputTable,
+                    getExplanationAsDataFrame(output), true);
+            SimpleExplanationNLG e = new SimpleExplanationNLG(conf, (APLExplanation) output , outputTable );
+            System.out.println(e.explainAsText());
+        }
         return output;
     }
+
+    private Connection getConnection() throws SQLException {
+        Connection connection;
+        try {
+            Class.forName("io.snappydata.jdbc.ClientDriver"); // fix later
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        return DriverManager.getConnection(inputURI);
+    }
+
+    public DataFrame getExplanationAsDataFrame(Explanation e) throws Exception{
+        if (e instanceof APLExplanation) {
+            APLExplanation exp = (APLExplanation)e;
+            return ((APLExplanation) e).toDataFrame(attributes);
+        }
+        else
+            throw new Exception("Explanation to DataFrame not supported for this method") ;
+    }
+
+    public void saveDataFrameToJDBC(Connection c, String tableName, DataFrame df, boolean replace) throws SQLException {
+        Statement s = c.createStatement();
+        List<String> cols = df.getSchema().getColumnNames();
+        List<String> l = new ArrayList<String>();
+        for (int i = 0; i < cols.size(); i++) {
+            l.add(cols.get(i) + " " + df.getSchema().getColumnTypeByName(cols.get(i))) ;
+        }
+        String createTableSt = "create table if not exists " + tableName + " (" + String.join(",", l) +")";
+        System.out.println("=========\n Explanation results stored in  ......");
+        System.out.println("CREATE TABLE --> " + createTableSt);
+        s.execute(createTableSt);
+        if (replace)
+            s.execute("truncate table " + tableName);
+
+        String prepareStr = "?";
+        for (int i = 1; i < cols.size() ; i++) {
+            prepareStr = prepareStr + ", ?" ;
+        }
+
+        String insertStr = "insert into " + tableName + " values (" + prepareStr + ")";
+        System.out.println("Using Insert statement --> " + insertStr + "\n==========");
+        PreparedStatement p = c.prepareStatement(insertStr);
+        Iterator<Row> j = df.getRowIterator().iterator();
+        while (j.hasNext()) {
+            Row r = j.next();
+            List v = r.getVals();
+            for (int k = 0; k < v.size(); k++) {
+                p.setObject(k+1, v.get(k));
+            }
+            p.execute();
+        }
+        p.close();
+        s.close();
+    }
+
 }

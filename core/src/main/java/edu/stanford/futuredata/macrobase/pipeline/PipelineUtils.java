@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
+import edu.stanford.futuredata.macrobase.ingest.JDBCDataFrameLoader;
 import edu.stanford.futuredata.macrobase.ingest.RESTDataFrameLoader;
 import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 
@@ -14,11 +15,13 @@ public class PipelineUtils {
     public static DataFrame loadDataFrame(
             String inputURI,
             Map<String, Schema.ColType> colTypes,
-            List<String> requiredColumns
+            List<String> requiredColumns,
+            String baseTable
     ) throws Exception {
         return PipelineUtils.loadDataFrame(
                 inputURI, colTypes, null, null, false,
-                requiredColumns
+                requiredColumns,
+                baseTable
         );
     }
 
@@ -28,7 +31,8 @@ public class PipelineUtils {
             Map<String, String> restHeader,
             Map<String, Object> jsonBody,
             boolean usePost,
-            List<String> requiredColumns
+            List<String> requiredColumns,
+            String baseTable
     ) throws Exception {
         if(inputURI.startsWith("csv")) {
             // take off "csv://" from inputURI
@@ -36,7 +40,7 @@ public class PipelineUtils {
             loader.setColumnTypes(colTypes);
             DataFrame df = loader.load();
             return df;
-        } else if (inputURI.startsWith("http")){
+        } else if (inputURI.startsWith("http")) {
             ObjectMapper mapper = new ObjectMapper();
             String bodyString = mapper.writeValueAsString(jsonBody);
 
@@ -47,6 +51,11 @@ public class PipelineUtils {
             );
             loader.setUsePost(usePost);
             loader.setJsonBody(bodyString);
+            loader.setColumnTypes(colTypes);
+            DataFrame df = loader.load();
+            return df;
+        } else if (inputURI.startsWith("jdbc")) {
+            JDBCDataFrameLoader loader = new JDBCDataFrameLoader(inputURI, baseTable, requiredColumns);
             loader.setColumnTypes(colTypes);
             DataFrame df = loader.load();
             return df;

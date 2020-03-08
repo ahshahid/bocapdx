@@ -1,0 +1,31 @@
+pipeline: "BasicBatchPipeline"
+
+objective: "What is driving AirBnB prices high?"
+
+inputURI: "jdbc:snappydata://10.80.141.102:1527"
+
+baseTable: "airbnb"
+
+classifier: "predicate"
+metric: "rent"
+predicate: ">"
+cutoff: 400.0
+
+
+summarizer: "aplinear"
+#summarizer: "fpgrowth"
+# summarizer: "countmeanshift"
+########
+## fpgrowth doesn't test with attribute combinations ... need to fix ...
+########
+
+attributes:
+  - "neighbourhood_group"
+  - "neighbourhood"
+  - "room_type"
+  - "number_of_reviews"
+  - "calculated_host_listings_count"
+
+ratioMetric: "globalratio"
+minRatioMetric: 1.5
+minSupport: 0.01
