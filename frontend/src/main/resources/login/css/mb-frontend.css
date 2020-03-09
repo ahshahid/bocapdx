@@ -94,7 +94,10 @@ body{
     border-bottom: 1px solid #c4dff5;
 }
 #data-table{
-    min-height: 100vh;
+    max-height: 550px;
+    overflow-y: scroll;
+    font-size: 11px;
+    text-transform: capitalize;
 }
 .table-details {
     width: 200px;
@@ -102,14 +105,19 @@ body{
 }
 .table-details p:first-child{
     border-bottom: 2px solid #ffffff;
+    word-break: break-word;
+    font-size: 12px;
 }
 .table-details p{
     background-color: #f1f8fe;
     margin: 0;
     padding: 10px;
+    word-break: break-word;
+    font-size: 12px;
 }
 .table-rows-section{
     background: #f1f8fe;
+    overflow: scroll;
 }
 .table-rows-section table{
     background: #ffffff;

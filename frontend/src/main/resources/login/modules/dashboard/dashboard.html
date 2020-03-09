@@ -32,7 +32,7 @@
                 <header class="logo-env">
                     <div class="logo">
                         <a ng-href="/#!/dashboard" class="logo-expanded">
-                            Data Tables
+                          Datasets
                         </a>
                     </div>
                     <a ng-href="/#!/dashboard"><i class="glyphicon glyphicon-refresh pull-right blue-color" ></i></a>
@@ -41,7 +41,7 @@
                 <ul id="data-table" class="main-menu" drop-on-me>
                     <li ng-click="getData(table)" ng-repeat="table in tableNames track by $index">
                         <input type="checkbox" id="{{table}}" ng-model="myTable.selected[table]" class="pull-right" >
-                        <label drag-me for="{{table}}" id="{{table}}s" class="title">{{table}}</label>
+                        <label drag-me for="{{table}}" id="{{table}}s" class="title"><span>{{table}}</span></label>
                     </li>
                 </ul>
             </div>
@@ -62,7 +62,7 @@
             <p>Number of Columns<br>
             {{schemaCols.length}}</p>
             <p>Number of Rows<br>
-            2000</p>
+            {{rowCount}}</p>
 
           </div>
           <div class="table-drop-message" ng-if="!worksheet">
@@ -94,15 +94,15 @@
 
 
           </div>
-          <table class="table" style="margin-bottom: 0;" >
+<!--           <table class="table" style="margin-bottom: 0;" >
           <tr>
-              <th ng-repeat="column in schemaCols">{{column.name}} ( {{column.type}} )</th>
+              <th ng-repeat="column in schemaCols">{{column.name}} ({{column.type}})</th>
           </tr>
-          </table>
-          <table class="table" show-filter="false" ng-table="schemaRows"  ng-table-columns-binding="schemaCols">
+          </table> -->
+          <table class="table table-bordered table-striped" show-filter="false" ng-table-dynamic="schemaRows with schemaCols" >
               
-              <tr ng-repeat="data in $data">
-                  <td ng-repeat="d in data  track by $index" filter="{ d: 'text'}" sortable="'d'">{{d}}</td>
+              <tr ng-repeat="data in $data track by $index">
+                  <td ng-repeat="d in data">{{d}}<!-- {{d}} --></td>
                  <!--  <td filter="{ $in: 'number'}" sortable="'type'">{{data[1]}}</td> -->
               </tr>
           </table>

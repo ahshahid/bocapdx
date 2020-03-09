@@ -28,7 +28,7 @@ body{
     margin-top: 10px;
     padding-left: 30px;
     list-style: none;
-    padding-right: 20px;
+    padding-right: 10px;
   }
   .sidebar-menu .main-menu a {
     color: #3d3d3d;
@@ -109,7 +109,6 @@ body{
   position: absolute;
   right: 0;
   z-index: 1;
-
   -webkit-transition: .2s;
   transition: .2s;
 }
@@ -147,4 +146,22 @@ body{
   width: 19px; height: 19px;
   border: 1px solid #e3f4f7;
   z-index: 0;
+}
+#data-table li label span{
+  max-width: 150px !important;
+  white-space: nowrap;
+  overflow: hidden !important;
+  text-overflow: ellipsis;
+  display: inline-block;
+}
+.table>thead>tr>th, .table>tbody>tr>th {
+  font-size: 10px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+.table>tbody>tr>td, .table>thead>tr>th, .table>tbody>tr>th {
+  min-width: 70px;
+  word-break: break-word;
+  /* display: inline-block; */
+  text-transform: capitalize;
 }
