@@ -34,7 +34,7 @@ public class FastInsightResource extends BaseResource {
   private HttpServletRequest request;
 
   static class FastInsightRequest {
-    public String tablename;
+    public long workflowid;
     public List<String> kpicols;
   }
 
@@ -72,9 +72,7 @@ public class FastInsightResource extends BaseResource {
     HttpSession ss = request.getSession();
     try {
       SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
-      TableData td = TableManager.getTableData(fir.tablename, ingester);
-
-
+      TableData td = TableManager.getTableData(fir.workflowid);
       response.kpidata = new ArrayList<>(fir.kpicols.size());
       for(String kpiCol: fir.kpicols) {
         DependencyData dd = td.getDependencyData(kpiCol, ingester);

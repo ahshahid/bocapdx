@@ -192,6 +192,15 @@ public abstract class SQLIngester extends DataIngester {
 
     }
 
+    public void executeSQL(String ddl) throws SQLException {
+        initializeConnection();
+        // TODO handle time column here
+
+        Statement stmt = connection.createStatement();
+        stmt.execute(ddl);
+
+    }
+
     private void initializeConnection() throws SQLException {
         if (connection == null) {
             DataSourceFactory factory = new DataSourceFactory();

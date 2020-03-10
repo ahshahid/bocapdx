@@ -5,27 +5,28 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.sql.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
 
 public class TableData {
   private long totalRows;
+  private final long workFlowId;
+  private final boolean isQuery;
   private final List<List<String>> sampleRows;
   private static final double pValueThreshold = 0.05d;
-  private final String tableName;
+  private final String tableOrQuery;
+  private final String tableOrView;
   private final Schema schema;
   private Map<Integer, ColumnData[]> sqlTypeToColumnMappings = new HashMap<>();
   private Map<String, ColumnData> columnMappings = new HashMap<>();
@@ -94,19 +95,19 @@ public class TableData {
       + "import org.apache.spark.sql.functions._;"
       + "val tableDf = snappysession.table(\"%1$s\");"
       + "val tableSchema = tableDf.schema;"
-      + "val tableName = \"%1$s\";"
+      + "val table = \"%1$s\";"
       + "val catVarName = \"%2$s\";"
       + "val contVarName = \"%3$s\";"
-      + "val catMeanSql = s\"select avg($contVarName), count(*), $catVarName from $tableName where $catVarName is not null group by $catVarName\";"
+      + "val catMeanSql = s\"select avg($contVarName), count(*), $catVarName from $table where $catVarName is not null group by $catVarName\";"
       + "val catMeanDf = snappysession.sql(catMeanSql);"
       + "val catMeanResult = catMeanDf.collect();"
-      + "val overAllMeanDf = snappysession.sql(s\"select avg($contVarName) from $tableName \");"
+      + "val overAllMeanDf = snappysession.sql(s\"select avg($contVarName) from $table \");"
 
       + "val overAllMean = overAllMeanDf.collect()(0).getDouble(0);"
       + "val Ai_categoryMeanDiff = catMeanResult.map(row => (row.getDouble(0) - overAllMean) -> row.getLong(1));"
       + "val SStreatmentBetweenGroups = Ai_categoryMeanDiff.foldLeft(0d)((sum,tup) => sum + tup._1 * tup._1 * tup._2);"
       + "val SStotal = snappysession.sql(s\"select "
-      + " sum(($contVarName - $overAllMean) * ($contVarName - $overAllMean)) from $tableName where $catVarName is not null\").collect()(0).getDouble(0);"
+      + " sum(($contVarName - $overAllMean) * ($contVarName - $overAllMean)) from $table where $catVarName is not null\").collect()(0).getDouble(0);"
       + "val SSresidual = SStotal - SStreatmentBetweenGroups;"
       + "val rsq = SStreatmentBetweenGroups / SStotal; "
       + "val outputSchema = StructType(Seq(StructField(\"rsq\", DoubleType, false)));"
@@ -217,7 +218,7 @@ public class TableData {
     }
 
     String scalaCodeToExecute = String.format(contiToContiCorr,
-        this.getTableName(), depColIndex, kpiColIndex, elementTransformationCode);
+        this.getTableOrView(), depColIndex, kpiColIndex, elementTransformationCode);
     SQLIngester ingester = ingesterThreadLocal.get();
     try {
       ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
@@ -232,7 +233,7 @@ public class TableData {
 
   private BiFunction<ColumnData, ColumnData, Double> catToCont = (catCol, contCol) -> {
     String scalaCodeToExecute = String.format(catToContCorr,
-        this.getTableName(), catCol.name, contCol.name);
+        this.getTableOrView(), catCol.name, contCol.name);
     SQLIngester ingester = ingesterThreadLocal.get();
     try {
       ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
@@ -269,7 +270,7 @@ public class TableData {
     sb.deleteCharAt(sb.length() -1);
     String depsColindxsStr = sb.toString();
     String scalaCodeToExecute = String.format(catToCatCorr,
-        this.getTableName(), depsColindxsStr, kpiColIndex, String.valueOf(pValueThreshold));
+        this.getTableOrView(), depsColindxsStr, kpiColIndex, String.valueOf(pValueThreshold));
     SQLIngester ingester = ingesterThreadLocal.get();
     try {
       ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
@@ -335,16 +336,30 @@ public class TableData {
   };
 
 
-  TableData(String tableName, SQLIngester ingester) throws SQLException, IOException {
+  TableData(String tableOrQuery, SQLIngester ingester, long workFlowId, boolean isQuery) throws SQLException, IOException {
     // filter columns of interest.
     // figure out if they are continuous or categorical
-    this.tableName = tableName;
-    ResultSet sampleSet = ingester.executeQuery("select * from "
-        + tableName + " LIMIT 100");
+    this.workFlowId = workFlowId;
+    this.isQuery = isQuery;
+    this.tableOrQuery = tableOrQuery;
+    // if query create a view
+    if (isQuery) {
+      String viewName = "view_" + workFlowId;
+
+      String viewDef = "create view " + viewName + " as " + tableOrQuery;
+      ingester.executeSQL(viewDef);
+      this.tableOrView = viewName;
+    } else {
+      this.tableOrView = tableOrQuery;
+    }
+
+    String query = "select * from " + this.tableOrView + " limit 100;";
+    ResultSet sampleSet = ingester.executeQuery(query);
     this.schema = ingester.getSchema(sampleSet);
     this.sampleRows = getSampleRows(sampleSet);
     // get total rows
-    ResultSet rs = ingester.executeQuery("select count(*) from " + tableName);
+    String countQuery = "select count (*) from " + tableOrView;
+    ResultSet rs = ingester.executeQuery(countQuery);
     rs.next();
     totalRows = rs.getLong(1);
     // segregate columns based on sql types
@@ -617,8 +632,27 @@ public class TableData {
     return this.schema;
   }
 
-  public String getTableName() {
-    return this.tableName;
+  public ColumnData getFirstAvailablePkColumn() {
+    Optional<ColumnData> opt =this.columnMappings.values().stream().filter(cd -> cd.possiblePrimaryKey).findFirst();
+    return opt.orElseThrow(() -> new RuntimeException("Primary Key not found"));
+  }
+
+  public ColumnData getFirstAvailablePkColumn(int sqlType) {
+    ColumnData[] arr = this.sqlTypeToColumnMappings.getOrDefault(sqlType, new ColumnData[0]);
+    for(ColumnData cd : arr) {
+      if (cd.isPossiblePrimaryKey()) {
+        return cd;
+      }
+    }
+    throw new  RuntimeException("Primary Key not found");
+  }
+
+  public ColumnData getColumnData(String colName) {
+    return this.columnMappings.get(colName);
+  }
+
+  public String getTableOrView() {
+    return this.tableOrView;
   }
 
   public List<List<String>> getSampleRows() {
@@ -638,10 +672,12 @@ public class TableData {
       case Types.INTEGER:
       case Types.BIGINT: {
         String countClause = scs.stream().map(sc -> sc.getName()).reduce("", (str1, str2)
-            -> str1 + "," + " count(distinct " + str2 + ")").substring(1);
+            -> str1 + "," + " approx_count_distinct(" + str2 + ")").substring(1);
         String query = "select  %1$s from %2$s";
-        ResultSet rs = ingester.executeQuery(String.format(query, countClause, this.tableName));
+
+        ResultSet rs = ingester.executeQuery(String.format(query, countClause, this.tableOrView));
         rs.next();
+        List<Integer> possiblePkIndexes = new ArrayList<>(cds.length);
         int i = 1;
         for (Schema.SchemaColumn sc : scs) {
           long distinctValues = rs.getLong(i);
@@ -661,11 +697,31 @@ public class TableData {
           } else {
             skip = true;
           }
-
+          // if approx distinct values is > 90 % of total rows , get exact figure
+          if (distinctValues > (90 * totalRows)/100) {
+            if (!isQuery) {
+              possiblePkIndexes.add(i - 1);
+            }
+          }
           cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
-              distinctValues);
+              distinctValues, false);
           ++i;
         }
+        if (!possiblePkIndexes.isEmpty()) {
+          String exactCountClause = possiblePkIndexes.stream().map(j -> cds[j].name).reduce("", (str1, str2)
+              -> str1 + "," + " count(distinct " + str2 + ")").substring(1);
+
+          rs = ingester.executeQuery(String.format(query, exactCountClause, this.tableOrView));
+          rs.next();
+          i = 1;
+          for (int pos : possiblePkIndexes) {
+            ColumnData cdd = cds[pos];
+            cdd.numDistinctValues = rs.getLong(i);
+            cdd.possiblePrimaryKey = cdd.numDistinctValues == this.totalRows;
+            ++i;
+          }
+        }
+
         return cds;
       }
       case Types.DECIMAL:
@@ -675,7 +731,7 @@ public class TableData {
         int i = 0;
         for (Schema.SchemaColumn sc : scs) {
           cds[i++] = new ColumnData(sc.getName().toLowerCase(), FeatureType.continuous, false,
-              sqlType, -1);
+              sqlType, -1, false);
         }
         return cds;
       }
@@ -695,10 +751,12 @@ public class TableData {
       case Types.NVARCHAR:
       case Types.VARCHAR:
       {
+        List<Integer> possiblePkIndexes = new ArrayList<>(cds.length);
+
         String countClause = scs.stream().map(sc -> sc.getName().toLowerCase()).reduce("", (str1, str2)
-            -> str1 + "," + " count(distinct " + str2 + ")").substring(1);
+            -> str1 + "," + " approx_count_distinct(" + str2 + ")").substring(1);
         String query = "select  %1$s from %2$s";
-        ResultSet rs = ingester.executeQuery(String.format(query, countClause, this.tableName));
+        ResultSet rs = ingester.executeQuery(String.format(query, countClause, this.tableOrView));
         rs.next();
         int i = 1;
         for (Schema.SchemaColumn sc : scs) {
@@ -717,9 +775,30 @@ public class TableData {
             skip = true;
 
           }
+          // if approx distinct values is > 90 % of total rows , get exact figure
+          if (distinctCount > (90 * totalRows)/100) {
+            if (!isQuery) {
+              possiblePkIndexes.add(i - 1);
+            }
+          }
           cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
-              distinctCount);
+              distinctCount, false);
           ++i;
+        }
+
+        if (!possiblePkIndexes.isEmpty()) {
+          String exactCountClause = possiblePkIndexes.stream().map(j -> cds[j].name).reduce("", (str1, str2)
+              -> str1 + "," + " count(distinct " + str2 + ")").substring(1);
+
+          rs = ingester.executeQuery(String.format(query, exactCountClause, this.tableOrView));
+          rs.next();
+          i = 1;
+          for (int pos : possiblePkIndexes) {
+            ColumnData cdd = cds[pos];
+            cdd.numDistinctValues = rs.getLong(i);
+            cdd.possiblePrimaryKey = cdd.numDistinctValues == this.totalRows;
+            ++i;
+          }
         }
         return cds;
       }
@@ -727,7 +806,7 @@ public class TableData {
         int i = 0;
         for (Schema.SchemaColumn sc : scs) {
           cds[i++] = new ColumnData(sc.getName().toLowerCase(), null, true,
-              sqlType, -1);
+              sqlType, -1, false);
         }
         return cds;
       }
@@ -735,20 +814,26 @@ public class TableData {
     }
   }
 
-  private static class ColumnData {
-    FeatureType ft;
-    boolean skip;
-    int sqlType;
-    String name;
-    long numDistinctValues;
+  public static class ColumnData {
+    final public FeatureType ft;
+    final public boolean skip;
+    final public int sqlType;
+    final public String name;
+    private long numDistinctValues;
+    private boolean possiblePrimaryKey;
 
     ColumnData(String name, FeatureType ft, boolean skip, int sqlType,
-        long numDistinctValues) {
+        long numDistinctValues, boolean possiblePrimaryKey) {
       this.ft = ft;
       this.skip = skip;
       this.sqlType = sqlType;
       this.name = name;
       this.numDistinctValues = numDistinctValues;
+      this.possiblePrimaryKey = possiblePrimaryKey;
+    }
+
+    public boolean isPossiblePrimaryKey() {
+      return this.possiblePrimaryKey;
     }
   }
 

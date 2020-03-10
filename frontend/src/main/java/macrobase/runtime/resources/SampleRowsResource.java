@@ -33,6 +33,9 @@ public class SampleRowsResource extends BaseResource {
   @Context
   private HttpServletRequest request;
 
+  static class SampleRowsRequest {
+    public long workflowid;
+  }
 
 
   static class SampleRowsResponse {
@@ -47,12 +50,12 @@ public class SampleRowsResource extends BaseResource {
 
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
-  public SampleRowsResponse getSample(SchemaResource.SchemaRequest schmaReq) {
+  public SampleRowsResponse getSample(SampleRowsRequest sampleRowReq) {
     SampleRowsResponse response = new SampleRowsResponse();
     HttpSession ss = request.getSession();
     try {
       SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
-      TableData td = TableManager.getTableData(schmaReq.tablename, ingester);
+      TableData td = TableManager.getTableData(sampleRowReq.workflowid);
       response.rows = td.getSampleRows();
       response.rowCount = td.getTotalRowsCount();
     } catch (Exception e) {
