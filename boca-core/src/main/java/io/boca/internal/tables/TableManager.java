@@ -3,15 +3,15 @@ package io.boca.internal.tables;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import macrobase.ingest.SQLIngester;
 
 public class TableManager {
   private static TableManager singleton = new TableManager();
-  private AtomicLong uid = new AtomicLong();
+  private AtomicInteger uid = new AtomicInteger();
   private ConcurrentHashMap<String, TableData> tablesMap = new ConcurrentHashMap<>();
-  private HashMap<Long, String> workFlowToTableDef = new HashMap<>();
+  private HashMap<Integer, String> workFlowToTableDef = new HashMap<>();
 
   private TableManager() {
 
@@ -19,7 +19,7 @@ public class TableManager {
 
   public static TableData getTableData(String fqTableNameOrQuery, SQLIngester ingester, boolean isQuery) {
     return singleton.tablesMap.computeIfAbsent(fqTableNameOrQuery, (key) -> {try {
-      long uid = singleton.uid.incrementAndGet();
+      int uid = singleton.uid.incrementAndGet();
       TableData td = new TableData(key, ingester, uid, isQuery);
       singleton.workFlowToTableDef.put(uid, key);
       return td;
@@ -28,7 +28,7 @@ public class TableManager {
     }});
   }
 
-  public static TableData getTableData(long workFlowId) {
+  public static TableData getTableData(int workFlowId) {
     String tableDef = singleton.workFlowToTableDef.get(workFlowId);
     if (tableDef != null) {
       return getTableData(tableDef, null, false);

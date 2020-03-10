@@ -39,7 +39,7 @@ public class SchemaResource extends BaseResource {
         public String name;
         public List<Join> joinlist;
         public void fillMissingPkColumns(SQLIngester ingester) {
-          if (!joinlist.isEmpty()) {
+          if (!(joinlist == null || joinlist.isEmpty())) {
               for(Join join: joinlist) {
                 join.fillMissingPkColumn(this.name, ingester);
               }
@@ -113,6 +113,8 @@ public class SchemaResource extends BaseResource {
 
     static class SchemaResponse {
         public Schema schema;
+        public long workflowid;
+        public Table table;
         public String errorMessage;
     }
 
@@ -134,6 +136,8 @@ public class SchemaResource extends BaseResource {
              tableObject.generateQuery(sb, true);
              TableData td = TableManager.getTableData(sb.toString(), ingester, tableObject.isQuery());
              response.schema = td.getSchema();
+             response.workflowid = td.getWorkFlowId();
+             response.table = tableObject;
         } catch (Exception e) {
             log.error("An error occurred while processing a request: {}", e);
             response.errorMessage = ExceptionUtils.getStackTrace(e);

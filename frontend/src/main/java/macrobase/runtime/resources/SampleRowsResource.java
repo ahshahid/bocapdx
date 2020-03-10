@@ -34,7 +34,7 @@ public class SampleRowsResource extends BaseResource {
   private HttpServletRequest request;
 
   static class SampleRowsRequest {
-    public long workflowid;
+    public int workflowid;
   }
 
 

@@ -34,7 +34,7 @@ public class FastInsightResource extends BaseResource {
   private HttpServletRequest request;
 
   static class FastInsightRequest {
-    public long workflowid;
+    public int workflowid;
     public List<String> kpicols;
   }
 

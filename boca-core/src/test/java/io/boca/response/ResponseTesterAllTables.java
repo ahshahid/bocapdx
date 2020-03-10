@@ -3,8 +3,6 @@ package io.boca.response;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.IntNode;
-import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.http.Header;
 import org.apache.http.HeaderIterator;
@@ -30,7 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.apache.http.util.EntityUtils;
 
-public class ResponseTester {
+public class ResponseTesterAllTables {
   String host = "localhost";
   @Test
   public void testResponse() throws Exception {
@@ -59,13 +57,18 @@ public class ResponseTester {
 
 
       ObjectMapper objectMapper = new ObjectMapper();
-       String tableName = "airline_ext";
 
+//read JSON like DOM Parser
+      JsonNode rootNode = objectMapper.readTree(content);
+      ArrayNode tables = (ArrayNode)rootNode.path("results");
+      Iterator<JsonNode> iter = tables.iterator();
+    /*  while(iter.hasNext()) {
+        TextNode table = (TextNode)iter.next();
         // Test schema fetch
         String schemaUrl = "http://" + host + ":9090/api/schema";
         httpPost = new HttpPost(schemaUrl);
         httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-        data = new StringEntity("{\"table\":{\"name\":\"" +  tableName + "\"}}");
+        data = new StringEntity("{\"tablename\":\"" + table.textValue()+ "\"}");
         httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
         httpPost.setEntity(data);
@@ -74,13 +77,34 @@ public class ResponseTester {
         entity = response.getEntity();
         content = EntityUtils.toString(entity);
         System.out.println("\n\n");
-        System.out.println("for table = " + tableName);
+        System.out.println("for table = " + table.textValue());
         System.out.println(content);
         System.out.println("\n\n");
 
+      }*/
+      /*
+      iter = tables.iterator();
+      while(iter.hasNext()) {
+        TextNode table = (TextNode)iter.next();
+        // Test schema fetch
+        String schemaUrl = "http://" + host + ":9090/api/sampleRows";
+        httpPost = new HttpPost(schemaUrl);
+        httpPost.addHeader("content-type", "application/json;charset=UTF-8");
+        data = new StringEntity("{\"tablename\":\"" + table.textValue()+ "\"}");
+        httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
-      JsonNode rootNode = objectMapper.readTree(content);
-      int  workflowid = ((IntNode)rootNode.get("workflowid")).intValue();
+        httpPost.setEntity(data);
+        response = client.execute(httpPost, httpContext);
+
+        entity = response.getEntity();
+        content = EntityUtils.toString(entity);
+        System.out.println("\n\n");
+        System.out.println("for table = " + table.textValue());
+        System.out.println(content);
+        System.out.println("\n\n");
+      }
+      */
+
 
 
 
@@ -88,7 +112,7 @@ public class ResponseTester {
       String sampleUrl = "http://" + host + ":9090/api/sampleRows";
       httpPost = new HttpPost(sampleUrl);
       httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-      data = new StringEntity("{\"workflowid\":"+ workflowid +"}");
+      data = new StringEntity("{\"tablename\":\"airline_ext\"}");
       httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
       httpPost.setEntity(data);
@@ -120,7 +144,7 @@ public class ResponseTester {
       String fastInsightUrl = "http://" + host + ":9090/api/fastInsight";
       httpPost = new HttpPost(fastInsightUrl);
       httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-      data = new StringEntity("{\"workflowid\":" + workflowid +", \"kpicols\":[\"weatherdelay\"]}");
+      data = new StringEntity("{\"tablename\":\"airline_ext\", \"kpicols\":[\"weatherdelay\"]}");
       httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
       httpPost.setEntity(data);

@@ -21,7 +21,7 @@ import macrobase.ingest.result.Schema;
 
 public class TableData {
   private long totalRows;
-  private final long workFlowId;
+  private final int workFlowId;
   private final boolean isQuery;
   private final List<List<String>> sampleRows;
   private static final double pValueThreshold = 0.05d;
@@ -336,7 +336,7 @@ public class TableData {
   };
 
 
-  TableData(String tableOrQuery, SQLIngester ingester, long workFlowId, boolean isQuery) throws SQLException, IOException {
+  TableData(String tableOrQuery, SQLIngester ingester, int workFlowId, boolean isQuery) throws SQLException, IOException {
     // filter columns of interest.
     // figure out if they are continuous or categorical
     this.workFlowId = workFlowId;
@@ -378,6 +378,10 @@ public class TableData {
 
   public long getTotalRowsCount() {
     return  this.totalRows;
+  }
+
+  public long getWorkFlowId() {
+    return this.workFlowId;
   }
 
   private static List<List<String>>  getSampleRows(ResultSet rs) throws SQLException, IOException {
