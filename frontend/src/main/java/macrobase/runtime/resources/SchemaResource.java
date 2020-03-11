@@ -77,7 +77,7 @@ public class SchemaResource extends BaseResource {
                 Set<String> clashingCols = new HashSet<>();
                 Set<String> allCalls = new HashSet<>();
                 for(Table tbl: allTables) {
-                  TableData td = TableManager.getTableData(tbl.name, null, false);
+                  TableData td = TableManager.getTableData(tbl.name.toLowerCase(), null, false);
                   for(Schema.SchemaColumn sc: td.getSchema().getColumns()) {
                     if (!allCalls.add(sc.getName())) {
                       clashingCols.add(sc.getName());
@@ -90,7 +90,7 @@ public class SchemaResource extends BaseResource {
                 } else {
                   for(Table tbl: allTables) {
                     String alias = tbl.alias;
-                    TableData td = TableManager.getTableData(tbl.name, null, false);
+                    TableData td = TableManager.getTableData(tbl.name.toLowerCase(), null, false);
                     for(Schema.SchemaColumn sc: td.getSchema().getColumns()) {
                       projSb.append(alias).append('.').append(sc.getName());
                       if (clashingCols.contains(sc.getName())) {
