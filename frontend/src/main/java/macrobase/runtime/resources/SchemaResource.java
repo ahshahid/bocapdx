@@ -1,5 +1,6 @@
 package macrobase.runtime.resources;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.boca.internal.tables.TableData;
 import io.boca.internal.tables.TableManager;
 import macrobase.conf.MacroBaseConf;
@@ -39,6 +40,7 @@ public class SchemaResource extends BaseResource {
 
     static class Table {
         public String name;
+        @JsonIgnore
         public String alias;
         public List<Join> joinlist;
         public void fillMissingPkColumnsAndAlias(SQLIngester ingester, int level, boolean isTopNode,
@@ -56,7 +58,7 @@ public class SchemaResource extends BaseResource {
               }
           }
         }
-
+        @JsonIgnore
         public boolean isQuery() {
           return !(this.joinlist == null || this.joinlist.isEmpty());
         }
