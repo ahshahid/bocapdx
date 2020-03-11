@@ -28,7 +28,7 @@ import io.boca.internal.tables.FeatureType;
 @Produces(MediaType.APPLICATION_JSON)
 
 public class FastInsightResource extends BaseResource {
-  private static final Logger log = LoggerFactory.getLogger(SchemaResource.class);
+  private static final Logger log = LoggerFactory.getLogger(FastInsightResource.class);
 
   @Context
   private HttpServletRequest request;
