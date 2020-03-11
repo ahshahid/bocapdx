@@ -9,17 +9,19 @@
           <div class="" id="bs-example-navbar-collapse-1">
             <form class="navbar-form navbar-left" role="search">
               <div class="form-group">
-                <input type="text" class="form-control" placeholder="question entered by user">
+                <p class="custom-text-p"><span>My Objective: </span>
+                <input type="text" class="form-control" style="width: 150px;" placeholder="User text here"> </p>
               </div>
             </form>
             <ul class="nav navbar-nav navbar-right custom-color">
+              <li><a ng-href="/#!/dashboard">Explore with Metabase</a></li>
               <li><a ng-href="/#!/dashboard">New Question</a></li>
               <li><a ng-href="/#!/dashboard">Help</a></li>
               <li><a ng-href="/#!/login">Signout</a></li>
             </ul>
           </div><!-- /.navbar-collapse -->
         </div><!-- /.container-fluid -->
-      </nav>
+    </nav>
       <!-- Header Ends -->
       <!-- main container -->
       <div class="row">
@@ -38,10 +40,10 @@
                     <a ng-href="/#!/dashboard"><i class="glyphicon glyphicon-refresh pull-right blue-color" ></i></a>
                 </header>
                 
-                <ul id="data-table" class="main-menu" drop-on-me>
+                <ul id="data-table" class="main-menu" drop-on-me callback-fn="getData(table)">
                     <li ng-click="getData(table)" ng-repeat="table in tableNames track by $index">
                         <input type="checkbox" id="{{table}}" ng-model="myTable.selected[table]" class="pull-right" >
-                        <label drag-me for="{{table}}" id="{{table}}s" class="title"><span>{{table}}</span></label>
+                        <label drag-me for="{{table}}" id="{{table}}" class="title"><span>{{table}}</span></label>
                     </li>
                 </ul>
             </div>
@@ -49,21 +51,17 @@
       </div>
       <!-- Sidebar Ends -->
     <div class="col-md-10 tab-container">
-
       <ul class="nav nav-tabs">
         <li role="presentation" class="active"><a ng-click="goToTab('home')">My Worksheet</a></li>
       </ul>
       <div class="panel panel-gray worksheet-tab">
         
-        <div class="panel-body" id="worksheet"  drop-on-me>
-          <div class="table-details" ng-if="worksheet">
-            <p>Name of the <br>
-            {{tableName}}</p>
-            <p>Number of Columns<br>
-            {{schemaCols.length}}</p>
-            <p>Number of Rows<br>
-            {{rowCount}}</p>
-
+        <div class="panel-body" id="worksheet"  drop-on-me callback-fn="getData(table)" style="position: relative;">
+          <div class="table-details " ng-repeat="table in workSheetTables" ng-if="worksheet"  ng-draggable='dragOptions' style="cursor: move;position: absolute;">
+           <p>{{table.name}}</p>
+            <p>Columns: {{table.colCount}}<br>
+              Rows: {{table.rowCount}}
+            </p>
           </div>
           <div class="table-drop-message" ng-if="!worksheet">
             <p>Drag and Drop tables from the left panel or select with the help of checkoboxes to add to the worksheet</p>
@@ -72,41 +70,29 @@
 
         <div class="panel-body table-rows-section"  ng-if="schemaCols.length > 0">
           <div class="row-search-panel">
-            Select columns to analyse 
+            <p class="custom-text-p"><span>Outliers Filter: </span>
+            <input type="text" class="form-control" placeholder="User text here"></p>
             <!-- Single button -->
             <button type="button" class="btn blue-btn" >
-              Show fast Insight
+              Influencer Insight
             </button>
-            <div class="btn-group ">
-              <button type="button" class="btn blue-btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Detect outliers <span class="caret"></span>
+              <button type="button" class="btn blue-btn">
+                Auto classify outliers <!-- <span class="caret"></span> -->
               </button>
-              <ul class="dropdown-menu">
-                <li><a href="#">option 1</a></li>
-                <li><a href="#">option 2</a></li>
-                <li role="separator" class="divider"></li>
-                <li><a href="#">option 3</a></li>
-              </ul>
-            </div>
             <button type="button" class="btn blue-btn pull-right" >
               Run Deep Explanations
             </button>
-
-
           </div>
-<!--           <table class="table" style="margin-bottom: 0;" >
-          <tr>
-              <th ng-repeat="column in schemaCols">{{column.name}} ({{column.type}})</th>
-          </tr>
-          </table> -->
-          <table class="table table-bordered table-striped" show-filter="false" ng-table-dynamic="schemaRows with schemaCols" >
-              
+          <table class="table table-bordered" show-filter="false" ng-table-dynamic="schemaRows with schemaCols" >
+            <colgroup>
+              <col ng-repeat="column in columnList" id="{{column.name}}">
+              </colgroup>
               <tr ng-repeat="data in $data track by $index">
                   <td ng-repeat="d in data">{{d}}<!-- {{d}} --></td>
                  <!--  <td filter="{ $in: 'number'}" sortable="'type'">{{data[1]}}</td> -->
               </tr>
           </table>
-      </div>
+        </div>
       </div>
 
 
