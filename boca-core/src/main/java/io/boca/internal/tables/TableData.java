@@ -16,6 +16,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
 
@@ -344,7 +345,7 @@ public class TableData {
     this.tableOrQuery = tableOrQuery;
     // if query create a view
     if (isQuery) {
-      String viewName = "view_" + workFlowId;
+      String viewName = MacroBaseDefaults.BOCA_VIEWS_PREFIX + workFlowId;
 
       String viewDef = "create or replace view " + viewName + " as " + tableOrQuery;
       ingester.executeSQL(viewDef);

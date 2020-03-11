@@ -17,7 +17,7 @@ public class MacroBaseDefaults {
 
     public static final Boolean USE_PERCENTILE = true;
     public static final Boolean USE_ZSCORE = false;
-
+    public static final String BOCA_VIEWS_PREFIX = "bocapdx_view_";
     // streaming defaults
     public static final Integer WARMUP_COUNT = 10000;
     public static final Integer TUPLE_BATCH_SIZE = 10000;
