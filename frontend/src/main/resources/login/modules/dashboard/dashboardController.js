@@ -9,20 +9,37 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     };
     $scope.temp= {}
     $scope.schemaCols = {};
+    $scope.selectedCols = [];
+    $scope.workSheetTables = [];
+    $scope.columnList = {};
     $scope.schemaRows = {};
     $scope.rowCount = 0;
     $scope.tableNames  = $stateParams.table;
 
+
+    $scope.dragOptions = {
+        /* start: function(e) {
+            console.log("Start");
+        },
+        drag: function(e) {
+          console.log("DRAGGING");
+        },
+        stop: function(e) {
+          console.log("STOPPING");
+        }, */
+        container: 'worksheet'
+    }
     
-        $scope.getData = function(table) {
-            $scope.tableName = table;
-           /*  $scope.schemaCols = $scope.ApiFactory.schema.columns */;
-            console.log($scope.myTable);
+    $scope.getData = function(table) {
+           $scope.tableName = table;
+           $scope.clearColumnSelection();
+           console.log($scope.myTable);
            $scope.worksheet=true;
            $scope.temp =[];
             ApiFactory.schema.save({
                 tablename: table
             }, function (response) {
+                $scope.columnList = response.schema.columns;
                 var newJson=[]
                 angular.forEach(response.schema.columns, function(value,key) {
                     var name =value.name
@@ -55,11 +72,15 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
                 sorting: {}}, 
                 {dataset: $scope.temp});
             });
-           
-            
+            var tempObj = {
+                rowCount: $scope.rowCount,
+                colCount: $scope.columnList.length,
+                name: table
+            }
+            $scope.workSheetTables.push(tempObj);
+    }
 
-        }
-        $scope.convertKeyValueJson = function(column, rows){
+    $scope.convertKeyValueJson = function(column, rows){
             var headers=[];
             angular.forEach(column, function(value,key) {
                 headers.push(value.name)
@@ -73,9 +94,28 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
                   }, {})
                   $scope.temp.push(result);
             });
-        }
-        $scope.goToTab = function(tableName){
+    }
+
+    $scope.toggleColumnSelection = function(columnName){
+            if($scope.selectedCols.indexOf(columnName) == -1) {
+                $scope.selectedCols.push(columnName);
+                var sel = document.querySelectorAll('col#'+columnName)[0].className='active';
+              }else{
+                var index = $scope.selectedCols.indexOf(columnName);
+                $scope.selectedCols.splice(index, 1);
+                var sel = document.querySelectorAll('col#'+columnName)[0].classList.remove('active');
+              }
+        console.log($scope.selectedCols);
             
-        }
+           // console.log(document.querySelectorAll('col#'+columnName));
+    }
+        
+    $scope.clearColumnSelection = function(){
+        $scope.selectedCols =[];
+    }
+
+    $scope.goToTab = function(tabName){
+
+    }
 
 }])
