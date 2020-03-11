@@ -37,11 +37,20 @@ public class SchemaResource extends BaseResource {
 
     static class Table {
         public String name;
+        public String alias;
         public List<Join> joinlist;
-        public void fillMissingPkColumns(SQLIngester ingester) {
+        public void fillMissingPkColumnsAndAlias(SQLIngester ingester, int level, boolean isTopNode,
+            String parentTableAlias) {
+
+          if (isTopNode) {
+            alias = "table_" + level;
+          } else {
+            alias = parentTableAlias + "_" + level;
+          }
           if (!(joinlist == null || joinlist.isEmpty())) {
+              int i = 0;
               for(Join join: joinlist) {
-                join.fillMissingPkColumn(this.name, ingester);
+                join.fillMissingPkColumnsAndAlias(this, ingester, i++);
               }
           }
         }
@@ -53,7 +62,7 @@ public class SchemaResource extends BaseResource {
         public void generateQuery(StringBuilder sb, boolean isTopNode) {
           if (isTopNode) {
               if (isQuery()) {
-                  sb.append("select * from ").append(this.name).append(" ");
+                  sb.append("select * from ").append(this.name).append(" as ").append(this.alias).append(" ");
                   for(Join joinNode: this.joinlist) {
                       joinNode.generateQuery(sb, this);
                   }
@@ -77,12 +86,12 @@ public class SchemaResource extends BaseResource {
         public Table table;
         public String joincol;
         public String jointype;
-        public void fillMissingPkColumn(String parentTableName, SQLIngester ingester) {
+        public void fillMissingPkColumnsAndAlias(Table parentTable, SQLIngester ingester, int level) {
           if (this.jointype == null || this.jointype.trim().isEmpty()) {
               this.jointype = "inner join";
           }
           if (parentcol == null || parentcol.trim().isEmpty()) {
-            TableData td = TableManager.getTableData(parentTableName.toLowerCase(), ingester, false);
+            TableData td = TableManager.getTableData(parentTable.name.toLowerCase(), ingester, false);
             TableData childTd = TableManager.getTableData(table.name.toLowerCase(), ingester, false);
             if (joincol != null && !joincol.trim().isEmpty()) {
               TableData.ColumnData childCol = childTd.getColumnData(joincol.toLowerCase());
@@ -92,21 +101,21 @@ public class SchemaResource extends BaseResource {
               this.joincol = childTd.getFirstAvailablePkColumn().name;
             }
           } else {
-              TableData td = TableManager.getTableData(parentTableName.toLowerCase(), ingester, false);
+              TableData td = TableManager.getTableData(parentTable.name.toLowerCase(), ingester, false);
               TableData childTd = TableManager.getTableData(table.name.toLowerCase(), ingester, false);
               if (joincol == null || joincol.trim().isEmpty()) {
                   TableData.ColumnData parentCol = td.getColumnData(parentcol.toLowerCase());
                   this.joincol = childTd.getFirstAvailablePkColumn(parentCol.sqlType).name;
               }
           }
-          table.fillMissingPkColumns(ingester);
+          table.fillMissingPkColumnsAndAlias(ingester, level,false, parentTable.alias);
         }
 
         public void generateQuery(StringBuilder sb, Table parentTable) {
-                sb.append(this.jointype).append(" ").append(this.table.name).
-                append(" on ").append(parentTable.name).append('.').append(this.parentcol).
-                append(" = ").append(this.table.name).append(".").append(this.joincol).append(" ");
-
+                sb.append(this.jointype).append(" ").append(this.table.name).append(" as ").append(this.table.alias).
+                append(" on ").append(parentTable.alias).append('.').append(this.parentcol).
+                append(" = ").append(this.table.alias).append(".").append(this.joincol).append(" ");
+                this.table.generateQuery(sb, false);
 
         }
     }
@@ -131,7 +140,7 @@ public class SchemaResource extends BaseResource {
             SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
              Table tableObject = schmaReq.table;
              // check if the join condition is specified in each of the table involved
-             tableObject.fillMissingPkColumns(ingester);
+             tableObject.fillMissingPkColumnsAndAlias(ingester, 0, true, "");
              StringBuilder sb = new StringBuilder();
              tableObject.generateQuery(sb, true);
              TableData td = TableManager.getTableData(sb.toString(), ingester, tableObject.isQuery());
