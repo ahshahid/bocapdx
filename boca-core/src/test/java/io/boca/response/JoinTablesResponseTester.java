@@ -116,7 +116,7 @@ public class JoinTablesResponseTester {
       System.out.println(content);
       System.out.println("\n\n");
 
-
+/*
       // dependency fetch
       String fastInsightUrl = "http://" + host + ":9090/api/fastInsight";
       httpPost = new HttpPost(fastInsightUrl);
@@ -133,7 +133,7 @@ public class JoinTablesResponseTester {
       System.out.println(content);
       System.out.println("\n\n");
 
-
+*/
     } finally {
 
       if (httpPost != null) {

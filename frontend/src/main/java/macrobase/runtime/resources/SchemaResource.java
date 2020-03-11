@@ -20,7 +20,9 @@ import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Path("/schema")
 @Produces(MediaType.APPLICATION_JSON)
@@ -62,22 +64,65 @@ public class SchemaResource extends BaseResource {
         public void generateQuery(StringBuilder sb, boolean isTopNode) {
           if (isTopNode) {
               if (isQuery()) {
-                  sb.append("select * from ").append(this.name).append(" as ").append(this.alias).append(" ");
+                //sb.append("select * from ")
+                  sb.append(this.name).append(" as ").append(this.alias).append(" ");
                   for(Join joinNode: this.joinlist) {
                       joinNode.generateQuery(sb, this);
                   }
+                  List<Table> allTables = new ArrayList<>();
+                  allTables.add(this);
+                for(Join joinNode: this.joinlist) {
+                  joinNode.collectTables(allTables);
+                }
+                Set<String> clashingCols = new HashSet<>();
+                Set<String> allCalls = new HashSet<>();
+                for(Table tbl: allTables) {
+                  TableData td = TableManager.getTableData(tbl.name, null, false);
+                  for(Schema.SchemaColumn sc: td.getSchema().getColumns()) {
+                    if (!allCalls.add(sc.getName())) {
+                      clashingCols.add(sc.getName());
+                    }
+                  }
+                }
+                StringBuilder projSb = new StringBuilder();
+                if (clashingCols.isEmpty()) {
+                  projSb.append(" * ");
+                } else {
+                  for(Table tbl: allTables) {
+                    String alias = tbl.alias;
+                    TableData td = TableManager.getTableData(tbl.name, null, false);
+                    for(Schema.SchemaColumn sc: td.getSchema().getColumns()) {
+                      projSb.append(alias).append('.').append(sc.getName());
+                      if (clashingCols.contains(sc.getName())) {
+                        projSb.append(" as ").append(tbl.name).append('_').append(sc.getName());
+                      }
+                      projSb.append(',');
+                    }
+                  }
+                  projSb.deleteCharAt(projSb.length() -1);
+                }
+                String projection = projSb.toString();
+                sb.insert(0, " from ").insert(0, projection).insert(0, "select ");
+
               } else {
                   sb.append(this.name);
               }
           } else {
              if (isQuery()) {
-
                  for(Join joinNode: this.joinlist) {
                     joinNode.generateQuery(sb, this);
                  }
              }
           }
         }
+
+      public void collectTables(List<Table> allTables) {
+          if (this.isQuery()) {
+            for(Join joinNode: this.joinlist) {
+              joinNode.collectTables(allTables);
+            }
+          }
+      }
 
     }
 
@@ -118,6 +163,10 @@ public class SchemaResource extends BaseResource {
                 this.table.generateQuery(sb, false);
 
         }
+      public void collectTables(List<Table> allTables) {
+          allTables.add(this.table);
+          this.table.collectTables(allTables);
+      }
     }
 
     static class SchemaResponse {

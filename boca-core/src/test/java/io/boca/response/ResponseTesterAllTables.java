@@ -82,7 +82,7 @@ public class ResponseTesterAllTables {
         System.out.println("\n\n");
 
       }*/
-      /*
+
       iter = tables.iterator();
       while(iter.hasNext()) {
         TextNode table = (TextNode)iter.next();
@@ -103,7 +103,7 @@ public class ResponseTesterAllTables {
         System.out.println(content);
         System.out.println("\n\n");
       }
-      */
+
 
 
 

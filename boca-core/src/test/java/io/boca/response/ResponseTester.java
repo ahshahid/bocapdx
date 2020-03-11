@@ -117,7 +117,7 @@ public class ResponseTester {
 
 
       // dependency fetch
-      String fastInsightUrl = "http://" + host + ":9090/api/fastInsight";
+     /* String fastInsightUrl = "http://" + host + ":9090/api/fastInsight";
       httpPost = new HttpPost(fastInsightUrl);
       httpPost.addHeader("content-type", "application/json;charset=UTF-8");
       data = new StringEntity("{\"workflowid\":" + workflowid +", \"kpicols\":[\"weatherdelay\"]}");
@@ -131,6 +131,7 @@ public class ResponseTester {
       System.out.println("\n\n");
       System.out.println(content);
       System.out.println("\n\n");
+      */
 
 
     } finally {

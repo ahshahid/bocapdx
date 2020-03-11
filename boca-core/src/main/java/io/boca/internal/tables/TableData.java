@@ -346,7 +346,7 @@ public class TableData {
     if (isQuery) {
       String viewName = "view_" + workFlowId;
 
-      String viewDef = "create view " + viewName + " as " + tableOrQuery;
+      String viewDef = "create or replace view " + viewName + " as " + tableOrQuery;
       ingester.executeSQL(viewDef);
       this.tableOrView = viewName;
     } else {
