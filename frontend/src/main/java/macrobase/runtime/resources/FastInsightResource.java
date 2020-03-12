@@ -77,6 +77,7 @@ public class FastInsightResource extends BaseResource {
       for(String kpiCol: fir.kpicols) {
         DependencyData dd = td.getDependencyData(kpiCol, ingester);
         FastInsightResponse.KpiData kpid = new FastInsightResponse.KpiData();
+        kpid.kpicolname = kpiCol;
         kpid.kpitype = dd.getKpiColFeatureType().name();
         Map<String, Double> contiMap = dd.getContinousFeatureMap();
         Map<String, Double> catMap = dd.getCategoricalFeatureMap();

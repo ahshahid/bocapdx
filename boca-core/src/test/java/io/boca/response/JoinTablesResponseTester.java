@@ -59,8 +59,8 @@ public class JoinTablesResponseTester {
 
 
       ObjectMapper objectMapper = new ObjectMapper();
-      String table1 = "test2";
-      String table2 = "test3";
+      String table1 = "telecom_churn_billing";
+      String table2 = "telecom_churn_networkq";
 
       // Test schema fetch
       String schemaUrl = "http://" + host + ":9090/api/schema";
@@ -116,12 +116,12 @@ public class JoinTablesResponseTester {
       System.out.println(content);
       System.out.println("\n\n");
 
-/*
+
       // dependency fetch
       String fastInsightUrl = "http://" + host + ":9090/api/fastInsight";
       httpPost = new HttpPost(fastInsightUrl);
       httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-      data = new StringEntity("{\"workflowid\":" + workflowid +", \"kpicols\":[\"weatherdelay\"]}");
+      data = new StringEntity("{\"workflowid\":" + workflowid +", \"kpicols\":[\"telecom_churn_networkq_churn\"]}");
       httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
       httpPost.setEntity(data);
@@ -133,7 +133,7 @@ public class JoinTablesResponseTester {
       System.out.println(content);
       System.out.println("\n\n");
 
-*/
+
     } finally {
 
       if (httpPost != null) {
