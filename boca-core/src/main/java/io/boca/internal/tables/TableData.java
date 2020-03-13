@@ -141,7 +141,7 @@ public class TableData {
       + "val valueDf = snappysession.sqlContext.createDataFrame(java.util.Collections.singletonList("
       + "Row(chiRes.degreesOfFreedom, chiRes.method, chiRes.nullHypothesis, chiRes.pValue, chiRes.statistic)), ouputSchema);";
       */
-  private static String contiToContiCorr = "import org.apache.spark.mllib.linalg._;"
+  private static String biserialCorr = "import org.apache.spark.mllib.linalg._;"
       + "import org.apache.spark.sql._;"
       + "import org.apache.spark.sql.types._;"
       + "import org.apache.spark.mllib.stat._;"
@@ -161,13 +161,81 @@ public class TableData {
       + "val dfStrct = StructType(Seq(StructField(\"corr\", DoubleType, false)));"
       + "val valueDf = snappysession.sqlContext.createDataFrame(java.util.Collections.singletonList(Row(corrValue)), dfStrct);";
 
-  //+ "val valueDf = snappysession.sqlContext.createDataFrame(java.util.Collections.singletonList(Row(corrValue)), dfStrct)";
-     // + "val rsDf = org.apache.spark.ml.stat.Correlation.corr(inputDataFrame, \"feature\" );"
-     // + "val valueDf = rsDf.map[Row](row => Row(row(0).asInstanceOf[Matrix](0,0)))(Encoders.Double);";
+
+  private static String contiToContiCorr = "import org.apache.spark.mllib.linalg._;"
+      + "import org.apache.spark.sql._;"
+      + "import org.apache.spark.sql.types._;"
+      + "import org.apache.spark.mllib.stat._;"
+      + "import org.apache.spark.sql.functions._;"
+      + "val tableDf = snappysession.table(\"%1$s\");"
+      + "val tableSchema = tableDf.schema;"
+      + "val depColIndexes = %2$s;"
+      + "val kpiColIndex = %3$s;"
+      + "val kpiColExpression = if (tableSchema(kpiColIndex).dataType != DoubleType) {"
+      + "                          s\"cast(${tableSchema(kpiColIndex).name} as double)\";"
+      + "                       } else { "
+      + "                         s\"${tableSchema(kpiColIndex).name}\";"
+      + "                         }"
+      + "val correlationExprs = depColindexes.map(index -> {"
+      + "                      val depColExpression = if (tableSchema(index).dataType != DoubleType) {"
+      + "                          s\"cast(${tableSchema(index).name} as double)\";"
+      + "                       } else { "
+      + "                         s\"${tableSchema(index).name}\";"
+      + "                       }"
+      + "                      s\"corr(${depColExpression}, ${kpiColExpression})\";"
+      + "}).toSeq;"
+      + "val valueDf = tableDf.selectExpr(correlationExprs :_*);";
+
 
   private static ThreadLocal<SQLIngester> ingesterThreadLocal = new ThreadLocal<SQLIngester>();
 
-  private BiFunction<ColumnData, ColumnData, Double> kpiContToCont = (kpiCd, depCd) -> {
+  private BiFunction<ColumnData, List<ColumnData> , double[]> kpiContToCont = (kpiCd, depCds) -> {
+    StringBuilder depColIndexes = new StringBuilder("Array[Int](");
+    int kpiColIndex = -1;
+    List<Schema.SchemaColumn> cols = getSchema().getColumns();
+
+    for(ColumnData depCd : depCds) {
+      inner: for (int i = 0; i < cols.size(); ++i) {
+        Schema.SchemaColumn sc = cols.get(i);
+        if (sc.getName().equalsIgnoreCase(depCd.name)) {
+          depColIndexes.append(i).append(',');
+          break inner;
+        }
+      }
+    }
+    depColIndexes.deleteCharAt(depColIndexes.length() - 1).append(')');
+
+
+    for (int i = 0; i < cols.size(); ++i) {
+     Schema.SchemaColumn sc = cols.get(i);
+        if (sc.getName().equalsIgnoreCase(kpiCd.name)) {
+          kpiColIndex = i;
+          break ;
+        }
+    }
+
+
+
+
+
+    String scalaCodeToExecute = String.format(contiToContiCorr,
+        this.getTableOrView(), depColIndexes.toString(), kpiColIndex);
+    SQLIngester ingester = ingesterThreadLocal.get();
+    try {
+      ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
+      rs.next();
+      double[] retVal = new double[depCds.size()];
+      for(int i = 0; i < retVal.length; ++i) {
+        retVal[i] = rs.getDouble(i + 1);
+      }
+      return retVal;
+    } catch(SQLException sqle) {
+      throw new RuntimeException(sqle);
+    }
+
+  };
+
+  private BiFunction<ColumnData, ColumnData, Double> biserial = (kpiCd, depCd) -> {
     int depColIndex = -1, kpiColIndex = -1;
     List<Schema.SchemaColumn> cols = getSchema().getColumns();
     for(int i = 0 ; i < cols.size(); ++i) {
@@ -182,10 +250,7 @@ public class TableData {
         break;
       }
     }
-    boolean isBiserial = depCd.ft.equals(FeatureType.categorical)||
-        kpiCd.ft.equals(FeatureType.categorical);
-    String elementTransformationCode = null;
-    if (isBiserial) {
+
       int indexOfCatCol = -1;
       if (depCd.ft.equals(FeatureType.categorical)) {
         assert depCd.numDistinctValues == 2;
@@ -194,7 +259,7 @@ public class TableData {
         assert kpiCd.numDistinctValues == 2;
         indexOfCatCol = 1;
       }
-      elementTransformationCode = " if (biserialValue == null && index == " + indexOfCatCol +") biserialValue = elem;"
+      String elementTransformationCode = " if (biserialValue == null && index == " + indexOfCatCol +") biserialValue = elem;"
           + "val isCatCol = index == " + indexOfCatCol + ";"
           +" elem match {"
           +     "case x: Short => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else x.toDouble;"
@@ -206,19 +271,9 @@ public class TableData {
           +     "case x: String => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else throw new RuntimeException(\"continuous var as string\");"
           +     "case _ => throw new RuntimeException(\"unknown type\");"
           +     "}";
-    } else {
-      elementTransformationCode = " elem match {"
-          +     "case x: Short => x.toDouble;"
-          +     "case x: Int => x.toDouble;"
-          +     "case x: Long => x.toDouble;"
-          +     "case x: Float => x.toDouble;"
-          +     "case x: Double => x;"
-          +     "case x: Decimal => x.toDouble;"
-          +     "case _ => throw new RuntimeException(\"unknown type\");"
-          +     "}";
-    }
 
-    String scalaCodeToExecute = String.format(contiToContiCorr,
+
+    String scalaCodeToExecute = String.format(biserialCorr,
         this.getTableOrView(), depColIndex, kpiColIndex, elementTransformationCode);
     SQLIngester ingester = ingesterThreadLocal.get();
     try {
@@ -291,24 +346,43 @@ public class TableData {
     ColumnData kpiCol = columnMappings.get(kpi.toLowerCase());
     DependencyData dd = new DependencyData(kpiCol.name, kpiCol.ft);
     if (kpiCol.ft.equals(FeatureType.continuous)) {
-     for(ColumnData cd: columnMappings.values()) {
-       if (!cd.name.equalsIgnoreCase(kpi)) {
-         if (cd.ft.equals(FeatureType.continuous)) {
-           double corr = kpiContToCont.apply(kpiCol, cd);
-           dd.addToPearson(cd.name, corr);
-         } else if (cd.ft.equals(FeatureType.categorical)) {
-           // get the distinct values count of
-           if (cd.numDistinctValues == 2) {
-             // can use pearson correlation with a transformation
-             double corr = kpiContToCont.apply(kpiCol, cd);
-             dd.addToPearson(cd.name, corr);
-           } else {
-             double corr = catToCont.apply(cd, kpiCol);
-             dd.addToAnova(cd.name, corr);
-           }
-         }
-       }
-     }
+      // identify which are continuous or categorical cols which can use pearson corr directly
+      List<ColumnData> pearsonAmenable = columnMappings.values().stream().filter(cd ->
+         !cd.name.equalsIgnoreCase(kpi) && (cd.ft.equals(FeatureType.continuous) ||
+             (cd.ft.equals(FeatureType.categorical) && cd.numDistinctValues == 2 && (cd.sqlType == Types.SMALLINT ||
+                 cd.sqlType == Types.INTEGER || cd.sqlType == Types.BIGINT || cd.sqlType == Types.DOUBLE
+          || cd.sqlType == Types.FLOAT)))
+      ).collect(Collectors.toList());
+      if (!pearsonAmenable.isEmpty()) {
+        double[] corrs = kpiContToCont.apply(kpiCol, pearsonAmenable);
+        for(int i = 0 ; i < corrs.length; ++i) {
+          dd.addToPearson(pearsonAmenable.get(i).name, corrs[i]);
+        }
+      }
+
+      List<ColumnData> annovaAmenable = columnMappings.values().stream().filter(cd ->
+          !cd.name.equalsIgnoreCase(kpi) && cd.ft.equals(FeatureType.categorical) &&
+              cd.numDistinctValues != 2 ).collect(Collectors.toList());
+      if (!annovaAmenable.isEmpty()) {
+        for(ColumnData cd: annovaAmenable) {
+          double corr = catToCont.apply(cd, kpiCol);
+          dd.addToAnova(cd.name, corr);
+        }
+      }
+
+      List<ColumnData> biserialAmenable = columnMappings.values().stream().filter(cd ->
+          !cd.name.equalsIgnoreCase(kpi) &&
+              cd.ft.equals(FeatureType.categorical) && cd.numDistinctValues == 2 && !(cd.sqlType == Types.SMALLINT ||
+                  cd.sqlType == Types.INTEGER || cd.sqlType == Types.BIGINT || cd.sqlType == Types.DOUBLE
+                  || cd.sqlType == Types.FLOAT)
+      ).collect(Collectors.toList());
+      if (!biserialAmenable.isEmpty()) {
+        for(ColumnData cd: biserialAmenable) {
+          double corr = biserial.apply(cd, kpiCol);
+          dd.addToPearson(cd.name, corr);
+        }
+      }
+
     } else if (kpiCol.ft.equals(FeatureType.categorical)) {
       // get all the categorical cols
       List<ColumnData> deps = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
@@ -321,10 +395,20 @@ public class TableData {
       List<ColumnData> contiCols = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
           && ele.ft.equals(FeatureType.continuous)).collect(Collectors.toList());
       if (kpiCol.numDistinctValues == 2) {
-        contiCols.stream().forEach(contiCol -> {
-          double corr = kpiContToCont.apply(kpiCol, contiCol);
-          dd.addToPearson(contiCol.name, corr);
-        });
+        if (kpiCol.sqlType == Types.SMALLINT ||
+            kpiCol.sqlType == Types.INTEGER || kpiCol.sqlType == Types.BIGINT || kpiCol.sqlType == Types.DOUBLE
+            || kpiCol.sqlType == Types.FLOAT) {
+          double[] corrs = kpiContToCont.apply(kpiCol, contiCols);
+          for(int i = 0 ; i < corrs.length; ++i) {
+            dd.addToPearson(contiCols.get(i).name, corrs[i]);
+          }
+        } else {
+          // biserial
+          contiCols.stream().forEach(contiCol -> {
+            double corr = biserial.apply(kpiCol, contiCol);
+            dd.addToPearson(contiCol.name, corr);
+          });
+        }
       } else {
         contiCols.stream().forEach(contiCol -> {
           double corr = catToCont.apply(kpiCol, contiCol);
