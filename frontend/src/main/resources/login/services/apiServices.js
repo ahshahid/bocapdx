@@ -5,7 +5,7 @@ app.factory('ApiFactory', ['$resource',
         // const server = 'http://34.70.33.200:9090/';
 
         /* For local comment below const */
-        const server = ''; 
+        const server = '';
         return {
             login: $resource(server +'api/login'),
             schema: $resource(server +'api/schema'),

@@ -3,7 +3,9 @@ package edu.stanford.futuredata.macrobase.pipeline;
 import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import java.sql.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 // Just a hack for initial prototype ....
@@ -13,32 +15,44 @@ public class SimpleExplanationNLG {
     private final PipelineConfig conf;
     private final String outputTable;
     private final APLExplanation explainObj;
+    private final Map<String, String> colDescriptions;
+    private final String metric;
+    private Connection conn;
 
-    public SimpleExplanationNLG(PipelineConfig conf, APLExplanation explainObj , String outputTable ) throws Exception {
+    public SimpleExplanationNLG(PipelineConfig conf, APLExplanation explainObj , String outputTable, String metric ) throws Exception {
         this.conf = conf;
         this.explainObj =explainObj;
         this.outputTable = outputTable;
+        this.metric = metric;
+        this.colDescriptions = getColDescriptions();
     }
 
     public String explainAsText() throws Exception {
         StringBuffer outputText = new StringBuffer();
+
+
         int count = explainObj.getResults().size();
         if (count == 0) {
             outputText.append("\nOops. The analysis did not generate any explanations. " +
                     "We suggest looking for more rare event patterns and try again.");
+            return outputText.toString();
         }
         else if (count > 10) {
-            outputText.append("Well, turns out your analysis generated quite a few explanations. " +
+            outputText.append("\n==========================================================\n" +
+                    "Well, turns out your analysis generated quite a few explanations. " +
                     "While our NLG in the future will summarize all these effectively, for now," +
                     " we present the most important ones. You could change 'Support' for more common" +
                     " patterns and try again. You can view all the explanations here(URL).");
         }
 
-        outputText.append("\n Your Objective :: " + conf.get("objective", "Not specified") +
+        outputText.append("\n==========================================================\n");
+        outputText.append("\n Your OBJECTIVE :: " + conf.get("objective", "Not specified") +
                               "\n==========================================================\n");
+        outputText.append("Analysis for your objective meant we had to carry out statistical analysis and " +
+                "comparison of records where \"" + getPredicateString() + "\" with the rest. \n");
 
-        outputText.append("Great news. The FastInsights engine produced " + count + " specific facts that " +
-                "drive your objective. Here they are ordered on importance ...\n");
+        outputText.append("Good news. The FastInsights engine produced " + count + " specific facts that " +
+                "drive your objective. Here are the important ones(upto 10)  ...\n");
         rawExplainTable(outputText);
         outputText.append("\n==========================================================\n");
         return outputText.toString();
@@ -64,32 +78,56 @@ public class SimpleExplanationNLG {
             String c = l.get(i).getColumn().toLowerCase();
             String value = l.get(i).getValue();
             if (c.equals("global_ratio")) ratioString = getRatioString(value);
-            else if (c.equals("support")) supportString = getSupportString(value);
+            else if (c.equals("support")) supportString = getNewSupportString(value);
 
             // Skip non domain attributes ...
             if (c.equals("global_ratio") || c.equals("outliers") || c.equals("count") || c.equals("support"))
                 continue;
             if (value == null || value.equalsIgnoreCase("NULL")) continue;
 
-            temp += (l.get(i).getColumn() + " is " + value);
+            temp += (getDescription(l.get(i).getColumn()) + " is " + value);
             if (i < (l.size() -1) ) temp += " and ";
         }
         if (temp.endsWith("and ")) outputText.append(temp.substring(0, temp.lastIndexOf("and"))) ;
 
-        outputText.append(", the risk or chance of " + getPredicateString() + " is " +
-                ratioString + "times higher. This fact pattern is" + supportString ) ;
+        outputText.append(", your metric " + metric + " is " +
+                ratioString + "times higher than usual. This increased " + supportString ) ;
+    }
+
+    private String getDescription(String column) {
+        String out;
+        if ((out = colDescriptions.get(column)) == null)
+            if((out = colDescriptions.get(column.toUpperCase())) == null)
+                if ((out = colDescriptions.get(column.toLowerCase())) == null)
+                    return column;
+        return out;
+    }
+
+    private Map<String,String> getColDescriptions() throws Exception{
+        String table = BasicBatchPipeline.removeSuffix(outputTable, "_prepped_Explained").toLowerCase();
+        String sql = "Select columnname, description from columnDescriptions where tablename = '" + table + "'";
+        RowSet rs = getRows(sql);
+        Map<String, String> m = new HashMap<>();
+        for (RowSet.Row r: rs.getRows()) {
+            List<ColumnValue> v = r.getColumnValues();
+            String key = v.get(0).getValue();
+            String val = v.get(1).getValue();
+            m.put(key, val);
+        }
+        return m;
     }
 
     private String getRatioString(String v) {
         double d = Double.parseDouble(v);
-        if (d > 1.5 && d < 1.7) return " 1.5 to 1.7 ";
-        if (d > 1.7 && d < 1.9) return " 1.7 to 1.9 ";
-        if (d > 2.0 && d < 3.0) return " two ";
-        if (d > 3.0 && d < 4.0) return " three ";
-        if (d > 4.0 && d < 5.0) return " four ";
-        if (d > 5.0 && d < 6.0) return " five ";
-        if (d > 6.0 && d < 7.0) return " six ";
-        if (d > 7.0 && d < 8.0) return " seven ";
+        if (d >= 1.5 && d < 1.7) return " 1.5 to 1.7 ";
+        if (d >= 1.7 && d < 1.9) return " 1.7 to 1.9 ";
+        if (d >= 1.9 && d < 2.0) return " 1.9 to 2.0 ";
+        if (d >= 2.0 && d < 3.0) return " two ";
+        if (d >= 3.0 && d < 4.0) return " three ";
+        if (d >= 4.0 && d < 5.0) return " four ";
+        if (d >= 5.0 && d < 6.0) return " five ";
+        if (d >= 6.0 && d < 7.0) return " six ";
+        if (d >= 7.0 && d < 8.0) return " seven ";
 
         else return " eight+ ";
     }
@@ -102,6 +140,12 @@ public class SimpleExplanationNLG {
         else return " very common. ";
     }
 
+    private String getNewSupportString(String v) {
+        //return " metric by x% "
+        long i  = Math.round(Double.parseDouble(v) * 100);
+        return metric + " by " + i + " percent.";
+    }
+
     private String getPredicateString() throws Exception{
         String s = "";
         if (conf.get("classifier").equals("predicate")) {
@@ -109,17 +153,17 @@ public class SimpleExplanationNLG {
             String relation = conf.get("predicate", "unknown").trim();
             switch (relation) {
                 case "==":
-                    s += " being "; break;
+                    s += " is "; break;
                 case ">":
-                    s += " greater than "; break;
+                    s += " is greater than "; break;
                 case "<":
-                    s += " less than "; break;
+                    s += " is less than "; break;
                 case "!=":
-                    s += " not equal to "; break;
+                    s += " is not equal to "; break;
                 case ">=":
-                    s += " greater than or equal to "; break;
+                    s += " is greater than or equal to "; break;
                 case "<=":
-                    s += " less than or equal to "; break;
+                    s += " is less than or equal to "; break;
                 case "unknown":
                     s += " unknown "; break;
             }
@@ -162,7 +206,9 @@ public class SimpleExplanationNLG {
     }
 
     private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(conf.get("inputURI"));
+        if (conn == null)
+         conn =  DriverManager.getConnection(conf.get("inputURI"));
+        return conn; // thread safety ?
     }
 
 }

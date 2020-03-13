@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
  */
 public class JDBCDataFrameLoader implements DataFrameLoader {
     private final String tableName;
+    private final String extraPredicate;
     private final String dburl;
     private Logger log = LoggerFactory.getLogger(JDBCDataFrameLoader.class);
     private final List<String> requiredColumns;
@@ -27,11 +28,13 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
     // when reading file, convert nulls to String "NULL" (default should be true)
     private final boolean convertNulls;
 
-    public JDBCDataFrameLoader(String url, String tableName, List<String> requiredColumns) throws IOException {
+    public JDBCDataFrameLoader(String url, String tableName, List<String> requiredColumns, String extraPredicate)
+            throws IOException {
         this.requiredColumns = requiredColumns.stream().map(String::toLowerCase).collect(Collectors.toList());
         this.tableName = tableName;
         this.dburl = url;
         this.convertNulls = true;
+        this.extraPredicate = extraPredicate;
     }
     
     @Override
@@ -96,7 +99,7 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
         //int count = getRowCount(c);
         Statement stmt = c.createStatement();
         String colNames = String.join(",", requiredColumns);
-        String sql = "SELECT " + colNames + " FROM " + tableName;
+        String sql = "SELECT " + colNames + " FROM " + tableName + " " + extraPredicate;
         System.out.println("REQUIRED COLUMNS = " + colNames);
         int sz = requiredColumns.size();
         ArrayList[] colValues = new ArrayList[sz];

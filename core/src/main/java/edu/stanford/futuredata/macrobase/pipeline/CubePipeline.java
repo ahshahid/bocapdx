@@ -110,7 +110,8 @@ public class CubePipeline implements Pipeline {
             jsonBody,
             usePost,
             requiredColumns,
-                null // Fix later ... SQL Tablename
+                "", // Fix later ... SQL Tablename
+                ""
         );
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Loading time: {} ms", elapsed);

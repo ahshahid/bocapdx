@@ -26,7 +26,8 @@ public class BasicBatchPipeline implements Pipeline {
     Logger log = LoggerFactory.getLogger(Pipeline.class);
 
     private String inputURI = null;
-    private final String baseTable;
+    private String baseTable;
+    private String extraPredicate;
 
     private String classifierType;
     private String metric;
@@ -46,6 +47,7 @@ public class BasicBatchPipeline implements Pipeline {
     private double minSupport;
     private double minRiskRatio;
     private double meanShiftRatio;
+    private int maxOrder;
 
     private boolean useFDs;
     private int[] functionalDependencies;
@@ -56,6 +58,7 @@ public class BasicBatchPipeline implements Pipeline {
         inputURI = conf.get("inputURI");
 
         baseTable = conf.get("baseTable", "NULL");
+        extraPredicate = conf.get("extraPredicate", "");
         classifierType = conf.get("classifier", "percentile");
         metric = ((String)conf.get("metric")).toLowerCase();
 
@@ -81,6 +84,7 @@ public class BasicBatchPipeline implements Pipeline {
         ratioMetric = conf.get("ratioMetric", "globalRatio");
         minRiskRatio = conf.get("minRatioMetric", 3.0);
         minSupport = conf.get("minSupport", 0.01);
+        maxOrder = conf.get("maxOrder", 3);
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
         bitmapRatioThreshold = conf.get("bitmapRatioThreshold", 256);
 
@@ -149,6 +153,7 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRiskRatio(minRiskRatio);
                 summarizer.setUseAttributeCombinations(true);
+                summarizer.setMaxOrder(maxOrder);
                 return summarizer;
             }
             case "aplinear":
@@ -162,6 +167,7 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setNumThreads(numThreads);
                 summarizer.setFDUsage(useFDs);
                 summarizer.setFDValues(functionalDependencies);
+                summarizer.setMaxOrder(maxOrder);
                 return summarizer;
             }
             case "countmeanshift": {
@@ -170,6 +176,7 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinMeanShift(meanShiftRatio);
                 summarizer.setNumThreads(numThreads);
+                summarizer.setMaxOrder(maxOrder);
                 return summarizer;
             }
             default: {
@@ -193,7 +200,7 @@ public class BasicBatchPipeline implements Pipeline {
 
         }
         requiredColumns.add(metric);
-        return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns, baseTable);
+        return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns, baseTable, extraPredicate);
     }
 
     @Override
@@ -224,7 +231,7 @@ public class BasicBatchPipeline implements Pipeline {
             String outputTable = baseTable + "_Explained" ;
             saveDataFrameToJDBC(getConnection(), outputTable,
                     getExplanationAsDataFrame(output), true);
-            SimpleExplanationNLG e = new SimpleExplanationNLG(conf, (APLExplanation) output , outputTable );
+            SimpleExplanationNLG e = new SimpleExplanationNLG(conf, (APLExplanation) output , outputTable, metric );
             System.out.println(e.explainAsText());
         }
         return output;
@@ -256,13 +263,14 @@ public class BasicBatchPipeline implements Pipeline {
         List<String> cols = df.getSchema().getColumnNames();
         List<String> l = new ArrayList<String>();
         for (int i = 0; i < cols.size(); i++) {
-            l.add(cols.get(i) + " " + df.getSchema().getColumnTypeByName(cols.get(i))) ;
+            l.add(stripSuffix(cols.get(i)) + " " + df.getSchema().getColumnTypeByName(cols.get(i))) ;
         }
-        String createTableSt = "create table if not exists " + tableName + " (" + String.join(",", l) +")";
-        System.out.println("=========\n Explanation results stored in  ......");
-        System.out.println("CREATE TABLE --> " + createTableSt);
+        System.out.println("=========\n Explanation results stored in --> " + tableName);
+        s.execute("Drop table if exists " + tableName); // Avoid this later ... lot more expensive in Gem layer
+        String createTableSt = "create table " + tableName + " (" + String.join(",", l) +") using column ";
+        System.out.println("CREATING TABLE --> " + createTableSt);
         s.execute(createTableSt);
-        if (replace)
+        if (replace)  // required later when we avoid the drop table.
             s.execute("truncate table " + tableName);
 
         String prepareStr = "?";
@@ -284,6 +292,19 @@ public class BasicBatchPipeline implements Pipeline {
         }
         p.close();
         s.close();
+    }
+
+    private String stripSuffix(String s) {
+        String s1 = removeSuffix(s, "_d_bin");
+        return removeSuffix(s1, "_bin");
+    }
+
+    public static String removeSuffix(final String s, final String suffix)
+    {
+        if (s != null && suffix != null && s.endsWith(suffix)){
+            return s.substring(0, s.length() - suffix.length());
+        }
+        return s;
     }
 
 }

@@ -16,12 +16,14 @@ public class PipelineUtils {
             String inputURI,
             Map<String, Schema.ColType> colTypes,
             List<String> requiredColumns,
-            String baseTable
+            String baseTable,
+            String extraPredicate
     ) throws Exception {
         return PipelineUtils.loadDataFrame(
                 inputURI, colTypes, null, null, false,
                 requiredColumns,
-                baseTable
+                baseTable,
+                extraPredicate
         );
     }
 
@@ -32,7 +34,8 @@ public class PipelineUtils {
             Map<String, Object> jsonBody,
             boolean usePost,
             List<String> requiredColumns,
-            String baseTable
+            String baseTable,
+            String extraPredicate
     ) throws Exception {
         if(inputURI.startsWith("csv")) {
             // take off "csv://" from inputURI
@@ -55,7 +58,7 @@ public class PipelineUtils {
             DataFrame df = loader.load();
             return df;
         } else if (inputURI.startsWith("jdbc")) {
-            JDBCDataFrameLoader loader = new JDBCDataFrameLoader(inputURI, baseTable, requiredColumns);
+            JDBCDataFrameLoader loader = new JDBCDataFrameLoader(inputURI, baseTable, requiredColumns, extraPredicate);
             loader.setColumnTypes(colTypes);
             DataFrame df = loader.load();
             return df;

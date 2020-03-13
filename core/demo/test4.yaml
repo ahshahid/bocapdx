@@ -1,6 +1,6 @@
 pipeline: "BasicBatchPipeline"
 
-objective: "Factors causing churn"
+objective: "What is causing churn?"
 
 inputURI: "jdbc:snappydata://10.80.141.102:1527"
 
@@ -31,4 +31,4 @@ attributes:
 
 ratioMetric: "globalratio"
 minRatioMetric: 1.5
-minSupport: 0.008
+minSupport: 0.007
