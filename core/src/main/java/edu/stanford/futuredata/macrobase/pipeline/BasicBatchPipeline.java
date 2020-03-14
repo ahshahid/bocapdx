@@ -237,16 +237,21 @@ public class BasicBatchPipeline implements Pipeline {
         return output;
     }
 
-    private Connection getConnection() throws SQLException {
-        Connection connection;
-        try {
-            Class.forName("io.snappydata.jdbc.ClientDriver"); // fix later
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
+    private Connection connection = null;
 
-        return DriverManager.getConnection(inputURI);
+    private Connection getConnection() throws SQLException {
+        //TODO: Not thread safe
+        if (connection == null ) {
+            try {
+                Class.forName("io.snappydata.jdbc.ClientDriver"); // fix later
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
+
+            connection = DriverManager.getConnection(inputURI);
+        }
+        return connection;
     }
 
     public DataFrame getExplanationAsDataFrame(Explanation e) throws Exception{
@@ -307,4 +312,79 @@ public class BasicBatchPipeline implements Pipeline {
         return s;
     }
 
+    //Placeholder ... move method to appropriate package/class
+
+    //TODO:  TEST THE FOLLOWING ....
+    /****
+     *    Find the cardinalities for each column in a table and store into row table. All counts are approx
+     */
+    String storeDistinctCount = "exec scala" +
+            "import org.apache.spark.sql.functions.lit " +
+            "val tabname = \"%1\"" +
+            "val df = snappysession.table(tabname)\n" +
+            "val colList = for (c <- df.columns) yield { s\"approx_count_distinct($c) as $c\"}\n" +
+            "val df1 = df.selectExpr( colList: _*)\n" +
+            "val df2 = df1.toJSON.withColumn(\"tablename\",lit(tabname))\n" +
+            "snappysession.sql(\"create table if not exists columnDistinctCount (tablename varchar(300) primary key, value string)\")\n" +
+            "snappysession.put(\"columnDistinctCount\", df2.selectExpr(\"tablename\", \"value\").collect: _*)\n" +
+            ";" ;
+    public  void storeApproxCountDistinct(String tablename) throws Exception {
+        String sql = String.format(storeDistinctCount, tablename);
+        getConnection().createStatement().executeQuery(sql);
+    }
+
+    //Get approx distinct count for specific Table, columns
+    String getApproxCountDistinct =
+            "exec scala options(returnDF 'df1')\n" +
+            "   import org.apache.spark.sql.functions._\n" +
+            "   val table = \"columnDistinctCount\"\n" +
+            "   val df = snappysession.table(%1)\n" +
+            "   val cols = %2\n" +
+            "   val df1 = df.select(json_tuple(df(\"value\"), cols : _*) )\n" +
+            ";" ;
+    public ResultSet getApproxCountDistinct(String tablename, List<String> cols) throws Exception {
+        String sql = String.format(getApproxCountDistinct, tablename, cols);
+        return getConnection().createStatement().executeQuery(sql);
+    }
+
+    /**
+     * Create and store binned values for input columns to a table with suffix '_prepped'
+     * Each input column must be numeric. It is first transformed to a double before binning.
+     * 100 bins are created.
+     * The output table has all the input columns as doubles, the corresponding binNumber column
+     * and a string with the bin range.
+     * NOTE: 100 bins may not be appropriate in many situations and range may not be correct (e.g. ZipCode)
+     */
+    String storeQuantileDiscretes = "exec scala\n" +
+            "val tablename = \"%1\"\n" +
+            "val inputcols = \"%2\"\n" +
+            "\n" +
+            "var df = snappysession.sql(s\"select $inputcols from $tablename\")\n" +
+            "val inputList = inputcols.split(\",\")\n" +
+            "val colsToBeDiscretized = for (c <- df.columns) yield { s\"cast($c as double) as $c\" + \"_d\"}\n" +
+            "var df1 = df.selectExpr( colsToBeDiscretized: _*)\n" +
+            "\n" +
+            "import org.apache.spark.ml.feature.QuantileDiscretizer\n" +
+            "val inputDoubles = inputcols.split(\",\").map( _ + \"_d\")\n" +
+            "// All to have only 100 buckets\n" +
+            "for (c <- inputDoubles) {\n" +
+            "  df1 = new QuantileDiscretizer().setInputCol(c).setOutputCol(c + \"_binnum\").setNumBuckets(100).fit(df1).transform(df1)\n" +
+            "}\n" +
+            "val disColsSelectStr = inputDoubles.map( c => { \n" +
+            "     s\"\"\"concat(min($c) over (partition by $c\"\"\" + s\"\"\"_binnum), ' to ',max($c) over (partition by $c\"\"\" + s\"\"\"_binnum)) as $c\"\"\" + \"\"\"_bin\"\"\"\n" +
+            "  }).mkString (\",\")\n" +
+            "\n" +
+            "// we save discretized columns + everything else. TODO ... change later.\n" +
+            "val allSelect = disColsSelectStr + \", *\"\n" +
+            "\n" +
+            "df1.createOrReplaceTempView(\"t1\")\n" +
+            "val preppedData = snappysession.sql(s\"select $allSelect from t1\")\n" +
+            "\n" +
+            "// TODO: Before the final DF is saved, need to add 'outcome' column + other non numeric influencers .... \n" +
+            "//preppedData.write.format(\"column\").mode(\"overwrite\").saveAsTable(s\"$tablename\" + \"_full_prepped\")" +
+            " ;\n";
+    public  void storeQuantileDiscretes(String tablename, List<String> cols) throws Exception {
+        String sql = String.format(storeQuantileDiscretes, tablename, cols);
+        getConnection().createStatement().executeQuery(sql);
+    }
 }
