@@ -59,8 +59,8 @@ app.directive('ngDraggable', function($document) {
             container = document.getElementById(id).getBoundingClientRect();
             container.x=0;
             container.y=0;
-            container.bottom = container.bottom + 15;
-            container.height = container.height + 15;
+            container.bottom = container.bottom + 33;
+            container.height = container.height + 33;
         }
         /* if (id) {
           container = {
@@ -99,6 +99,9 @@ app.directive('ngDraggable', function($document) {
       function mouseup(e) {
         $document.unbind('mousemove', mousemove);
         $document.unbind('mouseup', mouseup);
+        elem.css({
+          'z-index': 10
+        });
         if (stop) stop(e);
       }
 
@@ -123,7 +126,8 @@ app.directive('ngDraggable', function($document) {
 
         elem.css({
           top: y + 'px',
-          left:  x + 'px'
+          left:  x + 'px',
+          'z-index': 1000
         });
       }
     }

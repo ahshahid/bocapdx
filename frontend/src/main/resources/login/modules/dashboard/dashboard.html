@@ -37,11 +37,11 @@
                           Datasets
                         </a>
                     </div>
-                    <a ng-href="/#!/dashboard"><i class="glyphicon glyphicon-refresh pull-right blue-color" ></i></a>
+                    <a ng-click="refreshTables()"><i class="glyphicon glyphicon-refresh pull-right blue-color" ></i></a>
                 </header>
                 
-                <ul id="data-table" class="main-menu" drop-on-me callback-fn="getData(table)">
-                    <li ng-click="getData(table)" ng-repeat="table in tableNames track by $index">
+                <ul id="data-table" class="main-menu" drop-on-me >
+                    <li ng-click="getData(table); $event.preventDefault()" ng-repeat="table in tableNames track by $index">
                         <input type="checkbox" id="{{table}}" ng-model="myTable.selected[table]" class="pull-right" >
                         <label drag-me for="{{table}}" id="{{table}}" class="title"><span>{{table}}</span></label>
                     </li>
@@ -56,7 +56,7 @@
       </ul>
       <div class="panel panel-gray worksheet-tab">
         
-        <div class="panel-body" id="worksheet"  drop-on-me callback-fn="getData(table)" style="position: relative;">
+        <div class="panel-body" id="worksheet"  drop-on-me callback-fn="getData(table,true)" style="position: relative;">
           <div class="table-details " ng-repeat="table in workSheetTables" ng-if="worksheet"  ng-draggable='dragOptions' style="cursor: move;position: absolute;">
            <p>{{table.name}}</p>
             <p>Columns: {{table.colCount}}<br>
