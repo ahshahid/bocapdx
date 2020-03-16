@@ -127,7 +127,10 @@ public abstract class SQLIngester extends DataIngester {
         ResultSet rs = dmd.getTables(null, this.dbUser, "%", null );
         List<String> tables = new ArrayList<>();
         while(rs.next()) {
-            tables.add(rs.getString(3));
+            String tableOrView = rs.getString(3).toLowerCase();
+            if (!tableOrView.startsWith(MacroBaseDefaults.BOCA_VIEWS_PREFIX)) {
+                tables.add(tableOrView);
+            }
         }
         return tables;
     }
@@ -189,6 +192,15 @@ public abstract class SQLIngester extends DataIngester {
         Statement stmt = connection.createStatement();
         ResultSet rs = stmt.executeQuery(query);
         return rs;
+
+    }
+
+    public void executeSQL(String ddl) throws SQLException {
+        initializeConnection();
+        // TODO handle time column here
+
+        Statement stmt = connection.createStatement();
+        stmt.execute(ddl);
 
     }
 

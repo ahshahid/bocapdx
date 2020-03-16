@@ -21,26 +21,45 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Map;
+import java.util.stream.Collectors;
+import io.boca.internal.tables.FeatureType;
 @Path("/fastInsight")
 @Produces(MediaType.APPLICATION_JSON)
 
 public class FastInsightResource extends BaseResource {
-  private static final Logger log = LoggerFactory.getLogger(SchemaResource.class);
+  private static final Logger log = LoggerFactory.getLogger(FastInsightResource.class);
 
   @Context
   private HttpServletRequest request;
 
   static class FastInsightRequest {
-    public String tablename;
+    public int workflowid;
     public List<String> kpicols;
   }
 
   static class FastInsightResponse {
-    public List<String> depcols;
-    public List<Double> corrs;
+    public List<KpiData> kpidata;
     public String errorMessage;
+    static class KpiData {
+      public String kpicolname;
+      public String kpitype;
+      public List<PredictorData> continuousfeatures;
+      public List<PredictorData> categoricalfeatures;
+      static class PredictorData {
+        public String predictorname;
+        public double corr;
+        public PredictorData(String name, double val) {
+          predictorname = name;
+          corr = val;
+        }
+      }
+    }
   }
+
+
+
+
 
   public FastInsightResource(MacroBaseConf conf) {
     super(conf);
@@ -53,11 +72,27 @@ public class FastInsightResource extends BaseResource {
     HttpSession ss = request.getSession();
     try {
       SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
-      TableData td = TableManager.getTableData(fir.tablename, ingester);
-      DependencyData[] dd = new DependencyData[fir.kpicols.size()];
-      int index = 0;
+      TableData td = TableManager.getTableData(fir.workflowid);
+      response.kpidata = new ArrayList<>(fir.kpicols.size());
       for(String kpiCol: fir.kpicols) {
-        dd[index] = td.getDependencyData(kpiCol, ingester);
+        DependencyData dd = td.getDependencyData(kpiCol, ingester);
+        FastInsightResponse.KpiData kpid = new FastInsightResponse.KpiData();
+        kpid.kpicolname = kpiCol;
+        kpid.kpitype = dd.getKpiColFeatureType().name();
+        Map<String, Double> contiMap = dd.getContinousFeatureMap();
+        Map<String, Double> catMap = dd.getCategoricalFeatureMap();
+        if (!contiMap.isEmpty()) {
+          kpid.continuousfeatures = contiMap.entrySet().stream().map(entry ->
+              new FastInsightResponse.KpiData.PredictorData(entry.getKey(),
+                  entry.getValue())).collect(Collectors.toList());
+        }
+
+        if (!catMap.isEmpty()) {
+          kpid.categoricalfeatures = catMap.entrySet().stream().map(entry ->
+              new FastInsightResponse.KpiData.PredictorData(entry.getKey(),
+                  entry.getValue())).collect(Collectors.toList());
+        }
+        response.kpidata.add(kpid);
       }
 
     } catch (Exception e) {
@@ -67,3 +102,4 @@ public class FastInsightResource extends BaseResource {
     return response;
   }
 }
+

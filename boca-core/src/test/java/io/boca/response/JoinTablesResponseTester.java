@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.apache.http.util.EntityUtils;
 
-public class ResponseTester {
+public class JoinTablesResponseTester {
   String host = "localhost";
   @Test
   public void testResponse() throws Exception {
@@ -59,24 +59,25 @@ public class ResponseTester {
 
 
       ObjectMapper objectMapper = new ObjectMapper();
-       String tableName = "airline_ext";
+      String table1 = "telecom_churn_billing_prepped_view";
+      String table2 = "telecom_churn_networkq";
 
-        // Test schema fetch
-        String schemaUrl = "http://" + host + ":9090/api/schema";
-        httpPost = new HttpPost(schemaUrl);
-        httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-        data = new StringEntity("{\"table\":{\"name\":\"" +  tableName + "\"}}");
-        httpPost.addHeader("User-Agent", "Apache HTTPClient");
+      // Test schema fetch
+      String schemaUrl = "http://" + host + ":9090/api/schema";
+      httpPost = new HttpPost(schemaUrl);
+      httpPost.addHeader("content-type", "application/json;charset=UTF-8");
+      data = new StringEntity("{\"table\":{\"name\":\"" +  table1 + "\", \"joinlist\":[{\"table\":{\"name\":\"" + table2 +"\"}}]}}");
+      httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
-        httpPost.setEntity(data);
-        response = client.execute(httpPost, httpContext);
+      httpPost.setEntity(data);
+      response = client.execute(httpPost, httpContext);
 
-        entity = response.getEntity();
-        content = EntityUtils.toString(entity);
-        System.out.println("\n\n");
-        System.out.println("for table = " + tableName);
-        System.out.println(content);
-        System.out.println("\n\n");
+      entity = response.getEntity();
+      content = EntityUtils.toString(entity);
+      System.out.println("\n\n");
+      System.out.println("for table = " + table1 + "join " +table2);
+      System.out.println(content);
+      System.out.println("\n\n");
 
 
       JsonNode rootNode = objectMapper.readTree(content);
@@ -117,10 +118,10 @@ public class ResponseTester {
 
 
       // dependency fetch
-     /* String fastInsightUrl = "http://" + host + ":9090/api/fastInsight";
+      String fastInsightUrl = "http://" + host + ":9090/api/fastInsight";
       httpPost = new HttpPost(fastInsightUrl);
       httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-      data = new StringEntity("{\"workflowid\":" + workflowid +", \"kpicols\":[\"weatherdelay\"]}");
+      data = new StringEntity("{\"workflowid\":" + workflowid +", \"kpicols\":[\"telecom_churn_networkq_churn\"]}");
       httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
       httpPost.setEntity(data);
@@ -131,7 +132,6 @@ public class ResponseTester {
       System.out.println("\n\n");
       System.out.println(content);
       System.out.println("\n\n");
-      */
 
 
     } finally {

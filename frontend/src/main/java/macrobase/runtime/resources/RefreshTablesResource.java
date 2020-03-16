@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 @Path("/refreshTables")
 @Produces(MediaType.APPLICATION_JSON)
 public class RefreshTablesResource extends BaseResource {
-  private static final Logger log = LoggerFactory.getLogger(LoginResource.class);
+  private static final Logger log = LoggerFactory.getLogger(RefreshTablesResource.class);
 
   @Context
   private HttpServletRequest request;

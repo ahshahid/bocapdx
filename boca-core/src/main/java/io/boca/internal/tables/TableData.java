@@ -5,27 +5,29 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.sql.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
 
 public class TableData {
   private long totalRows;
+  private final int workFlowId;
+  public final boolean isQuery;
   private final List<List<String>> sampleRows;
   private static final double pValueThreshold = 0.05d;
-  private final String tableName;
+  private final String tableOrQuery;
+  private final String tableOrView;
   private final Schema schema;
   private Map<Integer, ColumnData[]> sqlTypeToColumnMappings = new HashMap<>();
   private Map<String, ColumnData> columnMappings = new HashMap<>();
@@ -89,9 +91,38 @@ public class TableData {
       + "import scala.collection.JavaConverters._;"
       + "val valueDf = snappysession.sqlContext.createDataFrame(rows.toSeq.asJava, outputSchema);";
 
+  private static String catToContCorr = "import org.apache.spark.sql._;"
+      + "import org.apache.spark.sql.types._;"
+      + "import org.apache.spark.sql.functions._;"
+      + "val tableDf = snappysession.table(\"%1$s\");"
+      + "val tableSchema = tableDf.schema;"
+      + "val table = \"%1$s\";"
+      + "val catVarName = \"%2$s\";"
+      + "val contVarName = \"%3$s\";"
+      + "val catMeanSql = s\"select avg($contVarName), count(*), $catVarName from $table where $catVarName is not null group by $catVarName\";"
+      + "val catMeanDf = snappysession.sql(catMeanSql);"
+      + "val catMeanResult = catMeanDf.collect();"
+      + "val overAllMeanDf = snappysession.sql(s\"select avg($contVarName) from $table \");"
+      + "val isOverAllMeanBigDec =  overAllMeanDf.schema(0).dataType.isInstanceOf[DecimalType]; "
+      + "val overAllMean = if (isOverAllMeanBigDec) {overAllMeanDf.collect()(0).getDecimal(0).doubleValue();} else {overAllMeanDf.collect()(0).getDouble(0);};"
+      + "val isCatMeanResultBigDec = catMeanDf.schema(0).dataType.isInstanceOf[DecimalType]; "
+      + "val Ai_categoryMeanDiff = catMeanResult.map(row => {"
+      +  "val catMean = if (isCatMeanResultBigDec) {row.getDecimal(0).doubleValue(); }else { row.getDouble(0);};"
+      + "(catMean - overAllMean) -> row.getLong(1);"
+      + " });"
+      + "val SStreatmentBetweenGroups = Ai_categoryMeanDiff.foldLeft(0d)((sum,tup) => {sum + tup._1 * tup._1 * tup._2;});"
+      + "val SStotal = snappysession.sql(s\"select "
+      + " cast (sum(cast(($contVarName - $overAllMean) * ($contVarName - $overAllMean) as double)) as double) from $table where $catVarName is not null\").collect()(0).getDouble(0);"
+      + "val SSresidual = SStotal - SStreatmentBetweenGroups;"
+      + "val rsq = SStreatmentBetweenGroups / SStotal; "
+      + "val outputSchema = StructType(Seq(StructField(\"rsq\", DoubleType, false)));"
+      + "import scala.collection.JavaConverters._;"
+
+      + "val valueDf = snappysession.sqlContext.createDataFrame(java.util.Collections.singletonList(Row(rsq)),"
+      + " outputSchema);";
 
 
-      /*
+  /*
       + "import org.apache.spark.ml.feature.ChiSqSelector;"
       + "val selector = new ChiSqSelector().setNumTopFeatures(depsColIndxs.length) .setFeaturesCol(\"features\")."
       + "setLabelCol(kpiIndexerCol.getOrElse(tableSchema(kpiColsIndex).name)) .setOutputCol(\"selectedFeatures\");"
@@ -115,25 +146,18 @@ public class TableData {
       + "val valueDf = snappysession.sqlContext.createDataFrame(java.util.Collections.singletonList("
       + "Row(chiRes.degreesOfFreedom, chiRes.method, chiRes.nullHypothesis, chiRes.pValue, chiRes.statistic)), ouputSchema);";
       */
-  private static String contiToContiCorr = "import org.apache.spark.mllib.linalg._;"
+  private static String biserialCorr = "import org.apache.spark.mllib.linalg._;"
       + "import org.apache.spark.sql._;"
       + "import org.apache.spark.sql.types._;"
       + "import org.apache.spark.mllib.stat._;"
       + "val tableDf = snappysession.table(\"%1$s\");"
-      + "val inputVectorRDD = tableDf.rdd.map[Vector](row => {"
-      + "val arr = Array(row(%2$s),row(%3$s));"
-      + "val doubleArr = arr.map(elem => {"
-      +  " elem match {"
-      +     "case x: Short => x.toDouble;"
-      +     "case x: Int => x.toDouble;"
-      +     "case x: Long => x.toDouble;"
-      +     "case x: Float => x.toDouble;"
-      +     "case x: Double => x;"
-      +     "case x: Decimal => x.toDouble;"
-      +     "case _ => throw new RuntimeException(\"unknown type\");"
-      +     "}"
-      +   "});"
-      +   "Vectors.dense(doubleArr);"
+      + "var biserialValue: Any = null;"
+      + "val inputVectorRDD = tableDf.rdd.map[org.apache.spark.mllib.linalg.Vector](row => {"
+      + "val arr = Array(row(%2$s)-> 0,row(%3$s) -> 1);"
+      + "val doubleArr = arr.map{case(elem, index) => {"
+      +      "%4$s"
+      +   "}};"
+      +   "org.apache.spark.mllib.linalg.Vectors.dense(doubleArr);"
       +  "});"
       //+ "val elementType1 = new ObjectType(classOf[Vector]);"
       //+ "val inputDataFrame = snappysession.createDataFrame(inputRowRDD, StructType(Seq(StructField(\"feature\", elementType1, false))));"
@@ -142,13 +166,81 @@ public class TableData {
       + "val dfStrct = StructType(Seq(StructField(\"corr\", DoubleType, false)));"
       + "val valueDf = snappysession.sqlContext.createDataFrame(java.util.Collections.singletonList(Row(corrValue)), dfStrct);";
 
-  //+ "val valueDf = snappysession.sqlContext.createDataFrame(java.util.Collections.singletonList(Row(corrValue)), dfStrct)";
-     // + "val rsDf = org.apache.spark.ml.stat.Correlation.corr(inputDataFrame, \"feature\" );"
-     // + "val valueDf = rsDf.map[Row](row => Row(row(0).asInstanceOf[Matrix](0,0)))(Encoders.Double);";
+
+  private static String contiToContiCorr = "import org.apache.spark.mllib.linalg._;"
+      + "import org.apache.spark.sql._;"
+      + "import org.apache.spark.sql.types._;"
+      + "import org.apache.spark.mllib.stat._;"
+      + "import org.apache.spark.sql.functions._;"
+      + "val tableDf = snappysession.table(\"%1$s\");"
+      + "val tableSchema = tableDf.schema;"
+      + "val depColIndexes = %2$s;"
+      + "val kpiColIndex = %3$s;"
+      + "val kpiColExpression = if (tableSchema(kpiColIndex).dataType != DoubleType) {"
+      + "                          s\"cast(${tableSchema(kpiColIndex).name} as double)\";"
+      + "                       } else { "
+      + "                         s\"${tableSchema(kpiColIndex).name}\";"
+      + "                         };"
+      + "val correlationExprs = depColIndexes.map(index => {"
+      + "                      val depColExpression = if (tableSchema(index).dataType != DoubleType) {"
+      + "                          s\"cast(${tableSchema(index).name} as double)\";"
+      + "                       } else { "
+      + "                         s\"${tableSchema(index).name}\";"
+      + "                       };"
+      + "                      s\"corr(${depColExpression}, ${kpiColExpression})\";"
+      + "}).toSeq;"
+      + "val valueDf = tableDf.selectExpr(correlationExprs :_*);";
+
 
   private static ThreadLocal<SQLIngester> ingesterThreadLocal = new ThreadLocal<SQLIngester>();
 
-  private BiFunction<ColumnData, ColumnData, Double> kpiContToCont = (kpiCd, depCd) -> {
+  private BiFunction<ColumnData, List<ColumnData> , double[]> kpiContToCont = (kpiCd, depCds) -> {
+    StringBuilder depColIndexes = new StringBuilder("Array[Int](");
+    int kpiColIndex = -1;
+    List<Schema.SchemaColumn> cols = getSchema().getColumns();
+
+    for(ColumnData depCd : depCds) {
+      inner: for (int i = 0; i < cols.size(); ++i) {
+        Schema.SchemaColumn sc = cols.get(i);
+        if (sc.getName().equalsIgnoreCase(depCd.name)) {
+          depColIndexes.append(i).append(',');
+          break inner;
+        }
+      }
+    }
+    depColIndexes.deleteCharAt(depColIndexes.length() - 1).append(')');
+
+
+    for (int i = 0; i < cols.size(); ++i) {
+     Schema.SchemaColumn sc = cols.get(i);
+        if (sc.getName().equalsIgnoreCase(kpiCd.name)) {
+          kpiColIndex = i;
+          break ;
+        }
+    }
+
+
+
+
+
+    String scalaCodeToExecute = String.format(contiToContiCorr,
+        this.getTableOrView(), depColIndexes.toString(), kpiColIndex);
+    SQLIngester ingester = ingesterThreadLocal.get();
+    try {
+      ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
+      rs.next();
+      double[] retVal = new double[depCds.size()];
+      for(int i = 0; i < retVal.length; ++i) {
+        retVal[i] = rs.getDouble(i + 1);
+      }
+      return retVal;
+    } catch(SQLException sqle) {
+      throw new RuntimeException(sqle);
+    }
+
+  };
+
+  private BiFunction<ColumnData, ColumnData, Double> biserial = (kpiCd, depCd) -> {
     int depColIndex = -1, kpiColIndex = -1;
     List<Schema.SchemaColumn> cols = getSchema().getColumns();
     for(int i = 0 ; i < cols.size(); ++i) {
@@ -164,8 +256,30 @@ public class TableData {
       }
     }
 
-    String scalaCodeToExecute = String.format(contiToContiCorr,
-        this.getTableName(), depColIndex, kpiColIndex);
+      int indexOfCatCol = -1;
+      if (depCd.ft.equals(FeatureType.categorical)) {
+        assert depCd.numDistinctValues == 2;
+        indexOfCatCol = 0;
+      } else {
+        assert kpiCd.numDistinctValues == 2;
+        indexOfCatCol = 1;
+      }
+      String elementTransformationCode = " if (biserialValue == null && index == " + indexOfCatCol +") biserialValue = elem;"
+          + "val isCatCol = index == " + indexOfCatCol + ";"
+          +" elem match {"
+          +     "case x: Short => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else x.toDouble;"
+          +     "case x: Int => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else x.toDouble;"
+          +     "case x: Long => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else x.toDouble;"
+          +     "case x: Float => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else x.toDouble;"
+          +     "case x: Double => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else x;"
+          +     "case x: Decimal => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else x.toDouble;"
+          +     "case x: String => if (isCatCol) if(elem == biserialValue) 0.0d else 1.0d else throw new RuntimeException(\"continuous var as string\");"
+          +     "case _ => throw new RuntimeException(\"unknown type\");"
+          +     "}";
+
+
+    String scalaCodeToExecute = String.format(biserialCorr,
+        this.getTableOrView(), depColIndex, kpiColIndex, elementTransformationCode);
     SQLIngester ingester = ingesterThreadLocal.get();
     try {
       ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
@@ -176,6 +290,22 @@ public class TableData {
     }
 
   };
+
+
+  private BiFunction<ColumnData, ColumnData, Double> catToCont = (catCol, contCol) -> {
+    String scalaCodeToExecute = String.format(catToContCorr,
+        this.getTableOrView(), catCol.name, contCol.name);
+    SQLIngester ingester = ingesterThreadLocal.get();
+    try {
+      ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
+      rs.next();
+      return rs.getDouble(1);
+    } catch(SQLException sqle) {
+      throw new RuntimeException(sqle);
+    }
+
+  };
+
 
   private BiFunction<ColumnData, List<ColumnData>, Map<String, Double>> categoricalToCategorical = (kpiCd, depCds) -> {
     List<Schema.SchemaColumn> cols = getSchema().getColumns();
@@ -201,7 +331,7 @@ public class TableData {
     sb.deleteCharAt(sb.length() -1);
     String depsColindxsStr = sb.toString();
     String scalaCodeToExecute = String.format(catToCatCorr,
-        this.getTableName(), depsColindxsStr, kpiColIndex, String.valueOf(pValueThreshold));
+        this.getTableOrView(), depsColindxsStr, kpiColIndex, String.valueOf(pValueThreshold));
     SQLIngester ingester = ingesterThreadLocal.get();
     try {
       ResultSet rs = ingester.executeQuery("exec scala options (returnDF 'valueDf') " + scalaCodeToExecute);
@@ -217,41 +347,110 @@ public class TableData {
   };
 
   private Function<String, DependencyData> depedencyComputer = kpi -> {
-    DependencyData dd = new DependencyData();
-    ColumnData kpiCol = columnMappings.get(kpi.toLowerCase());
 
+    ColumnData kpiCol = columnMappings.get(kpi.toLowerCase());
+    DependencyData dd = new DependencyData(kpiCol.name, kpiCol.ft);
     if (kpiCol.ft.equals(FeatureType.continuous)) {
-     for(ColumnData cd: columnMappings.values()) {
-       if (!cd.name.equalsIgnoreCase(kpi)) {
-         if (cd.ft.equals(FeatureType.continuous)) {
-           double corr = kpiContToCont.apply(kpiCol, cd);
-           dd.add(cd.name, corr);
-         }
-       }
-     }
+      // identify which are continuous or categorical cols which can use pearson corr directly
+      List<ColumnData> pearsonAmenable = columnMappings.values().stream().filter(cd ->
+         !cd.name.equalsIgnoreCase(kpi) && !cd.skip && (cd.ft.equals(FeatureType.continuous) ||
+             (cd.ft.equals(FeatureType.categorical) && cd.numDistinctValues == 2 && (cd.sqlType == Types.SMALLINT ||
+                 cd.sqlType == Types.INTEGER || cd.sqlType == Types.BIGINT || cd.sqlType == Types.DOUBLE
+          || cd.sqlType == Types.FLOAT)))
+      ).collect(Collectors.toList());
+      if (!pearsonAmenable.isEmpty()) {
+        double[] corrs = kpiContToCont.apply(kpiCol, pearsonAmenable);
+        for(int i = 0 ; i < corrs.length; ++i) {
+          dd.addToPearson(pearsonAmenable.get(i).name, corrs[i]);
+        }
+      }
+
+      List<ColumnData> annovaAmenable = columnMappings.values().stream().filter(cd ->
+          !cd.name.equalsIgnoreCase(kpi) && !cd.skip && cd.ft.equals(FeatureType.categorical) &&
+              cd.numDistinctValues != 2 ).collect(Collectors.toList());
+      if (!annovaAmenable.isEmpty()) {
+        for(ColumnData cd: annovaAmenable) {
+          double corr = catToCont.apply(cd, kpiCol);
+          dd.addToAnova(cd.name, corr);
+        }
+      }
+
+      List<ColumnData> biserialAmenable = columnMappings.values().stream().filter(cd ->
+          !cd.name.equalsIgnoreCase(kpi) && !cd.skip &&
+              cd.ft.equals(FeatureType.categorical) && cd.numDistinctValues == 2 && !(cd.sqlType == Types.SMALLINT ||
+                  cd.sqlType == Types.INTEGER || cd.sqlType == Types.BIGINT || cd.sqlType == Types.DOUBLE
+                  || cd.sqlType == Types.FLOAT)
+      ).collect(Collectors.toList());
+      if (!biserialAmenable.isEmpty()) {
+        for(ColumnData cd: biserialAmenable) {
+          double corr = biserial.apply(cd, kpiCol);
+          dd.addToPearson(cd.name, corr);
+        }
+      }
+
     } else if (kpiCol.ft.equals(FeatureType.categorical)) {
       // get all the categorical cols
       List<ColumnData> deps = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
-          && ele.ft.equals(FeatureType.categorical)).collect(Collectors.toList());
+          && !ele.skip && ele.ft.equals(FeatureType.categorical)).collect(Collectors.toList());
       Map<String, Double> corrData = categoricalToCategorical.apply(kpiCol, deps);
       for(Map.Entry<String, Double> entry: corrData.entrySet()) {
-        dd.add(entry.getKey(), entry.getValue());
+        dd.addToChiSqCorrelation(entry.getKey(), entry.getValue());
       }
+      // get all the continous cols
+      List<ColumnData> contiCols = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
+          && !ele.skip && ele.ft.equals(FeatureType.continuous)).collect(Collectors.toList());
+      if (kpiCol.numDistinctValues == 2) {
+        if (kpiCol.sqlType == Types.SMALLINT ||
+            kpiCol.sqlType == Types.INTEGER || kpiCol.sqlType == Types.BIGINT || kpiCol.sqlType == Types.DOUBLE
+            || kpiCol.sqlType == Types.FLOAT) {
+          double[] corrs = kpiContToCont.apply(kpiCol, contiCols);
+          for(int i = 0 ; i < corrs.length; ++i) {
+            dd.addToPearson(contiCols.get(i).name, corrs[i]);
+          }
+        } else {
+          // biserial
+          contiCols.stream().forEach(contiCol -> {
+            double corr = biserial.apply(kpiCol, contiCol);
+            dd.addToPearson(contiCol.name, corr);
+          });
+        }
+      } else {
+        contiCols.stream().forEach(contiCol -> {
+          double corr = catToCont.apply(kpiCol, contiCol);
+          dd.addToAnova(contiCol.name, corr);
+        });
+      }
+
     }
     return dd;
   };
 
 
-  TableData(String tableName, SQLIngester ingester) throws SQLException, IOException {
+  TableData(String tableOrQuery, SQLIngester ingester, int workFlowId, boolean isQuery) throws SQLException, IOException {
     // filter columns of interest.
     // figure out if they are continuous or categorical
-    this.tableName = tableName;
-    ResultSet sampleSet = ingester.executeQuery("select * from "
-        + tableName + " LIMIT 100");
+    this.workFlowId = workFlowId;
+    this.isQuery = isQuery;
+    this.tableOrQuery = tableOrQuery;
+    // if query create a view
+    if (isQuery) {
+      String viewName = MacroBaseDefaults.BOCA_VIEWS_PREFIX + workFlowId;
+      ingester.executeSQL("drop view if exists " + viewName );
+      ingester.executeSQL("drop table if exists " + viewName );
+      String viewDef = "create table " + viewName + " as (" + tableOrQuery + ")";
+      ingester.executeSQL(viewDef);
+      this.tableOrView = viewName;
+    } else {
+      this.tableOrView = tableOrQuery;
+    }
+
+    String query = "select * from " + this.tableOrView + " limit 100;";
+    ResultSet sampleSet = ingester.executeQuery(query);
     this.schema = ingester.getSchema(sampleSet);
-    this.sampleRows = getSampleRows(sampleSet);
+    this.sampleRows = Utils.convertResultsetToRows(sampleSet);
     // get total rows
-    ResultSet rs = ingester.executeQuery("select count(*) from " + tableName);
+    String countQuery = "select count (*) from " + tableOrView;
+    ResultSet rs = ingester.executeQuery(countQuery);
     rs.next();
     totalRows = rs.getLong(1);
     // segregate columns based on sql types
@@ -272,260 +471,37 @@ public class TableData {
     return  this.totalRows;
   }
 
-  private static List<List<String>>  getSampleRows(ResultSet rs) throws SQLException, IOException {
-    ResultSetMetaData rsmd = rs.getMetaData();
-    int numCols = rsmd.getColumnCount();
-    List<List<String>> sampleRows = new ArrayList<>(100);
-    while(rs.next()) {
-      List<String> row = new ArrayList<>();
-      for (int i = 1; i <= numCols; ++i) {
-        switch (rsmd.getColumnType(i)) {
-          case Types.ARRAY : {
-            Array temp = rs.getArray(i);
-            if (temp != null) {
-              Object [] data = (Object[])temp.getArray();
-              StringBuilder sb = new StringBuilder();
-              for(Object ele: data) {
-                sb.append(ele).append(", ");
-              }
-              sb.deleteCharAt(sb.length() -1);
-              row.add(sb.toString());
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.ROWID:
-          case Types.BIGINT : {
-            long temp = rs.getLong(i);
-            if (!rs.wasNull()) {
-              row.add(String.valueOf(temp));
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-
-          case Types.BIT : {
-            byte temp = rs.getByte(i);
-            if (!rs.wasNull()) {
-              row.add(String.valueOf(temp));
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.BLOB : {
-            byte[] temp = rs.getBytes(i);
-            if (!rs.wasNull()) {
-              row.add("blob data");
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.BOOLEAN : {
-            boolean temp = rs.getBoolean(i);
-            if (!rs.wasNull()) {
-              row.add(String.valueOf(temp));
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.NCLOB :
-          {
-            NClob temp = rs.getNClob(i);
-            if (!rs.wasNull()) {
-              long length = temp.length();
-              int intLength = length > Integer.MAX_VALUE? Integer.MAX_VALUE: (int)length;
-
-              char [] buff = new char[intLength];
-
-              Reader reader = temp.getCharacterStream();
-              int numRead = 0;
-              int totalRead = 0;
-              while((numRead = reader.read(buff, totalRead,
-                  intLength - totalRead)) != -1 && totalRead < intLength) {
-                totalRead += numRead;
-              }
-              row.add(new String(buff));
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.CLOB : {
-            Clob temp = rs.getClob(i);
-            if (!rs.wasNull()) {
-              long length = temp.length();
-              int intLength = length > Integer.MAX_VALUE? Integer.MAX_VALUE: (int)length;
-
-              char [] buff = new char[intLength];
-
-              Reader reader = temp.getCharacterStream();
-              int numRead = 0;
-              int totalRead = 0;
-              while((numRead = reader.read(buff, totalRead,
-                  intLength - totalRead)) != -1 && totalRead < intLength) {
-                totalRead += numRead;
-              }
-              row.add(new String(buff));
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.DATE : {
-            Date temp = rs.getDate(i);
-            if (!rs.wasNull()) {
-              row.add(temp.toString());
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.DECIMAL : {
-            BigDecimal temp = rs.getBigDecimal(i);
-            if (!rs.wasNull()) {
-              row.add(temp.toString());
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.DOUBLE : {
-            double temp = rs.getDouble(i);
-            if (!rs.wasNull()) {
-              row.add(String.valueOf(temp));
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.REAL:
-          case Types.FLOAT : {
-            float temp = rs.getFloat(i);
-            if (!rs.wasNull()) {
-              row.add(String.valueOf(temp));
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.INTEGER : {
-            int temp = rs.getInt(i);
-            if (!rs.wasNull()) {
-              row.add(String.valueOf(temp));
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.SMALLINT : {
-            short temp = rs.getShort(i);
-            if (!rs.wasNull()) {
-              row.add(String.valueOf(temp));
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.JAVA_OBJECT : {
-            Object temp = rs.getObject(i);
-            if (!rs.wasNull()) {
-              row.add(temp.toString());
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.LONGNVARCHAR :
-          case Types.NCHAR :
-          case Types.NVARCHAR :
-          {
-            String temp = rs.getNString(i);
-            if (!rs.wasNull()) {
-              row.add(temp);
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-
-          case Types.LONGVARBINARY :
-          case Types.LONGVARCHAR :
-          case Types.CHAR :
-          case Types.VARCHAR :
-          case Types.BINARY :
-          {
-            String temp = rs.getString(i);
-            if (!rs.wasNull()) {
-              row.add(temp);
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.NUMERIC:
-          {
-            float temp = rs.getFloat(i);
-            if (!rs.wasNull()) {
-              row.add(String.valueOf(temp));
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.TIMESTAMP:
-          case Types.TIMESTAMP_WITH_TIMEZONE:
-          {
-            Timestamp temp = rs.getTimestamp(i);
-            if (!rs.wasNull()) {
-              row.add(temp.toString());
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.TIME:
-          case Types.TIME_WITH_TIMEZONE:
-          {
-            Time temp = rs.getTime(i);
-            if (!rs.wasNull()) {
-              row.add(temp.toString());
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          case Types.TINYINT : {
-            byte temp = rs.getByte(i);
-            if (!rs.wasNull()) {
-              row.add(String.valueOf(temp));
-            } else {
-              row.add(null);
-            }
-            break;
-          }
-          default: {
-            throw new RuntimeException("Unhandled sql type = " + rsmd.getColumnType(i));
-          }
-
-        }
-
-      }
-      sampleRows.add(row);
-    }
-    return  sampleRows;
+  public long getWorkFlowId() {
+    return this.workFlowId;
   }
+
+
 
   public Schema getSchema() {
     return this.schema;
   }
 
-  public String getTableName() {
-    return this.tableName;
+  public ColumnData getFirstAvailablePkColumn() {
+    Optional<ColumnData> opt =this.columnMappings.values().stream().filter(cd -> cd.possiblePrimaryKey).findFirst();
+    return opt.orElseThrow(() -> new RuntimeException("Primary Key not found"));
+  }
+
+  public ColumnData getFirstAvailablePkColumn(int sqlType) {
+    ColumnData[] arr = this.sqlTypeToColumnMappings.getOrDefault(sqlType, new ColumnData[0]);
+    for(ColumnData cd : arr) {
+      if (cd.isPossiblePrimaryKey()) {
+        return cd;
+      }
+    }
+    throw new  RuntimeException("Primary Key not found");
+  }
+
+  public ColumnData getColumnData(String colName) {
+    return this.columnMappings.get(colName);
+  }
+
+  public String getTableOrView() {
+    return this.tableOrView;
   }
 
   public List<List<String>> getSampleRows() {
@@ -545,29 +521,56 @@ public class TableData {
       case Types.INTEGER:
       case Types.BIGINT: {
         String countClause = scs.stream().map(sc -> sc.getName()).reduce("", (str1, str2)
-            -> str1 + "," + " count(distinct " + str2 + ")").substring(1);
+            -> str1 + "," + " approx_count_distinct(" + str2 + ")").substring(1);
         String query = "select  %1$s from %2$s";
-        ResultSet rs = ingester.executeQuery(String.format(query, countClause, this.tableName));
+
+        ResultSet rs = ingester.executeQuery(String.format(query, countClause, this.tableOrView));
         rs.next();
+        List<Integer> possiblePkIndexes = new ArrayList<>(cds.length);
         int i = 1;
         for (Schema.SchemaColumn sc : scs) {
-          long num = rs.getLong(i);
+          long distinctValues = rs.getLong(i);
           boolean skip = false;
-          FeatureType ft = null;
-          int percent = (int)((100 * num) / totalRows);
-          if (percent > 80) {
-            skip = true;
-          } else if (percent < 10) {
-            ft = FeatureType.categorical;
-            skip = false;
+          FeatureType ft = FeatureType.unknown;
+          int percent = totalRows > 0 ?(int)((100 * distinctValues) / totalRows): -1;
+          if (percent != -1) {
+            if (percent > 80) {
+              skip = true;
+            } else if (percent < 10) {
+              ft = FeatureType.categorical;
+              skip = false;
+            } else {
+              skip = false;
+              ft = FeatureType.continuous;
+            }
           } else {
-            skip = false;
-            ft = FeatureType.continuous;
+            skip = true;
           }
-
-          cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType);
+          // if approx distinct values is > 90 % of total rows , get exact figure
+          if (distinctValues > (90 * totalRows)/100) {
+            if (!isQuery) {
+              possiblePkIndexes.add(i - 1);
+            }
+          }
+          cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
+              distinctValues, false);
           ++i;
         }
+        if (!possiblePkIndexes.isEmpty()) {
+          String exactCountClause = possiblePkIndexes.stream().map(j -> cds[j].name).reduce("", (str1, str2)
+              -> str1 + "," + " count(distinct " + str2 + ")").substring(1);
+
+          rs = ingester.executeQuery(String.format(query, exactCountClause, this.tableOrView));
+          rs.next();
+          i = 1;
+          for (int pos : possiblePkIndexes) {
+            ColumnData cdd = cds[pos];
+            cdd.numDistinctValues = rs.getLong(i);
+            cdd.possiblePrimaryKey = cdd.numDistinctValues == this.totalRows;
+            ++i;
+          }
+        }
+
         return cds;
       }
       case Types.DECIMAL:
@@ -577,11 +580,11 @@ public class TableData {
         int i = 0;
         for (Schema.SchemaColumn sc : scs) {
           cds[i++] = new ColumnData(sc.getName().toLowerCase(), FeatureType.continuous, false,
-              sqlType);
+              sqlType, -1, false);
         }
         return cds;
       }
-      case Types.NCHAR:
+     /* case Types.NCHAR:
       case Types.CHAR:{
         int i = 0;
         for (Schema.SchemaColumn sc : scs) {
@@ -589,38 +592,70 @@ public class TableData {
               sqlType);
         }
         return cds;
-      }
+      } */
+      case Types.NCHAR:
+      case Types.CHAR:
       case Types.LONGNVARCHAR:
       case Types.LONGVARCHAR:
       case Types.NVARCHAR:
       case Types.VARCHAR:
       {
+        List<Integer> possiblePkIndexes = new ArrayList<>(cds.length);
+
         String countClause = scs.stream().map(sc -> sc.getName().toLowerCase()).reduce("", (str1, str2)
-            -> str1 + "," + " count(distinct " + str2 + ")").substring(1);
+            -> str1 + "," + " approx_count_distinct(" + str2 + ")").substring(1);
         String query = "select  %1$s from %2$s";
-        ResultSet rs = ingester.executeQuery(String.format(query, countClause, this.tableName));
+        ResultSet rs = ingester.executeQuery(String.format(query, countClause, this.tableOrView));
         rs.next();
         int i = 1;
         for (Schema.SchemaColumn sc : scs) {
-          long num = rs.getLong(i);
+          long distinctCount = rs.getLong(i);
           boolean skip = false;
-          FeatureType ft = null;
-          int percent = (int)((100 * num) / totalRows);
-          if (percent > 80) {
-            skip = true;
+          FeatureType ft = FeatureType.unknown;
+          int percent = totalRows > 0 ?(int)((100 * distinctCount) / totalRows): -1;
+          if (percent != -1) {
+            if (percent > 80) {
+              skip = true;
+            } else {
+              ft = FeatureType.categorical;
+              skip = false;
+            }
           } else {
-            ft = FeatureType.categorical;
-            skip = false;
+            skip = true;
+
           }
-          cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType);
+          // if approx distinct values is > 90 % of total rows , get exact figure
+          if (distinctCount > (90 * totalRows)/100) {
+            if (!isQuery) {
+              possiblePkIndexes.add(i - 1);
+            }
+          }
+          cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
+              distinctCount, false);
           ++i;
+        }
+
+        if (!possiblePkIndexes.isEmpty()) {
+          String exactCountClause = possiblePkIndexes.stream().map(j -> cds[j].name).reduce("", (str1, str2)
+              -> str1 + "," + " count(distinct " + str2 + ")").substring(1);
+
+          rs = ingester.executeQuery(String.format(query, exactCountClause, this.tableOrView));
+          rs.next();
+          i = 1;
+          for (int pos : possiblePkIndexes) {
+            ColumnData cdd = cds[pos];
+            cdd.numDistinctValues = rs.getLong(i);
+            cdd.possiblePrimaryKey = cdd.numDistinctValues == this.totalRows;
+            ++i;
+          }
         }
         return cds;
       }
       default: {
         int i = 0;
         for (Schema.SchemaColumn sc : scs) {
-          cds[i++] = new ColumnData(sc.getName().toLowerCase(), null, true, sqlType);
+          cds[i++] = new ColumnData(sc.getName().toLowerCase(), null, true,
+              sqlType, -1, false);
         }
         return cds;
       }
@@ -628,22 +663,27 @@ public class TableData {
     }
   }
 
-  private static class ColumnData {
-    FeatureType ft;
-    boolean skip;
-    int sqlType;
-    String name;
+  public static class ColumnData {
+    final public FeatureType ft;
+    final public boolean skip;
+    final public int sqlType;
+    final public String name;
+    private long numDistinctValues;
+    private boolean possiblePrimaryKey;
 
-    ColumnData(String name, FeatureType ft, boolean skip, int sqlType) {
+    ColumnData(String name, FeatureType ft, boolean skip, int sqlType,
+        long numDistinctValues, boolean possiblePrimaryKey) {
       this.ft = ft;
       this.skip = skip;
       this.sqlType = sqlType;
       this.name = name;
+      this.numDistinctValues = numDistinctValues;
+      this.possiblePrimaryKey = possiblePrimaryKey;
+    }
+
+    public boolean isPossiblePrimaryKey() {
+      return this.possiblePrimaryKey;
     }
   }
 
-}
-
-enum FeatureType {
- categorical, continuous, date
 }

@@ -1,13 +1,16 @@
 app.factory('ApiFactory', ['$resource',
 	function ($resource) {
 
-        /* for server comment below const */
-        // const server = 'http://34.70.33.200:9090/';
+        /*for server */
+         const server = '';
 
-        /* For local comment below const */
-        const server = '';
+
+        /*local server  */
+        //const server = 'http://localhost:3000/'; 
+
         return {
             login: $resource(server +'api/login'),
+            refreshTables: $resource(server +'api/refreshTables'),
             schema: $resource(server +'api/schema'),
             getRows: $resource(server +'api/sampleRows')
         }
