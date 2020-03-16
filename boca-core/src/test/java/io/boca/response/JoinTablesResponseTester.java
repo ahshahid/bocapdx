@@ -59,7 +59,7 @@ public class JoinTablesResponseTester {
 
 
       ObjectMapper objectMapper = new ObjectMapper();
-      String table1 = "telecom_churn_billing";
+      String table1 = "telecom_churn_billing_prepped_view";
       String table2 = "telecom_churn_networkq";
 
       // Test schema fetch
