@@ -353,7 +353,7 @@ public class TableData {
     if (kpiCol.ft.equals(FeatureType.continuous)) {
       // identify which are continuous or categorical cols which can use pearson corr directly
       List<ColumnData> pearsonAmenable = columnMappings.values().stream().filter(cd ->
-         !cd.name.equalsIgnoreCase(kpi) && (cd.ft.equals(FeatureType.continuous) ||
+         !cd.name.equalsIgnoreCase(kpi) && !cd.skip && (cd.ft.equals(FeatureType.continuous) ||
              (cd.ft.equals(FeatureType.categorical) && cd.numDistinctValues == 2 && (cd.sqlType == Types.SMALLINT ||
                  cd.sqlType == Types.INTEGER || cd.sqlType == Types.BIGINT || cd.sqlType == Types.DOUBLE
           || cd.sqlType == Types.FLOAT)))
@@ -366,7 +366,7 @@ public class TableData {
       }
 
       List<ColumnData> annovaAmenable = columnMappings.values().stream().filter(cd ->
-          !cd.name.equalsIgnoreCase(kpi) && cd.ft.equals(FeatureType.categorical) &&
+          !cd.name.equalsIgnoreCase(kpi) && !cd.skip && cd.ft.equals(FeatureType.categorical) &&
               cd.numDistinctValues != 2 ).collect(Collectors.toList());
       if (!annovaAmenable.isEmpty()) {
         for(ColumnData cd: annovaAmenable) {
@@ -376,7 +376,7 @@ public class TableData {
       }
 
       List<ColumnData> biserialAmenable = columnMappings.values().stream().filter(cd ->
-          !cd.name.equalsIgnoreCase(kpi) &&
+          !cd.name.equalsIgnoreCase(kpi) && !cd.skip &&
               cd.ft.equals(FeatureType.categorical) && cd.numDistinctValues == 2 && !(cd.sqlType == Types.SMALLINT ||
                   cd.sqlType == Types.INTEGER || cd.sqlType == Types.BIGINT || cd.sqlType == Types.DOUBLE
                   || cd.sqlType == Types.FLOAT)
@@ -391,14 +391,14 @@ public class TableData {
     } else if (kpiCol.ft.equals(FeatureType.categorical)) {
       // get all the categorical cols
       List<ColumnData> deps = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
-          && ele.ft.equals(FeatureType.categorical)).collect(Collectors.toList());
+          && !ele.skip && ele.ft.equals(FeatureType.categorical)).collect(Collectors.toList());
       Map<String, Double> corrData = categoricalToCategorical.apply(kpiCol, deps);
       for(Map.Entry<String, Double> entry: corrData.entrySet()) {
         dd.addToChiSqCorrelation(entry.getKey(), entry.getValue());
       }
       // get all the continous cols
       List<ColumnData> contiCols = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
-          && ele.ft.equals(FeatureType.continuous)).collect(Collectors.toList());
+          && !ele.skip && ele.ft.equals(FeatureType.continuous)).collect(Collectors.toList());
       if (kpiCol.numDistinctValues == 2) {
         if (kpiCol.sqlType == Types.SMALLINT ||
             kpiCol.sqlType == Types.INTEGER || kpiCol.sqlType == Types.BIGINT || kpiCol.sqlType == Types.DOUBLE
