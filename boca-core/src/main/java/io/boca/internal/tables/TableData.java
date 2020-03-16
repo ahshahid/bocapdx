@@ -435,8 +435,9 @@ public class TableData {
     // if query create a view
     if (isQuery) {
       String viewName = MacroBaseDefaults.BOCA_VIEWS_PREFIX + workFlowId;
-
-      String viewDef = "create or replace view " + viewName + " as " + tableOrQuery;
+      ingester.executeSQL("drop view if exists " + viewName );
+      ingester.executeSQL("drop table if exists " + viewName );
+      String viewDef = "create table " + viewName + " as (" + tableOrQuery + ")";
       ingester.executeSQL(viewDef);
       this.tableOrView = viewName;
     } else {

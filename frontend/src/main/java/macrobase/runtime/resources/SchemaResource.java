@@ -3,7 +3,9 @@ package macrobase.runtime.resources;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.boca.internal.tables.TableData;
 import io.boca.internal.tables.TableManager;
+import macrobase.MacroBase;
 import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
 import org.apache.commons.csv.CSVFormat;
@@ -47,7 +49,7 @@ public class SchemaResource extends BaseResource {
             String parentTableAlias) {
 
           if (isTopNode) {
-            alias = "table_" + level;
+            alias = MacroBaseDefaults.BOCA_ALIAS_PREFIX + level;
           } else {
             alias = parentTableAlias + "_" + level;
           }
