@@ -37,11 +37,11 @@
                           Datasets
                         </a>
                     </div>
-                    <a ng-href="/#!/dashboard"><i class="glyphicon glyphicon-refresh pull-right blue-color" ></i></a>
+                    <a ng-click="refreshTables()"><i class="glyphicon glyphicon-refresh pull-right blue-color" ></i></a>
                 </header>
                 
-                <ul id="data-table" class="main-menu" drop-on-me callback-fn="getData(table)">
-                    <li ng-click="getData(table)" ng-repeat="table in tableNames track by $index">
+                <ul id="data-table" class="main-menu" drop-on-me >
+                    <li ng-click="getData(table); $event.preventDefault()" ng-repeat="table in tableNames track by $index">
                         <input type="checkbox" id="{{table}}" ng-model="myTable.selected[table]" class="pull-right" >
                         <label drag-me for="{{table}}" id="{{table}}" class="title"><span>{{table}}</span></label>
                     </li>
@@ -56,7 +56,7 @@
       </ul>
       <div class="panel panel-gray worksheet-tab">
         
-        <div class="panel-body" id="worksheet"  drop-on-me callback-fn="getData(table)" style="position: relative;">
+        <div class="panel-body" id="worksheet"  drop-on-me callback-fn="getData(table,true)" style="position: relative;">
           <div class="table-details " ng-repeat="table in workSheetTables" ng-if="worksheet"  ng-draggable='dragOptions' style="cursor: move;position: absolute;">
            <p>{{table.name}}</p>
             <p>Columns: {{table.colCount}}<br>
@@ -73,7 +73,7 @@
             <p class="custom-text-p"><span>Outliers Filter: </span>
             <input type="text" class="form-control" placeholder="User text here"></p>
             <!-- Single button -->
-            <button type="button" class="btn blue-btn" >
+            <button type="button" ng-click="updateColumnList()" data-toggle="modal" data-target="#myModal" class="btn blue-btn" >
               Influencer Insight
             </button>
               <button type="button" class="btn blue-btn">
@@ -101,4 +101,42 @@
     </div>
 
 
+
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Influncer Insights</h4>
+          </div>
+          <div class="modal-body">
+           <div class="column">
+             <h3>Available Columns</h3>
+             <ul class="column-list">
+              <li ng-click="addColumn(cols); $event.preventDefault()" ng-repeat="cols in colsForSelection track by $index">
+                  <input type="checkbox" id="{{cols}}Test" ng-model="selectedColumns.selected[cols]" class="pull-right" >
+                  <label for="{{cols}}Test" id="{{cols}}Test" class="title"><span>{{cols}}</span></label>
+              </li>
+          </ul>
+           </div>
+           <div class="column mar-left-4">
+            <h3>Selection</h3>
+            <ul class="column-list" >
+              <li  ng-repeat="cols in selectedCols track by $index">
+                  <label for="{{cols}}" id="{{cols}}" class="title"><span>{{cols}}</span></label>
+                  <button type="button" class="close"  ng-click="removeColumn(cols); $event.preventDefault()">
+                    <span>&times;</span>
+                  </button>
+              </li>
+          </ul>
+          </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn blue-btn" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn blue-btn">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
 </div>
+

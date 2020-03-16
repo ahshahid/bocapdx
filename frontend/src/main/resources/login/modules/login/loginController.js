@@ -27,6 +27,7 @@ app.controller('loginController', ['$scope', '$rootScope', '$http', 'ApiFactory'
     });
     
     }
+    
 	/* $http.post("http://35.202.5.109:9090/api/login",
 	    JSON.stringify(data), { headers: { 'Access-Control-Allow-Headers':'origin, x-requested-with, content-type'} })
 	    .then(function(response) {

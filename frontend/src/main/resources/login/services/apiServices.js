@@ -8,6 +8,7 @@ app.factory('ApiFactory', ['$resource',
         //const server = 'http://localhost:3000/'; 
         return {
             login: $resource(server +'api/login'),
+            refreshTables: $resource(server +'api/refreshTables'),
             schema: $resource(server +'api/schema'),
             getRows: $resource(server +'api/sampleRows')
         }
