@@ -25,7 +25,7 @@ public class TableData {
   private final int workFlowId;
   public final boolean isQuery;
   private final List<List<String>> sampleRows;
-  private static final double pValueThreshold = 0.05d;
+  private static final double pValueThreshold = 0.1d;
   private final String tableOrQuery;
   private final String tableOrView;
   private final Schema schema;
@@ -435,7 +435,6 @@ public class TableData {
     // if query create a view
     if (isQuery) {
       String viewName = MacroBaseDefaults.BOCA_VIEWS_PREFIX + workFlowId;
-      ingester.executeSQL("drop view if exists " + viewName );
       ingester.executeSQL("drop table if exists " + viewName );
       String viewDef = "create table " + viewName + " as (" + tableOrQuery + ")";
       ingester.executeSQL(viewDef);
