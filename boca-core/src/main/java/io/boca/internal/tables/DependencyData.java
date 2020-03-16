@@ -27,11 +27,11 @@ public class DependencyData {
     this.chisqCorrelationMapping.put(depCol, corr);
   }
 
-  public Map<String, Double> getContinousFeatureMap() {
+  public Map<String, Double> getPearsonFeatureMap() {
     return Collections.unmodifiableMap(this.pearsonCorrelationMapping);
   }
 
-  public Map<String, Double> getCategoricalFeatureMap() {
+  public Map<String, Double> getChisquareFeatureMap() {
     return Collections.unmodifiableMap(this.chisqCorrelationMapping);
   }
 

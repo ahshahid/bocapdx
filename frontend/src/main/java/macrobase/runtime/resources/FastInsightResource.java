@@ -5,9 +5,6 @@ import io.boca.internal.tables.TableData;
 import io.boca.internal.tables.TableManager;
 import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.SQLIngester;
-import macrobase.ingest.result.Schema;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,13 +14,11 @@ import javax.servlet.http.HttpSession;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.io.File;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import io.boca.internal.tables.FeatureType;
+
 @Path("/fastInsight")
 @Produces(MediaType.APPLICATION_JSON)
 
@@ -44,8 +39,9 @@ public class FastInsightResource extends BaseResource {
     static class KpiData {
       public String kpicolname;
       public String kpitype;
-      public List<PredictorData> continuousfeatures;
-      public List<PredictorData> categoricalfeatures;
+      public List<PredictorData> pearsonfeatures;
+      public List<PredictorData> chisquarefeatures;
+      public List<PredictorData> anovafeatures;
       static class PredictorData {
         public String predictorname;
         public double corr;
@@ -79,16 +75,23 @@ public class FastInsightResource extends BaseResource {
         FastInsightResponse.KpiData kpid = new FastInsightResponse.KpiData();
         kpid.kpicolname = kpiCol;
         kpid.kpitype = dd.getKpiColFeatureType().name();
-        Map<String, Double> contiMap = dd.getContinousFeatureMap();
-        Map<String, Double> catMap = dd.getCategoricalFeatureMap();
-        if (!contiMap.isEmpty()) {
-          kpid.continuousfeatures = contiMap.entrySet().stream().map(entry ->
+        Map<String, Double> pearsonMap = dd.getPearsonFeatureMap();
+        Map<String, Double> chiSquareMap = dd.getChisquareFeatureMap();
+        Map<String, Double> anovaMap = dd.getAnovaFeatureMap();
+        if (!pearsonMap.isEmpty()) {
+          kpid.pearsonfeatures = pearsonMap.entrySet().stream().map(entry ->
               new FastInsightResponse.KpiData.PredictorData(entry.getKey(),
                   entry.getValue())).collect(Collectors.toList());
         }
 
-        if (!catMap.isEmpty()) {
-          kpid.categoricalfeatures = catMap.entrySet().stream().map(entry ->
+        if (!chiSquareMap.isEmpty()) {
+          kpid.chisquarefeatures = chiSquareMap.entrySet().stream().map(entry ->
+              new FastInsightResponse.KpiData.PredictorData(entry.getKey(),
+                  entry.getValue())).collect(Collectors.toList());
+        }
+
+        if (!anovaMap.isEmpty()) {
+          kpid.anovafeatures = anovaMap.entrySet().stream().map(entry ->
               new FastInsightResponse.KpiData.PredictorData(entry.getKey(),
                   entry.getValue())).collect(Collectors.toList());
         }
