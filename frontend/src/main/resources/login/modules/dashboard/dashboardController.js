@@ -184,5 +184,35 @@ $scope.tableList = [];
     $scope.goToTab = function(tabName){
 
     }
+$scope.colsForSelection =[]
+    $scope.updateColumnList = function(){
+        $scope.colsForSelection =[]
+        angular.forEach($scope.columnList, function(key) {
+            if($scope.colsForSelection.indexOf(key.name) == -1) {
+                if($scope.selectedCols.indexOf(key.name) == -1) {
+                    $scope.colsForSelection.push(key.name)
+                }
+            }
+        })
+    }
+    
+    $scope.addColumn = function(column){
+        if($scope.selectedCols.indexOf(column) == -1) {
+            $scope.selectedCols.push(column);
+            var index = $scope.colsForSelection.indexOf(column);
+            $scope.colsForSelection.splice(index, 1);   
+        }
+    }
+    $scope.selectedColumns = {
+        selected:{}
+    };
+    $scope.removeColumn = function(column){
+        if($scope.colsForSelection.indexOf(column) == -1) {
+            $scope.colsForSelection.push(column);
+            var index = $scope.selectedCols.indexOf(column);
+            $scope.selectedCols.splice(index, 1);  
+        }
+    }
+
 
 }])

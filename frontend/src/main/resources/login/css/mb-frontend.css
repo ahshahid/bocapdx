@@ -200,3 +200,78 @@ col.active{
 .table-bordered>tbody>tr>td, .table-bordered>tbody>tr>th, .table-bordered>tfoot>tr>td, .table-bordered>tfoot>tr>th, .table-bordered>thead>tr>td, .table-bordered>thead>tr>th {
     border: 1px solid #2799f6;
 }
+
+.modal-body {
+    position: relative;
+    padding: 15px;
+    display: flex;
+    padding: 0px 15px;
+}
+.modal-dialog {
+    width: 500px;
+}
+.modal-content {
+    background: #f1f8fe;
+}
+.column h3, .modal-title {
+    font-size: 14px;
+    font-weight: 600;
+}
+button.close {
+    border-radius: 28px;
+    background: #2799f6;
+    width: 28px;
+    height: 28px;
+    opacity: 0.6;
+}
+button.close span{
+    color: #ffff;
+    font-weight: 100;
+}
+.modal-footer {
+    text-align: center;
+    border: none;
+}
+
+.modal-body .column {
+    width: 48%;
+    float: left;
+    position: relative;
+}
+.modal-body .column ul{
+    background: #FFF;
+    list-style: none;
+    padding: 10px;
+    height: 300px;
+    overflow-y: scroll;
+    font-size: 11px;
+    text-transform: capitalize;
+}
+.mar-left-4{
+    margin-left: 4%;
+}
+.modal-body .column ul li{
+    height: 35px;
+    position: relative;
+}
+.modal-body .column ul li label span {
+    max-width: 165px !important;
+    white-space: nowrap;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+    display: inline-block;
+}
+.column button.close {
+    border-radius: 20px;
+    background: #2799f6;
+    width: 18px;
+    height: 18px;
+    opacity: 0.6;
+    position: absolute;
+    right: 0;
+}
+
+.column button.close span{
+    font-size: 15px;
+    display: block;
+}
