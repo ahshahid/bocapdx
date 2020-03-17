@@ -68,7 +68,7 @@ public class FastInsightResource extends BaseResource {
     HttpSession ss = request.getSession();
     try {
       SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
-      TableData td = TableManager.getTableData(fir.workflowid);
+      TableData td = TableManager.getTableData(fir.workflowid).getTableDataForFastInsights();
       response.kpidata = new ArrayList<>(fir.kpicols.size());
       for(String kpiCol: fir.kpicols) {
         DependencyData dd = td.getDependencyData(kpiCol, ingester);

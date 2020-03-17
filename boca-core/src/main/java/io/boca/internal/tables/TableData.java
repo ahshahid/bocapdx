@@ -10,8 +10,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.sql.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -21,19 +25,77 @@ import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
 
 public class TableData {
+  private static int numCatCriteria = 10;  // 10 %
   private long totalRows;
   private final int workFlowId;
   public final boolean isQuery;
   private final List<List<String>> sampleRows;
   private static final double pValueThreshold = 0.1d;
+  // stores the actual tablename or query
   private final String tableOrQuery;
   private final String tableOrView;
   private final Schema schema;
   private Map<Integer, ColumnData[]> sqlTypeToColumnMappings = new HashMap<>();
   private Map<String, ColumnData> columnMappings = new HashMap<>();
-  private ConcurrentHashMap<String, DependencyData >kpiDependencyMap =
+  private ConcurrentHashMap<String, DependencyData> kpiDependencyMap =
       new ConcurrentHashMap<>();
 
+  private static ExecutorService executorService = Executors.newCachedThreadPool();
+  private final Future<TableData> shadowTableFuture;
+
+  private static String storeQuantileDiscretes = "exec scala\n" +
+      "val tablename = \"%1$s\";" +
+      "val tableDf = snappysession.table(tablename);" +
+      "val schema = tableDf.schema;" +
+      "val colsToModifyIndexes = Array[Int](%2$s);" +
+      "val modColIndexToBuckets = Map[Int, Int](%3$s);" +
+      "val newTableName = \"%4$s\";" +
+      "val newSchema = StructType(schema.zipWithIndex.map((sf, index) => {" +
+      "                     if (colsToModifyIndexes.contains(index)) { " +
+      "                           sf.copy(dataType = StringType);" +
+      "                     } else { sf; }" +
+      "                }));" +
+      "val projectionWithDoubleCast = schema.zipWithIndex.map((sf, index) => {" +
+      "                     if (colsToModifyIndexes.contains(index)) { " +
+      "                           s\"cast( ${sf.name} as double) as ${sf.name}\";" +
+      "                     } else { sf.name; }" +
+      "                })).mkString(\",\");" +
+      "var dfToOp = snappysession.sql(s\"select projectionWithDoubleCast from $tablename\");" +
+      "val sortedColsToModifyIndexes = colsToModifyIndexes.sorted;" +
+
+      "import org.apache.spark.ml.feature.Bucketizer;" +
+      "import org.apache.spark.ml.feature.QuantileDiscretizer;" +
+      "val (preppedDf, bucketizers) = sortedColsToModifyIndexes." +
+      "foldLeft[(DataFrame, Seq[Bucketizer])](dfToOp -> null)((tup, elem) => {" +
+      "        val bc =  new QuantileDiscretizer().setInputCol(schema(elem).name)." +
+      "   setOutputCol(schema(elem).name + \"_binnum\").setNumBuckets(modColIndexToBuckets.get(elem).get).fit(tup._1);" +
+      "   val newDf = bc.transform(tup._1);" +
+      "   if (tup._2 == null) { " +
+      "      newDf -> Seq(bc);" +
+      "   } else {" +
+      "      newDf -> (tup._2 ++ bc);" +
+      "   }" +
+      "});" +
+      "val furtherPreppedRdd = preppedDf.rdd.map(row => {" +
+      "     var j: Int = 0;" +
+      "     val newSeq = Seq.fill[Row](schema.length)(i => {" +
+      "        if (j < sortedColsToModifyIndexes.length && i == sortedColsToModifyIndexes(j)) {" +
+      "           val binValue = row.getDouble(schema.length + j); " +
+      "           val splits = bucketizers(j).getSplits; " +
+      "           j += 1;" +
+      "           val range = if (binValue.toInt < splits.length - 1) { " +
+      "                          s\"${splits(binValue.toInt)} - ${splits(binValue.toInt + 1)}\";" +
+      "                       } else {" +
+      "                          s\"${splits(binValue.toInt)} - infinity\";" +
+      "                       }" +
+      "            range;" +
+      "        } else {row(i);}" +
+      "     });   " +
+      "    Row.fromSeq(newSeq);" +
+      " });" +
+      "val furtherPreppedDf = snappysession.sqlContext.createDataFrame(furtherPreppedRdd, newSchema);" +
+      "furtherPreppedDf.write.format(\"column\").mode(\"overwrite\").saveAsTable(newTableName);" +
+      " ;\n";
   private static String catToCatCorr = "import org.apache.spark.mllib.linalg._;"
       + "import org.apache.spark.sql._;"
       + "import org.apache.spark.sql.types._;"
@@ -463,6 +525,83 @@ public class TableData {
 
     // check if the table contains int / big int/ doube/float columns which are continuous & not primary key ones.
     // if yes we may have to create a shadow prepped table which is binned.
+    List<ColumnData> columnsNeedingMod = new ArrayList<ColumnData>();
+    for(ColumnData cd: this.sqlTypeToColumnMappings.get(Types.INTEGER)) {
+      if (!cd.skip && cd.ft.equals(FeatureType.continuous)) {
+        columnsNeedingMod.add(cd);
+      }
+    }
+
+    for(ColumnData cd: this.sqlTypeToColumnMappings.get(Types.BIGINT)) {
+      if (!cd.skip && cd.ft.equals(FeatureType.continuous)) {
+        columnsNeedingMod.add(cd);
+      }
+    }
+
+    for(ColumnData cd: this.sqlTypeToColumnMappings.get(Types.FLOAT)) {
+      if (!cd.skip && cd.ft.equals(FeatureType.continuous)) {
+        columnsNeedingMod.add(cd);
+      }
+    }
+
+    for(ColumnData cd: this.sqlTypeToColumnMappings.get(Types.DOUBLE)) {
+      if (!cd.skip && cd.ft.equals(FeatureType.continuous)) {
+        columnsNeedingMod.add(cd);
+      }
+    }
+    if (columnsNeedingMod.isEmpty()) {
+      this.shadowTableFuture = null;
+    } else {
+      this.shadowTableFuture = executorService.submit(getShadowTableCreationTask(columnsNeedingMod, ingester));
+    }
+
+  }
+
+  private Callable<TableData> getShadowTableCreationTask(final List<ColumnData> colsToBin,
+      final SQLIngester ingester) {
+    Callable<TableData> callableTask = new Callable<TableData>() {
+      @Override
+      public TableData call() throws Exception {
+        String shadowTableName = MacroBaseDefaults.BOCA_SHADOW_TABLE_PREFIX + TableData.this.getTableOrView();
+        StringBuilder modColIndexesBuff = new StringBuilder("");
+        int[] modColIndexes = new int[colsToBin.size()];
+        List<Schema.SchemaColumn> cols = getSchema().getColumns();
+        int j = 0;
+        for (ColumnData cd : colsToBin) {
+          inner:
+          for (int i = 0; i < cols.size(); ++i) {
+            Schema.SchemaColumn sc = cols.get(i);
+            if (sc.getName().equalsIgnoreCase(cd.name)) {
+              modColIndexes[j++] = i;
+              modColIndexesBuff.append(i).append(',');
+              break inner;
+            }
+          }
+        }
+        modColIndexesBuff.deleteCharAt(modColIndexesBuff.length() - 1);
+        StringBuilder bucketsMapping = new StringBuilder();
+        j = 0;
+        for (ColumnData cd : colsToBin) {
+          long range = cd.approxMax - cd.approxMin;
+          long criteria = (TableData.this.totalRows * (numCatCriteria - 1)) / 100;
+          // range exceeds the max distinct criteria by
+          long excess = range - criteria;
+          int numBuckets = (int)(criteria / 4 + excess / 4);
+          bucketsMapping.append(modColIndexes[j]).append("->").append(numBuckets).append(',');
+          ++j;
+        }
+        bucketsMapping.deleteCharAt(bucketsMapping.length() - 1);
+
+        String createDiscretizedTable = String.format(storeQuantileDiscretes,
+            TableData.this.getTableOrView(), modColIndexesBuff.toString(), bucketsMapping.toString(),
+            shadowTableName);
+        ingester.executeQuery(createDiscretizedTable);
+        return new TableData(shadowTableName, ingester, -1, false);
+
+      }
+    } ;
+    return callableTask;
+
   }
 
   public long getTotalRowsCount() {
@@ -511,6 +650,14 @@ public class TableData {
     return kpiDependencyMap.computeIfAbsent(kpiColumn, depedencyComputer);
   }
 
+  public TableData getTableDataForFastInsights() throws Exception {
+    if (this.shadowTableFuture != null) {
+      return this.shadowTableFuture.get();
+    } else {
+      return this;
+    }
+  }
+
   private ColumnData[] determineColumnData(int sqlType, List<Schema.SchemaColumn> scs,
       SQLIngester ingester)
   throws SQLException {
@@ -539,7 +686,7 @@ public class TableData {
               //skip = true;
               skip = false;
               ft = FeatureType.continuous;
-            } else if (percent < 10) {
+            } else if (percent < numCatCriteria) {
               ft = FeatureType.categorical;
               skip = false;
             } else {
@@ -611,7 +758,7 @@ public class TableData {
               //skip = true;
               skip = false;
               ft = FeatureType.continuous;
-            } else if (percent < 10) {
+            } else if (percent < numCatCriteria) {
               ft = FeatureType.categorical;
               skip = false;
             } else {
