@@ -219,10 +219,6 @@ public class TableData {
         }
     }
 
-
-
-
-
     String scalaCodeToExecute = String.format(contiToContiCorr,
         this.getTableOrView(), depColIndexes.toString(), kpiColIndex);
     SQLIngester ingester = ingesterThreadLocal.get();
@@ -464,6 +460,9 @@ public class TableData {
         columnMappings.put(cd.name.toLowerCase(), cd);
       }
     }
+
+    // check if the table contains int / big int/ doube/float columns which are continuous & not primary key ones.
+    // if yes we may have to create a shadow prepped table which is binned.
   }
 
   public long getTotalRowsCount() {
@@ -520,21 +519,26 @@ public class TableData {
       case Types.INTEGER:
       case Types.BIGINT: {
         String countClause = scs.stream().map(sc -> sc.getName()).reduce("", (str1, str2)
-            -> str1 + "," + " approx_count_distinct(" + str2 + ")").substring(1);
+            -> str1 + "," + " approx_count_distinct(" + str2 + "), max(" + str2 + "), min (" + str2 + ")").substring(1);
         String query = "select  %1$s from %2$s";
 
         ResultSet rs = ingester.executeQuery(String.format(query, countClause, this.tableOrView));
         rs.next();
         List<Integer> possiblePkIndexes = new ArrayList<>(cds.length);
         int i = 1;
+        int k = 0;
         for (Schema.SchemaColumn sc : scs) {
           long distinctValues = rs.getLong(i);
+          long max = sqlType == Types.INTEGER ? rs.getInt(i + 1): rs.getLong(i + 1);
+          long min = sqlType == Types.INTEGER ? rs.getInt(i + 2): rs.getLong(i + 2);
           boolean skip = false;
           FeatureType ft = FeatureType.unknown;
           int percent = totalRows > 0 ?(int)((100 * distinctValues) / totalRows): -1;
           if (percent != -1) {
             if (percent > 80) {
-              skip = true;
+              //skip = true;
+              skip = false;
+              ft = FeatureType.continuous;
             } else if (percent < 10) {
               ft = FeatureType.categorical;
               skip = false;
@@ -548,12 +552,13 @@ public class TableData {
           // if approx distinct values is > 90 % of total rows , get exact figure
           if (distinctValues > (90 * totalRows)/100) {
             if (!isQuery) {
-              possiblePkIndexes.add(i - 1);
+              possiblePkIndexes.add(k);
             }
           }
-          cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
-              distinctValues, false);
-          ++i;
+          cds[k] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
+              distinctValues, false, max, min);
+          i += 3;
+          ++k;
         }
         if (!possiblePkIndexes.isEmpty()) {
           String exactCountClause = possiblePkIndexes.stream().map(j -> cds[j].name).reduce("", (str1, str2)
@@ -576,13 +581,57 @@ public class TableData {
       case Types.FLOAT:
       case Types.REAL:
       case Types.DOUBLE: {
-        int i = 0;
+        String countClause = scs.stream().map(sc -> sc.getName()).reduce("", (str1, str2)
+            -> str1 + "," + " approx_count_distinct(" + str2 + "), max(" + str2 + "), min (" + str2 + ")").substring(1);
+        String query = "select  %1$s from %2$s";
+
+        ResultSet rs = ingester.executeQuery(String.format(query, countClause, this.tableOrView));
+        rs.next();
+        int i = 1;
+        int k = 0;
         for (Schema.SchemaColumn sc : scs) {
-          cds[i++] = new ColumnData(sc.getName().toLowerCase(), FeatureType.continuous, false,
-              sqlType, -1, false);
+          long distinctValues = rs.getLong(i);
+          long max = Integer.MIN_VALUE;
+          long min = Integer.MAX_VALUE;
+          if (sqlType == Types.DECIMAL) {
+            max = rs.getBigDecimal(i + 1).longValue();
+            min = rs.getBigDecimal(i + 2).longValue();
+          } else if (sqlType == Types.FLOAT || sqlType == Types.REAL) {
+            max = (long)rs.getFloat(i + 1);
+            min = (long)rs.getFloat(i + 2);
+          } else if (sqlType == Types.DOUBLE) {
+            max = (long)rs.getDouble(i + 1);
+            min = (long)rs.getDouble(i + 2);
+          }
+          boolean skip = false;
+          FeatureType ft = FeatureType.unknown;
+          int percent = totalRows > 0 ?(int)((100 * distinctValues) / totalRows): -1;
+          if (percent != -1) {
+            if (percent > 80) {
+              //skip = true;
+              skip = false;
+              ft = FeatureType.continuous;
+            } else if (percent < 10) {
+              ft = FeatureType.categorical;
+              skip = false;
+            } else {
+              skip = false;
+              ft = FeatureType.continuous;
+            }
+          } else {
+            skip = true;
+          }
+
+          cds[k] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
+              distinctValues, false, max, min);
+          i += 3;
+          ++k;
         }
         return cds;
+
       }
+
+
      /* case Types.NCHAR:
       case Types.CHAR:{
         int i = 0;
@@ -630,7 +679,7 @@ public class TableData {
             }
           }
           cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
-              distinctCount, false);
+              distinctCount, false, Integer.MIN_VALUE, Integer.MAX_VALUE);
           ++i;
         }
 
@@ -654,7 +703,7 @@ public class TableData {
         int i = 0;
         for (Schema.SchemaColumn sc : scs) {
           cds[i++] = new ColumnData(sc.getName().toLowerCase(), null, true,
-              sqlType, -1, false);
+              sqlType, -1, false, Integer.MIN_VALUE, Integer.MAX_VALUE);
         }
         return cds;
       }
@@ -669,15 +718,21 @@ public class TableData {
     final public String name;
     private long numDistinctValues;
     private boolean possiblePrimaryKey;
+    // looses teh decimal part;
+    final private long approxMax;
+    final private long approxMin;
+
 
     ColumnData(String name, FeatureType ft, boolean skip, int sqlType,
-        long numDistinctValues, boolean possiblePrimaryKey) {
+        long numDistinctValues, boolean possiblePrimaryKey, long approxMax, long approxMin) {
       this.ft = ft;
       this.skip = skip;
       this.sqlType = sqlType;
       this.name = name;
       this.numDistinctValues = numDistinctValues;
       this.possiblePrimaryKey = possiblePrimaryKey;
+      this.approxMax = approxMax;
+      this.approxMin = approxMin;
     }
 
     public boolean isPossiblePrimaryKey() {
