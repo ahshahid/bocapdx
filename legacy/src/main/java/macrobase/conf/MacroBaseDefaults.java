@@ -60,7 +60,7 @@ public class MacroBaseDefaults {
     public static final String DB_USER = "app";
     public static final String DB_PASSWORD = "app";
     public static final String DB_NAME = "";
-    public static final String DB_URL = "10.80.141.102:1527";
+    public static final String DB_URL = "localhost:1527";//"10.80.141.102:1527";
     public static final Integer DB_CACHE_CHUNK_SIZE = 1000000;
 
     public static final Double OUTLIER_STATIC_THRESHOLD = 3.0;
