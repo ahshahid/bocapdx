@@ -24,7 +24,7 @@ import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
 
 public class TableData {
-  private static final int numCatCriteria = 10 ;
+  private static final int numCatCriteria = 4;
   private static final ColumnData[] emptyColumnData = new ColumnData[0];
   private long totalRows;
   private final int workFlowId;
@@ -723,9 +723,9 @@ public class TableData {
             if (percent > 80) {
               //skip = true;
               skip = false;
-              ft =  this.isShadowTable ? FeatureType.continuous : FeatureType.continuous;
+              ft =  this.isShadowTable ? FeatureType.categorical : FeatureType.continuous;
             } else if (percent < numCatCriteria ) {
-              ft =  this.isShadowTable ? FeatureType.categorical : FeatureType.categorical;
+              ft =   FeatureType.categorical ;
               skip = false;
             } else {
               skip = false;
@@ -796,9 +796,9 @@ public class TableData {
             if (percent > 80) {
               //skip = true;
               skip = false;
-              ft =  this.isShadowTable ? FeatureType.continuous : FeatureType.continuous;
+              ft =  this.isShadowTable ? FeatureType.categorical : FeatureType.continuous;
             } else if (percent < numCatCriteria ) {
-              ft =  this.isShadowTable || percent < 5 ? FeatureType.categorical : FeatureType.continuous;
+              ft =   FeatureType.categorical;
               skip = false;
             } else {
               skip = false;
