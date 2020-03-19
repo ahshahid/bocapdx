@@ -1,8 +1,6 @@
 package io.boca.internal.tables;
 
 import java.io.IOException;
-import java.io.Reader;
-import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.sql.*;
@@ -41,7 +40,8 @@ public class TableData {
   private ConcurrentHashMap<String, DependencyData> kpiDependencyMap =
       new ConcurrentHashMap<>();
   private final Future<TableData> shadowTableFuture;
-  private final boolean skipShadowTable;
+  private final boolean isShadowTable;
+  private final Set<String> joinCols;
 
   private static ExecutorService executorService = Executors.newCachedThreadPool();
 
@@ -89,10 +89,12 @@ public class TableData {
       "           val binValue = row.getDouble(schema.length + j); " +
       "           val splits = bucketizers(j).getSplits; " +
       "           j += 1;" +
+      "         /* val doubl = splits(binValue.toInt);" +
+      "           (doubl * 10000).round / 10000.toDouble; */  " +
       "           if (binValue.toInt < splits.length - 1) { " +
       "              s\"${splits(binValue.toInt)} - ${splits(binValue.toInt + 1)}\";" +
       "           } else {" +
-      "              s\"${splits(binValue.toInt)} - infinity\";" +
+      "              s\"${splits(binValue.toInt)} - \";" +
       "           }" +
       "        } else {" +
       "          row(i);" +
@@ -243,7 +245,7 @@ public class TableData {
       + "import org.apache.spark.sql.functions._;"
       + "val tableDf = snappysession.table(\"%1$s\");"
       + "val tableSchema = tableDf.schema;"
-      + "val depColIndexes = %2$s;"
+      + "val depColIndexes = Array[Int](%2$s);"
       + "val kpiColIndex = %3$s;"
       + "val kpiColExpression = if (tableSchema(kpiColIndex).dataType != DoubleType) {"
       + "                          s\"cast(${tableSchema(kpiColIndex).name} as double)\";"
@@ -264,7 +266,7 @@ public class TableData {
   private static ThreadLocal<SQLIngester> ingesterThreadLocal = new ThreadLocal<SQLIngester>();
 
   private BiFunction<ColumnData, List<ColumnData> , double[]> kpiContToCont = (kpiCd, depCds) -> {
-    StringBuilder depColIndexes = new StringBuilder("Array[Int](");
+    StringBuilder depColIndexes = new StringBuilder("");
     int kpiColIndex = -1;
     List<Schema.SchemaColumn> cols = getSchema().getColumns();
 
@@ -277,7 +279,7 @@ public class TableData {
         }
       }
     }
-    depColIndexes.deleteCharAt(depColIndexes.length() - 1).append(')');
+    depColIndexes.deleteCharAt(depColIndexes.length() - 1);
 
 
     for (int i = 0; i < cols.size(); ++i) {
@@ -464,26 +466,28 @@ public class TableData {
       // get all the continous cols
       List<ColumnData> contiCols = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
           && !ele.skip && ele.ft.equals(FeatureType.continuous)).collect(Collectors.toList());
-      if (kpiCol.numDistinctValues == 2) {
-        if (kpiCol.sqlType == Types.SMALLINT ||
-            kpiCol.sqlType == Types.INTEGER || kpiCol.sqlType == Types.BIGINT || kpiCol.sqlType == Types.DOUBLE
-            || kpiCol.sqlType == Types.FLOAT) {
-          double[] corrs = kpiContToCont.apply(kpiCol, contiCols);
-          for(int i = 0 ; i < corrs.length; ++i) {
-            dd.addToPearson(contiCols.get(i).name, corrs[i]);
+      if (!contiCols.isEmpty()) {
+        if (kpiCol.numDistinctValues == 2) {
+          if (kpiCol.sqlType == Types.SMALLINT ||
+              kpiCol.sqlType == Types.INTEGER || kpiCol.sqlType == Types.BIGINT || kpiCol.sqlType == Types.DOUBLE
+              || kpiCol.sqlType == Types.FLOAT) {
+            double[] corrs = kpiContToCont.apply(kpiCol, contiCols);
+            for (int i = 0; i < corrs.length; ++i) {
+              dd.addToPearson(contiCols.get(i).name, corrs[i]);
+            }
+          } else {
+            // biserial
+            contiCols.stream().forEach(contiCol -> {
+              double corr = biserial.apply(kpiCol, contiCol);
+              dd.addToPearson(contiCol.name, corr);
+            });
           }
         } else {
-          // biserial
           contiCols.stream().forEach(contiCol -> {
-            double corr = biserial.apply(kpiCol, contiCol);
-            dd.addToPearson(contiCol.name, corr);
+            double corr = catToCont.apply(kpiCol, contiCol);
+            dd.addToAnova(contiCol.name, corr);
           });
         }
-      } else {
-        contiCols.stream().forEach(contiCol -> {
-          double corr = catToCont.apply(kpiCol, contiCol);
-          dd.addToAnova(contiCol.name, corr);
-        });
       }
 
     }
@@ -491,12 +495,14 @@ public class TableData {
   };
 
 
-  TableData(String tableOrQuery, SQLIngester ingester, int workFlowId, boolean isQuery) throws SQLException, IOException {
-    this(tableOrQuery, ingester, workFlowId, isQuery, false);
+  TableData(String tableOrQuery, SQLIngester ingester, int workFlowId, boolean isQuery, Set<String> joinCols) throws SQLException, IOException {
+    this(tableOrQuery, ingester, workFlowId, isQuery,false, joinCols);
   }
-  TableData(String tableOrQuery, SQLIngester ingester, int workFlowId, boolean isQuery, boolean skipShadowTable)
+  TableData(String tableOrQuery, SQLIngester ingester, int workFlowId, boolean isQuery,
+      boolean isShadowTable, Set<String> joinCols)
       throws SQLException, IOException {
-    this.skipShadowTable = skipShadowTable;
+    this.isShadowTable = isShadowTable;
+    this.joinCols = joinCols;
     // filter columns of interest.
     // figure out if they are continuous or categorical
     this.workFlowId = workFlowId;
@@ -535,7 +541,7 @@ public class TableData {
       }
     }
 
-    if (skipShadowTable) {
+    if (isShadowTable) {
       this.shadowTableFuture = null;
     } else {
       // check if the table contains int / big int/ doube/float columns which are continuous & not primary key ones.
@@ -599,11 +605,25 @@ public class TableData {
         j = 0;
         for (ColumnData cd : colsToBin) {
           long range = cd.approxMax - cd.approxMin;
-          long criteria = (TableData.this.totalRows * (numCatCriteria - 1)) / 100;
+          long numBuckets = 2;
+          if (range <= 10) {
+            numBuckets = 10;
+          } else if (range <= 100) {
+            numBuckets = 100;
+          } else if (range < 1000) {
+            numBuckets = 1000;
+          } else {
+            numBuckets = range /100 ;
+          }
+          if (numBuckets > 1000000) {
+            numBuckets = 1000;
+          }
+          //numBuckets = 50;
+         /* long criteria = (TableData.this.totalRows * (numCatCriteria- 1)) / 100;
           // range exceeds the max distinct criteria by
-          long excess = range - criteria;
-          int numBuckets = Math.max((int)(criteria / 4 + excess / 4), 2);
-          bucketsMapping.append(modColIndexes[j]).append("->").append(numBuckets).append(',');
+          long excess = range - criteria;*/
+
+          bucketsMapping.append(modColIndexes[j]).append("->").append((int)numBuckets).append(',');
           ++j;
         }
         bucketsMapping.deleteCharAt(bucketsMapping.length() - 1);
@@ -611,8 +631,10 @@ public class TableData {
         String createDiscretizedTable = String.format(storeQuantileDiscretes,
             TableData.this.getTableOrView(), modColIndexesBuff.toString(), bucketsMapping.toString(),
             shadowTableName);
+        ingester.executeSQL("drop table if exists " + shadowTableName);
         ingester.executeQuery(createDiscretizedTable);
-        return new TableData(shadowTableName, ingester, -1, false, true);
+        return new TableData(shadowTableName, ingester, -1, false,
+            true, TableData.this.joinCols);
 
       }
     } ;
@@ -701,23 +723,24 @@ public class TableData {
             if (percent > 80) {
               //skip = true;
               skip = false;
-              ft = FeatureType.continuous;
-            } else if (percent < numCatCriteria) {
-              ft = FeatureType.categorical;
+              ft =  this.isShadowTable ? FeatureType.continuous : FeatureType.continuous;
+            } else if (percent < numCatCriteria ) {
+              ft =  this.isShadowTable ? FeatureType.categorical : FeatureType.categorical;
               skip = false;
             } else {
               skip = false;
-              ft = FeatureType.continuous;
+              ft =  this.isShadowTable ? FeatureType.categorical : FeatureType.continuous;
             }
           } else {
             skip = true;
           }
           // if approx distinct values is > 90 % of total rows , get exact figure
           if (distinctValues > (90 * totalRows)/100) {
-            if (!isQuery) {
+            if (!(isQuery || isShadowTable)) {
               possiblePkIndexes.add(k);
             }
           }
+          skip = skip || joinCols.contains(sc.getName());
           cds[k] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
               distinctValues, false, max, min);
           i += 3;
@@ -773,18 +796,18 @@ public class TableData {
             if (percent > 80) {
               //skip = true;
               skip = false;
-              ft = FeatureType.continuous;
-            } else if (percent < numCatCriteria) {
-              ft = FeatureType.categorical;
+              ft =  this.isShadowTable ? FeatureType.continuous : FeatureType.continuous;
+            } else if (percent < numCatCriteria ) {
+              ft =  this.isShadowTable ? FeatureType.categorical : FeatureType.categorical;
               skip = false;
             } else {
               skip = false;
-              ft = FeatureType.continuous;
+              ft =  this.isShadowTable ? FeatureType.categorical : FeatureType.continuous;
             }
           } else {
             skip = true;
           }
-
+          skip = skip || joinCols.contains(sc.getName());
           cds[k] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
               distinctValues, false, max, min);
           i += 3;
@@ -841,6 +864,7 @@ public class TableData {
               possiblePkIndexes.add(i - 1);
             }
           }
+          skip = skip || joinCols.contains(sc.getName());
           cds[i - 1] = new ColumnData(sc.getName().toLowerCase(), ft, skip, sqlType,
               distinctCount, false, Integer.MIN_VALUE, Integer.MAX_VALUE);
           ++i;

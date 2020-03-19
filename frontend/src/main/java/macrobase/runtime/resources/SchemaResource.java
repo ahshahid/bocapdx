@@ -23,9 +23,12 @@ import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Path("/schema")
 @Produces(MediaType.APPLICATION_JSON)
@@ -45,6 +48,7 @@ public class SchemaResource extends BaseResource {
         @JsonIgnore
         public String alias;
         public List<Join> joinlist;
+        private Set<String> joinCols;  // stores table_name|columnname
         public void fillMissingPkColumnsAndAlias(SQLIngester ingester, int level, boolean isTopNode,
             String parentTableAlias) {
 
@@ -65,8 +69,23 @@ public class SchemaResource extends BaseResource {
           return !(this.joinlist == null || this.joinlist.isEmpty());
         }
 
+        @JsonIgnore
+        public Set<String> getJoinColumns() {
+          return Collections.unmodifiableSet(this.joinCols);
+        }
+
+
+
+
+      private void collectJoinColumns(Set<String> joinCols) {
+          if (joinlist != null) {
+            joinlist.forEach(join -> join.collectJoinsColumns(this, joinCols));
+          }
+        }
+
         public void generateQuery(StringBuilder sb, boolean isTopNode) {
           if (isTopNode) {
+              this.joinCols = new HashSet<>();
               if (isQuery()) {
                 //sb.append("select * from ")
                   sb.append(this.name).append(" as ").append(this.alias).append(" ");
@@ -75,13 +94,15 @@ public class SchemaResource extends BaseResource {
                   }
                   List<Table> allTables = new ArrayList<>();
                   allTables.add(this);
+                this.collectJoinColumns(this.joinCols);
                 for(Join joinNode: this.joinlist) {
                   joinNode.collectTables(allTables);
                 }
                 Set<String> clashingCols = new HashSet<>();
                 Set<String> allCalls = new HashSet<>();
                 for(Table tbl: allTables) {
-                  TableData td = TableManager.getTableData(tbl.name.toLowerCase(), null, false);
+                  TableData td = TableManager.getTableData(tbl.name.toLowerCase(), null, false,
+                      Collections.emptySet());
                   for(Schema.SchemaColumn sc: td.getSchema().getColumns()) {
                     if (!allCalls.add(sc.getName())) {
                       clashingCols.add(sc.getName());
@@ -91,14 +112,26 @@ public class SchemaResource extends BaseResource {
                 StringBuilder projSb = new StringBuilder();
                 if (clashingCols.isEmpty()) {
                   projSb.append(" * ");
+                  this.joinCols = this.joinCols.stream().map(fqColName -> fqColName.substring(fqColName.indexOf('|') + 1)).
+                      collect(Collectors.toSet());
                 } else {
                   for(Table tbl: allTables) {
                     String alias = tbl.alias;
-                    TableData td = TableManager.getTableData(tbl.name.toLowerCase(), null, false);
+                    TableData td = TableManager.getTableData(tbl.name.toLowerCase(), null, false,
+                        Collections.emptySet());
                     for(Schema.SchemaColumn sc: td.getSchema().getColumns()) {
+                      String check = tbl.name + '|' + sc.getName();
+                      boolean removed = this.joinCols.remove(check);
                       projSb.append(alias).append('.').append(sc.getName());
                       if (clashingCols.contains(sc.getName())) {
                         projSb.append(" as ").append(tbl.name).append('_').append(sc.getName());
+                        if (removed) {
+                          this.joinCols.add(tbl.name + '_' + sc.getName());
+                        }
+                      } else {
+                        if (removed) {
+                          this.joinCols.add(sc.getName());
+                        }
                       }
                       projSb.append(',');
                     }
@@ -140,8 +173,8 @@ public class SchemaResource extends BaseResource {
               this.jointype = "inner join";
           }
           if (parentcol == null || parentcol.trim().isEmpty()) {
-            TableData td = TableManager.getTableData(parentTable.name.toLowerCase(), ingester, false);
-            TableData childTd = TableManager.getTableData(table.name.toLowerCase(), ingester, false);
+            TableData td = TableManager.getTableData(parentTable.name.toLowerCase(), ingester, false, Collections.emptySet());
+            TableData childTd = TableManager.getTableData(table.name.toLowerCase(), ingester, false, Collections.emptySet());
             if (joincol != null && !joincol.trim().isEmpty()) {
               TableData.ColumnData childCol = childTd.getColumnData(joincol.toLowerCase());
               this.parentcol = td.getFirstAvailablePkColumn(childCol.sqlType).name;
@@ -150,14 +183,20 @@ public class SchemaResource extends BaseResource {
               this.joincol = childTd.getFirstAvailablePkColumn().name;
             }
           } else {
-              TableData td = TableManager.getTableData(parentTable.name.toLowerCase(), ingester, false);
-              TableData childTd = TableManager.getTableData(table.name.toLowerCase(), ingester, false);
+              TableData td = TableManager.getTableData(parentTable.name.toLowerCase(), ingester, false, Collections.emptySet());
+              TableData childTd = TableManager.getTableData(table.name.toLowerCase(), ingester, false, Collections.emptySet());
               if (joincol == null || joincol.trim().isEmpty()) {
                   TableData.ColumnData parentCol = td.getColumnData(parentcol.toLowerCase());
                   this.joincol = childTd.getFirstAvailablePkColumn(parentCol.sqlType).name;
               }
           }
           table.fillMissingPkColumnsAndAlias(ingester, level,false, parentTable.alias);
+        }
+
+        private void collectJoinsColumns(Table parent, Set<String> joinCols) {
+          joinCols.add(parent.name +'|'+ parentcol);
+          joinCols.add(this.table.name + '|'+joincol);
+          this.table.collectJoinColumns(joinCols);
         }
 
         public void generateQuery(StringBuilder sb, Table parentTable) {
@@ -196,7 +235,8 @@ public class SchemaResource extends BaseResource {
              tableObject.fillMissingPkColumnsAndAlias(ingester, 0, true, "");
              StringBuilder sb = new StringBuilder();
              tableObject.generateQuery(sb, true);
-             TableData td = TableManager.getTableData(sb.toString(), ingester, tableObject.isQuery());
+             Set<String> joinCols = tableObject.getJoinColumns();
+             TableData td = TableManager.getTableData(sb.toString(), ingester, tableObject.isQuery(), joinCols);
              response.schema = td.getSchema();
              response.workflowid = td.getWorkFlowId();
              response.table = tableObject;

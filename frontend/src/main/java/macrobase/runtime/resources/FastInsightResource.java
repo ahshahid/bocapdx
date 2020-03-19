@@ -1,6 +1,7 @@
 package macrobase.runtime.resources;
 
 import io.boca.internal.tables.DependencyData;
+import io.boca.internal.tables.FeatureType;
 import io.boca.internal.tables.TableData;
 import io.boca.internal.tables.TableManager;
 import macrobase.conf.MacroBaseConf;
@@ -68,10 +69,19 @@ public class FastInsightResource extends BaseResource {
     HttpSession ss = request.getSession();
     try {
       SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
-      TableData td = TableManager.getTableData(fir.workflowid).getTableDataForFastInsights();
+
+      final TableData tdOrig = TableManager.getTableData(fir.workflowid);
+      TableData currentTd = tdOrig;
+
       response.kpidata = new ArrayList<>(fir.kpicols.size());
       for(String kpiCol: fir.kpicols) {
-        DependencyData dd = td.getDependencyData(kpiCol, ingester);
+        TableData.ColumnData kpiColData = tdOrig.getColumnData(kpiCol);
+        if (!kpiColData.skip && kpiColData.ft.equals(FeatureType.categorical)) {
+          currentTd = tdOrig.getTableDataForFastInsights();
+        } else {
+          currentTd = tdOrig;
+        }
+        DependencyData dd = currentTd.getDependencyData(kpiCol, ingester);
         FastInsightResponse.KpiData kpid = new FastInsightResponse.KpiData();
         kpid.kpicolname = kpiCol;
         kpid.kpitype = dd.getKpiColFeatureType().name();
