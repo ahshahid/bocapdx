@@ -798,7 +798,7 @@ public class TableData {
               skip = false;
               ft =  this.isShadowTable ? FeatureType.continuous : FeatureType.continuous;
             } else if (percent < numCatCriteria ) {
-              ft =  this.isShadowTable ? FeatureType.categorical : FeatureType.categorical;
+              ft =  this.isShadowTable || percent < 5 ? FeatureType.categorical : FeatureType.continuous;
               skip = false;
             } else {
               skip = false;
