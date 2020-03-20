@@ -20,6 +20,7 @@ public class MacroBaseDefaults {
     public static final String BOCA_VIEWS_PREFIX = "bocapdx_view_";
     public static final String BOCA_ALIAS_PREFIX = "bocapdx_tbl_";
     public static final String BOCA_SHADOW_TABLE_PREFIX = "bocapdx_prepped_";
+    public static final String BOCA_SHADOW_TABLE_UNBINNED_COL_PREFIX = "bocapdx_unprepped_";
     // streaming defaults
     public static final Integer WARMUP_COUNT = 10000;
     public static final Integer TUPLE_BATCH_SIZE = 10000;

@@ -121,7 +121,7 @@ public class JoinTablesResponseTester {
       String fastInsightUrl = "http://" + host + ":9090/api/fastInsight";
       httpPost = new HttpPost(fastInsightUrl);
       httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-      data = new StringEntity("{\"workflowid\":" + workflowid +", \"kpicols\":[\"avgrev\"]}");
+      data = new StringEntity("{\"workflowid\":" + workflowid +", \"kpicols\":[\"telecom_churn_networkq_churn\"]}");
       httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
       httpPost.setEntity(data);

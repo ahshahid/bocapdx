@@ -19,6 +19,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import macrobase.MacroBase;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
@@ -58,11 +59,16 @@ public class TableData {
       "val colsToModifyIndexes = Array[Int](%2$s);" +
       "val modColIndexToBuckets = Map[Int, Int](%3$s);" +
       "val newTableName = \"%4$s\";" +
-      "val newSchema = StructType(schema.zipWithIndex.map{ case(sf, index) => {" +
+      "val schemapart1 = schema.zipWithIndex.map{ case(sf, index) => {" +
       "                     if (colsToModifyIndexes.contains(index)) { " +
       "                           sf.copy(dataType = StringType);" +
       "                     } else { sf; }" +
-      "                }});" +
+      "                }};" +
+      "val schemapart2 = schema.zipWithIndex.filter{ case(_, index) => colsToModifyIndexes.contains(index)}." +
+      "unzip._1.map(sf => sf.copy(name = \""
+       + MacroBaseDefaults.BOCA_SHADOW_TABLE_UNBINNED_COL_PREFIX + "\" + sf.name, dataType = DoubleType));" +
+
+      "val newSchema = StructType(schemapart1 ++ schemapart2);" +
       "val projectionWithDoubleCast = schema.zipWithIndex.map{ case (sf, index) => {" +
       "                     if (colsToModifyIndexes.contains(index)) { " +
       "                           s\"cast( ${sf.name} as double) as ${sf.name}\";" +
@@ -84,10 +90,12 @@ public class TableData {
       "});" +
       "val furtherPreppedRdd = preppedDf.rdd.map[Row](row => {" +
       "     var j: Int = 0;" +
+      "     val part2 = Array.ofDim[Any](colsToModifyIndexes.length);" +
       "     val newSeq = Seq.tabulate[Any](schema.length)(i => if (j < sortedColsToModifyIndexes.length " +
       "                             && i == sortedColsToModifyIndexes(j)) {" +
       "           val binValue = row.getDouble(schema.length + j); " +
       "           val splits = bucketizers(j).getSplits; " +
+      "           part2(j) = row(i); " +
       "           j += 1;" +
       "         /* val doubl = splits(binValue.toInt);" +
       "           (doubl * 10000).round / 10000.toDouble; */  " +
@@ -100,7 +108,7 @@ public class TableData {
       "          row(i);" +
       "        }" +
       "    );   " +
-      "    Row.fromSeq(newSeq);" +
+      "    Row.fromSeq(newSeq ++ part2.toSeq);" +
       " });" +
       "val furtherPreppedDf = snappysession.sqlContext.createDataFrame(furtherPreppedRdd, newSchema);" +
       "furtherPreppedDf.write.format(\"column\").mode(\"overwrite\").saveAsTable(newTableName);" +
@@ -523,6 +531,7 @@ public class TableData {
     ResultSet sampleSet = ingester.executeQuery(query);
     this.schema = ingester.getSchema(sampleSet);
     this.sampleRows = Utils.convertResultsetToRows(sampleSet);
+    // avoid it for shadow table
     // get total rows
     String countQuery = "select count (*) from " + tableOrView;
     ResultSet rs = ingester.executeQuery(countQuery);
@@ -530,6 +539,7 @@ public class TableData {
     totalRows = rs.getLong(1);
     // segregate columns based on sql types
     Map<Integer, List<Schema.SchemaColumn>> groups =  schema.getColumns().stream().
+        filter(sc -> !sc.getName().startsWith(MacroBaseDefaults.BOCA_SHADOW_TABLE_UNBINNED_COL_PREFIX)).
         collect(Collectors.groupingBy(sc -> sc.sqlType()));
 
     for(Map.Entry<Integer, List<Schema.SchemaColumn>> entry : groups.entrySet()) {
