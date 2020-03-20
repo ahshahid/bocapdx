@@ -24,6 +24,16 @@
         <artifactId>macrobase-legacy</artifactId>
         <version>0.1-SNAPSHOT</version>
     </dependency>
-    </dependencies>
+    <dependency>
+        <groupId>edu.stanford.futuredata</groupId>
+        <artifactId>macrobase-legacy</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>edu.stanford.futuredata</groupId>
+        <artifactId>macrobase-core</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
 
 </project>

@@ -72,6 +72,23 @@ public class MacroBaseConf extends Configuration {
 
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
+    public static final String INPUT_URI_KEY = "inputURI";
+    public static final String BASE_TABLE_KEY = "baseTable";
+    public static final String EXTRA_PRED_KEY = "extraPredicate";
+    public static final String CLASSIFIER_KEY = "classifier";
+    public static final String METRIC_KEY = "metric";
+    public static final String CUT_OFF_KEY = "cutoff";
+    public static final String INCLUDE_HI_KEY = "includeHi";
+    public static final String INCLUDE_LO_KEY = "includeLo";
+    public static final String PRED_KEY = "predicate";
+    public static final String SUMMARIZER_KEY = "summarizer";
+    public static final String ATTRIBUTES_KEY = "attributes";
+    public static final String RATIO_METRIC_KEY = "ratioMetric";
+    public static final String MIN_RATIO_METRIC_KEY = "minRatioMetric";
+    public static final String MIN_SUPPORT_KEY = "minSupport";
+    public static final String MAX_ORDER_KEY = "maxOrder";
+
+
     private final DatumEncoder datumEncoder;
 
     public MacroBaseConf() {
