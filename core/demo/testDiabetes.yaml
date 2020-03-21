@@ -1,0 +1,35 @@
+pipeline: "BasicBatchPipeline"
+
+objective: "Reduce rate of diabetes"
+
+#inputURI: "csv:///Users/jramnara/Downloads/data/diabetes/diabetes.csv"
+inputURI: "jdbc:snappydata://10.80.141.102:1527"
+
+baseTable: "diabetes_ext_prepped"
+extraPredicate: " where insulin > 0 "
+
+classifier: "predicate"
+metric: "Outcome"
+predicate: "=="
+cutoff: "1"
+
+
+summarizer: "aplinear"
+#summarizer: "fpgrowth"
+# summarizer: "countmeanshift"
+
+#### Attributes are case sensitive ... when column names are returned from Snappy they are lowercase
+#### So, stick to lowercase below
+attributes:
+  - "glucose_d_bin"
+  - "bloodpressure"
+  - "insulin_d_bin"
+  - "skinthickness"
+  - "age"
+  - "bmi_d_bin"
+  - "diabetespedigreefunction_d_bin"
+
+
+ratioMetric: "globalratio"
+minRatioMetric: 1.5
+minSupport: 0.02
