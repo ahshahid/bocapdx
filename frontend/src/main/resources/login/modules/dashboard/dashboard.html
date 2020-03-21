@@ -1,4 +1,4 @@
-<div ng-controller="dashboardController as dashboard">
+<div ng-controller="dashboardController as dashboard" ng-init="init()">
   <!-- Header start -->
     <nav class="navbar navbar-boca">
         <div class="container-fluid">
@@ -52,11 +52,17 @@
       <!-- Sidebar Ends -->
     <div class="col-md-10 tab-container">
       <ul class="nav nav-tabs">
-        <li role="presentation" class="active"><a ng-click="goToTab('home')">My Worksheet</a></li>
+        <li role="presentation" class="active">
+          <a  aria-controls="worksheetTab" role="tab" data-toggle="tab" ng-click="goToTab('worksheet')">My Worksheet</a>
+        </li>
+        <li role="presentation" ng-if="influncer">
+          <a  aria-controls="influncer" role="tab" data-toggle="tab" ng-click="goToTab('influncer')">Instant Insight</a>
+        </li>
       </ul>
-      <div class="panel panel-gray worksheet-tab">
+      
+      <div class="panel panel-gray worksheet-tab tab-pane"  role="tabpanel" ng-show="worksheetTab" id="worksheetTab">
         
-        <div class="panel-body" id="worksheet"  drop-on-me callback-fn="getData(table,true)" style="position: relative;">
+        <div class="panel-body"  id="worksheet" drop-on-me callback-fn="getData(table,true)" style="position: relative;">
           <div class="table-details " ng-repeat="table in workSheetTables" ng-if="worksheet"  ng-draggable='dragOptions' style="cursor: move;position: absolute;">
            <p>{{table.name}}</p>
             <p>Columns: {{table.colCount}}<br>
@@ -94,8 +100,37 @@
           </table>
         </div>
       </div>
-
-
+      <!-- influncerTab Start -->
+      <div class="panel panel-gray tab-pane"  role="tabpanel" ng-show="influncerTab"  id="influncer">
+        <div class="col-md-2 selected-list">
+          <h6>Insights based on <a  >
+            <i  ng-click="editPopup()" class="glyphicon glyphicon glyphicon-edit pull-right blue-color" ></i></a></h6>
+          <ul class="column-list-selected" >
+            <li  ng-repeat="cols in selectedCols track by $index">
+                <label for="{{cols}}" id="{{cols}}" class="title"><span>{{cols}}</span></label> 
+            </li>
+          </ul>
+        </div>
+        <!-- Charts  -->
+        <div class="col-md-10 " style="margin-left: -10px;">
+          <div id="resizable">
+            <div id="searchVolume"></div>
+              <div id="tooltip" class="hidden">
+                  <p class="heading"><span id="keyword">word</span></p>
+                  <p class="heading">Search Volume</p>
+                  <p class="indent"><span id="volVal">5</span></p>
+                  <p class="heading">CPC</p>
+                  <p class="indent">$<span id="cpcVal">5</span></p>
+              </div>
+              <button id="change">Switch Global</button>
+          </div>
+          <div id="resizable1">
+            <p>Resize Me as well</p>
+          </div>
+        </div>
+        <!-- Charts  End-->
+        </div>
+      <!-- influncerTab Start -->
 
     </div>
     </div>
@@ -131,9 +166,19 @@
           </ul>
           </div>
           </div>
+
+          
           <div class="modal-footer">
+            <div class="slider-container">
+              <label>Explain Rare Events</label>
+              <input type="range" min="0" max="100" value="50" ng-model="rareEvent" class="slider" id="rareEvent" data-toggle="tooltip" data-placement="top" title="{{riskRatio}}">
+            </div>
+            <div class="slider-container">
+              <label>Explain Risk Ratio</label>
+              <input type="range" min="0" max="100" value="50" ng-model="riskRatio" class="slider" id="riskRatio" data-toggle="tooltip" data-placement="top" title="{{riskRatio}}">
+            </div>
             <button type="button" class="btn blue-btn" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn blue-btn">Submit</button>
+            <button type="button" class="btn blue-btn" ng-click="goToTab('influncer')">Submit</button>
           </div>
         </div>
       </div>

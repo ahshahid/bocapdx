@@ -231,6 +231,7 @@ button.close span{
 .modal-footer {
     text-align: center;
     border: none;
+    padding: 15px 0;
 }
 
 .modal-body .column {
@@ -275,3 +276,152 @@ button.close span{
     font-size: 15px;
     display: block;
 }
+ul.column-list-selected {
+    margin-left: 0;
+    padding-left: 0;
+}
+ul.column-list-selected li {
+    list-style: none;
+    margin: 0;
+}
+ul.column-list-selected li label{
+    font-weight: normal;
+}
+#influncer {
+    min-height: 500px;
+    display: block;
+    clear: both;
+    height: 100%;
+    float: left;
+    width: 100%; 
+}
+.selected-list{
+    background: #f1f8fe;
+    margin: 5px;
+    min-height: 490px;
+}
+.selected-list  h6 {
+    font-size: 14px;
+    font-weight: 900;
+}
+.nav-tabs>li>a{
+    cursor: default;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-bottom-color: transparent;
+}
+.slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2px;
+    border-radius: 5px;
+    background: #000004;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+  }
+  
+  .slider:hover {
+    opacity: 1;
+  }
+  
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #269afe;
+    cursor: pointer;
+  }
+  
+  .slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #269afe;
+    cursor: pointer;
+  }
+  .slider-container{
+    height: 40px;
+    padding: 0 15px;
+    text-align: left;
+  }
+  .slider-container label{
+    display: inline-block;
+    width: 150px;
+    float: left;
+  }
+  .slider-container input[type=range]{
+    display: block;
+    float: left;
+    width: 316px;
+    margin-top: 5px;
+  }
+  #resizable, #resizable1{
+	width: 400px;
+	height:400px;
+	padding:0.5em;
+	text-align:center;
+    font-weight: bold;
+    float: left;
+    display: block;
+    margin: 10px 10px;
+    border: 1px solid #c5c5c5;
+    border-radius: 6px;
+    min-width: 400px;
+    min-height: 350px;
+    }
+    
+
+
+    /* Charts css */
+    #tooltip {
+        position: absolute;
+        width: 90px;
+        height: auto;
+        padding: 10px;
+        background-color: white;
+        -webkit-border-radius: 10px;
+        -moz-border-radius: 10px;
+        border-radius: 10px;
+        -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        pointer-events: none;
+    }
+    #tooltip.hidden {
+        display: none;
+    }
+    #tooltip p {
+        margin: 0;
+        font-family: sans-serif;
+        font-size: 12px;
+        line-height: 16px;
+    }
+    .indent {
+        padding-left: 15px;
+    }
+    rect {
+        -moz-transition: all 0.3s;
+        -webkit-transition: all 0.3s;
+        -o-transition: all 0.3s;
+        transition: all 0.3s;
+    }
+    rect:hover {
+        fill: orange;
+    }
+    .axis path, .axis line {
+        fill: none;
+        stroke: black;
+        shape-rendering: crispEdges;
+    }
+    .axis text {
+        font-family: sans-serif;
+        font-size: 11px;
+    }
+    /*.legend {
+        padding: 2px;
+        border: 2px solid black;
+    }*/
