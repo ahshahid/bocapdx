@@ -94,6 +94,13 @@
          <artifactId>snappydata-jdbc_2.11</artifactId>
          <version>1.2.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>edu.stanford.futuredata</groupId>
+            <artifactId>macrobase-legacy</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+       
     </dependencies>
 
     <distributionManagement>

@@ -1,10 +1,12 @@
 package macrobase.runtime.resources;
 
+import edu.stanford.futuredata.macrobase.pipeline.BasicBatchPipeline;
 import edu.stanford.futuredata.macrobase.pipeline.PipelineConfig;
 import io.boca.internal.tables.DependencyData;
 import io.boca.internal.tables.FeatureType;
 import io.boca.internal.tables.TableData;
 import io.boca.internal.tables.TableManager;
+import macrobase.analysis.pipeline.BasicBatchedPipeline;
 import macrobase.analysis.pipeline.Pipeline;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -38,14 +40,17 @@ public class DeepInsightResource extends BaseResource {
     public int workflowid;
     public List<String> attributes;
     public String metric;  //outlier column
-    public String outlierclassifier;  // percentile, predicate etc
+    public String classifier;  // percentile, predicate etc
     public String objective;
-    public String cutoff;
     public String extraPredicate;
+    public String predicate;
     public String ratioMetric;
+    /// numeric data data
+    public String cutoff;
     public String minRatioMetric;
     public String minSupport;
     public String maxOrder;
+
 
 
   }
@@ -99,8 +104,43 @@ public class DeepInsightResource extends BaseResource {
       }
       String tableName = preppedTableData.getTableOrView();
       Map<String, Object> conf = new HashMap<>();
-      conf.put()
-      PipelineConfig config = new PipelineConfig();
+      conf.put(MacroBaseConf.BASE_TABLE_KEY, tableName);
+      if (dir.extraPredicate != null && !dir.extraPredicate.trim().isEmpty()) {
+        conf.put(MacroBaseConf.EXTRA_PRED_KEY, dir.extraPredicate);
+      }
+      if (dir.classifier != null && !dir.classifier.trim().isEmpty()) {
+        conf.put(MacroBaseConf.CLASSIFIER_KEY, dir.classifier);
+      }
+      conf.put(MacroBaseConf.METRIC_KEY, metricCol);
+      if (dir.predicate != null && !dir.predicate.trim().isEmpty()) {
+        conf.put(MacroBaseConf.PRED_KEY, dir.predicate);
+      }
+
+      if (dir.attributes != null && !dir.attributes.isEmpty()) {
+        conf.put(MacroBaseConf.ATTRIBUTES_KEY, dir.attributes);
+      }
+      conf.put(MacroBaseConf.INGESTER_KEY, ingester);
+
+      if (dir.cutoff != null && !dir.cutoff.trim().isEmpty()) {
+        conf.put(MacroBaseConf.CUT_OFF_KEY, Double.parseDouble(dir.cutoff));
+      }
+      if (dir.ratioMetric != null && !dir.ratioMetric.trim().isEmpty()) {
+        conf.put(MacroBaseConf.RATIO_METRIC_KEY, dir.ratioMetric);
+      }
+
+      if (dir.minRatioMetric != null && !dir.minRatioMetric.trim().isEmpty()) {
+        conf.put(MacroBaseConf.MIN_RATIO_METRIC_KEY, Double.parseDouble(dir.minRatioMetric));
+      }
+
+      if (dir.minSupport != null && !dir.minSupport.trim().isEmpty()) {
+        conf.put(MacroBaseConf.MIN_SUPPORT_KEY, Double.parseDouble(dir.minSupport));
+      }
+
+      if (dir.maxOrder != null && !dir.maxOrder.trim().isEmpty()) {
+        conf.put(MacroBaseConf.MAX_ORDER_KEY, Integer.parseInt(dir.maxOrder));
+      }
+      PipelineConfig config = new PipelineConfig(conf);
+      BasicBatchPipeline bbp = new BasicBatchPipeline(config);
 
 
     } catch (Exception e) {

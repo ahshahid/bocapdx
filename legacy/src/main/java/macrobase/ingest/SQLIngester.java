@@ -93,6 +93,11 @@ public abstract class SQLIngester extends DataIngester {
         return sql.replaceAll(";", "");
     }
 
+    public Connection getConnection() throws SQLException {
+        this.initializeConnection();
+        return this.connection;
+    }
+
     public Schema getSchema(String baseQuery)
             throws SQLException {
         initializeConnection();

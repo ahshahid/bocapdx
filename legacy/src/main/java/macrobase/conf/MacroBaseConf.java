@@ -87,6 +87,7 @@ public class MacroBaseConf extends Configuration {
     public static final String MIN_RATIO_METRIC_KEY = "minRatioMetric";
     public static final String MIN_SUPPORT_KEY = "minSupport";
     public static final String MAX_ORDER_KEY = "maxOrder";
+    public static final String INGESTER_KEY = "ingester";
 
 
     private final DatumEncoder datumEncoder;

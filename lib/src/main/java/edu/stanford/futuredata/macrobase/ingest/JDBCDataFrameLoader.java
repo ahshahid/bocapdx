@@ -2,6 +2,7 @@ package edu.stanford.futuredata.macrobase.ingest;
 
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
+import macrobase.ingest.SQLIngester;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,7 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
     private final String tableName;
     private final String extraPredicate;
     private final String dburl;
+    private final SQLIngester ingester;
     private Logger log = LoggerFactory.getLogger(JDBCDataFrameLoader.class);
     private final List<String> requiredColumns;
     private Map<String, Schema.ColType> columnTypes;
@@ -35,7 +37,20 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
         this.dburl = url;
         this.convertNulls = true;
         this.extraPredicate = extraPredicate;
+        this.ingester = null;
     }
+
+    public JDBCDataFrameLoader(SQLIngester ingester, String tableName, List<String> requiredColumns, String extraPredicate)
+        throws IOException {
+        this.requiredColumns = requiredColumns.stream().map(String::toLowerCase).collect(Collectors.toList());
+        this.tableName = tableName;
+        this.ingester = ingester;
+        this.convertNulls = true;
+        this.dburl = null;
+        this.extraPredicate = extraPredicate;
+    }
+
+
     
     @Override
     public DataFrameLoader setColumnTypes(Map<String, Schema.ColType> types) {
@@ -69,15 +84,18 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
     }
 
     private Connection getConnection() throws SQLException {
-        Connection connection;
-        try {
-            Class.forName("io.snappydata.jdbc.ClientDriver"); // fix later
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
+        if (this.ingester != null) {
+            return this.ingester.getConnection();
+        } else {
+            try {
+                Class.forName("io.snappydata.jdbc.ClientDriver"); // fix later
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
 
-        return DriverManager.getConnection(dburl);
+            return DriverManager.getConnection(dburl);
+        }
     }
 
     private int getRowCount(Connection c) throws SQLException {

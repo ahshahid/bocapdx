@@ -10,6 +10,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>edu.stanford.futuredata</groupId>
+            <artifactId>macrobase-legacy</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
