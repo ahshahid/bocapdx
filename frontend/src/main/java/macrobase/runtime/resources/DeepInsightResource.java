@@ -119,7 +119,7 @@ public class DeepInsightResource extends BaseResource {
       if (dir.attributes != null && !dir.attributes.isEmpty()) {
         conf.put(MacroBaseConf.ATTRIBUTES_KEY, dir.attributes);
       }
-      conf.put(MacroBaseConf.INGESTER_KEY, ingester);
+      conf.put(MacroBaseConf.PROVIDED_CONN_KEY, ingester.getConnection());
 
       if (dir.cutoff != null && !dir.cutoff.trim().isEmpty()) {
         conf.put(MacroBaseConf.CUT_OFF_KEY, Double.parseDouble(dir.cutoff));

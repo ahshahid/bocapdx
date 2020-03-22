@@ -2,7 +2,6 @@ package edu.stanford.futuredata.macrobase.ingest;
 
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import macrobase.ingest.SQLIngester;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +22,7 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
     private final String tableName;
     private final String extraPredicate;
     private final String dburl;
-    private final SQLIngester ingester;
+    private final Connection providedConn;
     private Logger log = LoggerFactory.getLogger(JDBCDataFrameLoader.class);
     private final List<String> requiredColumns;
     private Map<String, Schema.ColType> columnTypes;
@@ -37,14 +36,14 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
         this.dburl = url;
         this.convertNulls = true;
         this.extraPredicate = extraPredicate;
-        this.ingester = null;
+        this.providedConn = null;
     }
 
-    public JDBCDataFrameLoader(SQLIngester ingester, String tableName, List<String> requiredColumns, String extraPredicate)
+    public JDBCDataFrameLoader(Connection providedConn, String tableName, List<String> requiredColumns, String extraPredicate)
         throws IOException {
         this.requiredColumns = requiredColumns.stream().map(String::toLowerCase).collect(Collectors.toList());
         this.tableName = tableName;
-        this.ingester = ingester;
+        this.providedConn = providedConn;
         this.convertNulls = true;
         this.dburl = null;
         this.extraPredicate = extraPredicate;
@@ -84,8 +83,8 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
     }
 
     private Connection getConnection() throws SQLException {
-        if (this.ingester != null) {
-            return this.ingester.getConnection();
+        if (this.providedConn != null) {
+            return this.providedConn;
         } else {
             try {
                 Class.forName("io.snappydata.jdbc.ClientDriver"); // fix later
