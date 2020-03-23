@@ -14,6 +14,8 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.statement.Statements;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,21 +42,9 @@ public class DeepInsightResource extends BaseResource {
 
   static class DeepInsightRequest {
     public int workflowid;
-    public List<String> attributes;
     public String metric;  //outlier column
-    public String classifier;  // percentile, predicate etc
     public String objective;
-    public String extraPredicate;
-    public String predicate;
-    public String ratioMetric;
-    /// numeric data data
-    public String cutoff;
-    public String minRatioMetric;
-    public String minSupport;
-    public String maxOrder;
-
-
-
+    public Map<String, Object> optionalConf;
   }
 
   static class DeepInsightResponse {
@@ -93,43 +83,42 @@ public class DeepInsightResource extends BaseResource {
         metricCol = actualCols.get(0).getName();
       }
       String tableName = preppedTableData.getTableOrView();
-      Map<String, Object> conf = new HashMap<>();
-      conf.put(MacroBaseConf.BASE_TABLE_KEY, tableName);
-      if (dir.extraPredicate != null && !dir.extraPredicate.trim().isEmpty()) {
-        conf.put(MacroBaseConf.EXTRA_PRED_KEY, dir.extraPredicate);
+      // validate optionalConf
+      Map<String, Object> optionalConf = dir.optionalConf;
+      if (optionalConf != null) {
+        // validate keys
+        optionalConf.keySet().stream().forEach(key -> {
+          boolean found = false;
+          for(String param: MacroBaseConf.optionalParams) {
+            if (key.equals(param)) {
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            throw new RuntimeException("Unknown optional param = " + key);
+          }
+        });
+      } else {
+        optionalConf = new HashMap<>();
       }
-      if (dir.classifier != null && !dir.classifier.trim().isEmpty()) {
-        conf.put(MacroBaseConf.CLASSIFIER_KEY, dir.classifier);
-      }
-      conf.put(MacroBaseConf.METRIC_KEY, metricCol);
-      if (dir.predicate != null && !dir.predicate.trim().isEmpty()) {
-        conf.put(MacroBaseConf.PRED_KEY, dir.predicate);
+      optionalConf.put(MacroBaseConf.BASE_TABLE_KEY, tableName);
+      optionalConf.put(MacroBaseConf.METRIC_KEY, metricCol);
+      optionalConf.put(MacroBaseConf.PROVIDED_CONN_KEY, ingester.getConnection());
+      optionalConf.put(MacroBaseConf.SUMMARIZER_KEY, "apriori");
+      if (optionalConf.containsKey(MacroBaseConf.EXTRA_PRED_KEY)) {
+        String extraPred = (String)optionalConf.get(MacroBaseConf.EXTRA_PRED_KEY);
+        if (extraPred != null && !extraPred.trim().isEmpty()) {
+          String query = "select * from " + tableName + " " + extraPred;
+          Statements stmt = CCJSqlParserUtil.parseStatements(query);
+          System.out.println(stmt);
+
+        }
+
       }
 
-      if (dir.attributes != null && !dir.attributes.isEmpty()) {
-        conf.put(MacroBaseConf.ATTRIBUTES_KEY, dir.attributes);
-      }
-      conf.put(MacroBaseConf.PROVIDED_CONN_KEY, ingester.getConnection());
 
-      if (dir.cutoff != null && !dir.cutoff.trim().isEmpty()) {
-        conf.put(MacroBaseConf.CUT_OFF_KEY, Double.parseDouble(dir.cutoff));
-      }
-      if (dir.ratioMetric != null && !dir.ratioMetric.trim().isEmpty()) {
-        conf.put(MacroBaseConf.RATIO_METRIC_KEY, dir.ratioMetric);
-      }
-
-      if (dir.minRatioMetric != null && !dir.minRatioMetric.trim().isEmpty()) {
-        conf.put(MacroBaseConf.MIN_RATIO_METRIC_KEY, Double.parseDouble(dir.minRatioMetric));
-      }
-
-      if (dir.minSupport != null && !dir.minSupport.trim().isEmpty()) {
-        conf.put(MacroBaseConf.MIN_SUPPORT_KEY, Double.parseDouble(dir.minSupport));
-      }
-
-      if (dir.maxOrder != null && !dir.maxOrder.trim().isEmpty()) {
-        conf.put(MacroBaseConf.MAX_ORDER_KEY, Integer.parseInt(dir.maxOrder));
-      }
-      PipelineConfig config = new PipelineConfig(conf);
+      PipelineConfig config = new PipelineConfig(optionalConf);
       BasicBatchPipeline bbp = new BasicBatchPipeline(config);
       Explanation expl = bbp.results();
       response = new DeepInsightResponse(expl);
