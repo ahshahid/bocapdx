@@ -1,5 +1,7 @@
 package macrobase.runtime.resources;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import edu.stanford.futuredata.macrobase.pipeline.BasicBatchPipeline;
 import edu.stanford.futuredata.macrobase.pipeline.PipelineConfig;
 import io.boca.internal.tables.DependencyData;
@@ -56,27 +58,15 @@ public class DeepInsightResource extends BaseResource {
   }
 
   static class DeepInsightResponse {
-    public List<KpiData> kpidata;
+
     public String errorMessage;
-    static class KpiData {
-      public String kpicolname;
-      public String kpitype;
-      public List<PredictorData> pearsonfeatures;
-      public List<PredictorData> chisquarefeatures;
-      public List<PredictorData> anovafeatures;
-      static class PredictorData {
-        public String predictorname;
-        public double corr;
-        public PredictorData(String name, double val) {
-          predictorname = name;
-          corr = val;
-        }
-      }
+    public Explanation expl = null;
+    private DeepInsightResponse() {}
+    private DeepInsightResponse (Explanation expl) {
+      this.expl = expl;
     }
+
   }
-
-
-
 
 
   public DeepInsightResource(MacroBaseConf conf) {
@@ -86,7 +76,7 @@ public class DeepInsightResource extends BaseResource {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   public DeepInsightResponse getSchema(DeepInsightRequest dir) {
-    DeepInsightResponse response = new DeepInsightResponse();
+    DeepInsightResponse response ;
     HttpSession ss = request.getSession();
     try {
       SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
@@ -141,9 +131,11 @@ public class DeepInsightResource extends BaseResource {
       }
       PipelineConfig config = new PipelineConfig(conf);
       BasicBatchPipeline bbp = new BasicBatchPipeline(config);
-
+      Explanation expl = bbp.results();
+      response = new DeepInsightResponse(expl);
 
     } catch (Exception e) {
+      response = new DeepInsightResponse();
       log.error("An error occurred while processing a request: {}", e);
       response.errorMessage = ExceptionUtils.getStackTrace(e);
     }
