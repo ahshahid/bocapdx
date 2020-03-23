@@ -70,6 +70,7 @@ public class SimpleExplanationNLG {
     public void rawExplainRow(RowSet.Row r, StringBuffer outputText, int rowNum) throws Exception {
         String supportString ="";
         String ratioString = "";
+        long supportPercent = 0;
 
         outputText.append("\n("  + (++rowNum) + ")" + " When the value of ");
         List<ColumnValue> l = r.getColumnValues();
@@ -78,7 +79,10 @@ public class SimpleExplanationNLG {
             String c = l.get(i).getColumn().toLowerCase();
             String value = l.get(i).getValue();
             if (c.equals("global_ratio")) ratioString = getRatioString(value);
-            else if (c.equals("support")) supportString = getNewSupportString(value);
+            else if (c.equals("support")) {
+                supportString = getNewSupportString(value);
+                supportPercent = Math.round(Double.parseDouble(value) * 100);
+            }
 
             // Skip non domain attributes ...
             if (c.equals("global_ratio") || c.equals("outliers") || c.equals("count") || c.equals("support"))
@@ -90,8 +94,15 @@ public class SimpleExplanationNLG {
         }
         if (temp.endsWith("and ")) outputText.append(temp.substring(0, temp.lastIndexOf("and"))) ;
 
-        outputText.append(", your metric " + metric + " is " +
-                ratioString + "times higher than usual. This increased " + supportString ) ;
+        if (isOutcomeBinary()) {
+            outputText.append(", your metric " + metric + " is " +
+                    ratioString + "times higher than usual. This increased " + supportString);
+        }
+        else {
+            outputText.append(", the chance (or risk) of meeting your objective is " +
+                    ratioString + " times higher than usual. This represents " +
+                    supportPercent + " percent of all records that meet your objective.");
+        }
     }
 
     private String getDescription(String column) {
@@ -140,6 +151,7 @@ public class SimpleExplanationNLG {
         else return " very common. ";
     }
 
+    // If the outcome variable is binary, we are sure that outcome improves by Support %?
     private String getNewSupportString(String v) {
         //return " metric by x% "
         long i  = Math.round(Double.parseDouble(v) * 100);
@@ -183,6 +195,19 @@ public class SimpleExplanationNLG {
 
         return s;
     }
+
+    // Hack ... just use Conf to figure out if Outcome is binary .. fix later.
+    private boolean isOutcomeBinary() {
+        Object rawCutoff = conf.get("cutoff");
+        boolean isStrPredicate = rawCutoff instanceof String;
+        if (isStrPredicate) {
+            String strCutoff = ((String) rawCutoff).toLowerCase();
+            if (strCutoff.equals("yes") || strCutoff.equals("true") || strCutoff.equals("1"))
+                return true;
+        }
+        return false;
+    }
+
 
     private RowSet getRows(String query) throws SQLException {
         Connection connection = getConnection();
