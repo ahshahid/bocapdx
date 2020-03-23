@@ -14,8 +14,25 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.StatementVisitor;
+import net.sf.jsqlparser.statement.StatementVisitorAdapter;
 import net.sf.jsqlparser.statement.Statements;
+import net.sf.jsqlparser.statement.alter.Alter;
+import net.sf.jsqlparser.statement.create.index.CreateIndex;
+import net.sf.jsqlparser.statement.create.table.CreateTable;
+import net.sf.jsqlparser.statement.create.view.CreateView;
+import net.sf.jsqlparser.statement.delete.Delete;
+import net.sf.jsqlparser.statement.drop.Drop;
+import net.sf.jsqlparser.statement.insert.Insert;
+import net.sf.jsqlparser.statement.replace.Replace;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.truncate.Truncate;
+import net.sf.jsqlparser.statement.update.Update;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,18 +123,34 @@ public class DeepInsightResource extends BaseResource {
       optionalConf.put(MacroBaseConf.METRIC_KEY, metricCol);
       optionalConf.put(MacroBaseConf.PROVIDED_CONN_KEY, ingester.getConnection());
       optionalConf.put(MacroBaseConf.SUMMARIZER_KEY, "apriori");
+      /*
       if (optionalConf.containsKey(MacroBaseConf.EXTRA_PRED_KEY)) {
         String extraPred = (String)optionalConf.get(MacroBaseConf.EXTRA_PRED_KEY);
         if (extraPred != null && !extraPred.trim().isEmpty()) {
           String query = "select * from " + tableName + " " + extraPred;
-          Statements stmt = CCJSqlParserUtil.parseStatements(query);
-          System.out.println(stmt);
+          Select select = (Select)CCJSqlParserUtil.parse(query);
+          Expression expr = ((PlainSelect)select.getSelectBody()).getWhere();
+          expr.accept(new ExpressionVisitorAdapter(){
+            @Override
+            public void visit(Column column) {
+              final String columnName = column.getColumnName();
+              List<Schema.SchemaColumn> actualCols = preppedTableData.getSchema().getColumns().stream().
+                  filter(sc -> sc.getName().
+                      equalsIgnoreCase(MacroBaseDefaults.BOCA_SHADOW_TABLE_UNBINNED_COL_PREFIX + columnName)).
+                  collect(Collectors.toList());
+              String newColumnName = columnName;
+              if (!actualCols.isEmpty()) {
+                newColumnName = actualCols.get(0).getName();
+              }
+              column.setColumnName(newColumnName);
+            }
+          });
+
 
         }
-
       }
 
-
+      */
       PipelineConfig config = new PipelineConfig(optionalConf);
       BasicBatchPipeline bbp = new BasicBatchPipeline(config);
       Explanation expl = bbp.results();
