@@ -6,7 +6,7 @@ app.factory('ApiFactory', ['$resource',
 
 
         /*local server  */
-        //const server = 'http://localhost:3000/'; 
+        //const server = 'http://localhost:3000/';
 
         return {
             login: $resource(server +'api/login'),

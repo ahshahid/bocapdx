@@ -11,7 +11,7 @@ metric: "avgrev"
 predicate: ">"
 cutoff: 100.0
 
-extraPredicate: "where age1 > 0 and age2 > 0"
+# extraPredicate: "where age1 > 0 and age2 > 0"
 
 summarizer: "aplinear"
 #summarizer: "fpgrowth"
@@ -21,21 +21,21 @@ summarizer: "aplinear"
 ########
 
 attributes:
-  - "adjmou_bin"
-  - "adjqty_d_bin"
-  - "adjrev_bin"
-  - "avgmou_bin"
-  - "avgqty_bin"
+#  - "adjmou_bin"
+#  - "adjqty_d_bin"
+#  - "adjrev_bin"
+#  - "avgmou_bin"
+#  - "avgqty_bin"
   - "eqpdays_d_bin"
-  - "mou_mean_d_bin"
-  - "ovrrev_mean_d_bin"
+#  - "mou_mean_d_bin"
+#  - "ovrrev_mean_d_bin"
   #
-  - "totcalls_d_bin"
-  - "totmrc_mean_d_bin"
-  - "avg3mou"
-  - "avg3qty"
-  - "avg6mou"
-  - "avg6qty"
+#  - "totcalls_d_bin"
+#  - "totmrc_mean_d_bin"
+#  - "avg3mou"
+#  - "avg3qty"
+#  - "avg6mou"
+#  - "avg6qty"
   - "datovr_mean"
   - "datovr_range"
   - "mou_range"
@@ -76,7 +76,7 @@ attributes:
 ####  -  div_type, dwllsize, dwlltype, ethnic, forgntvl, hnd_webcap, income, mailordr, mailresp, marital, models, mtrcycle, numbcars, occu1, prizm_social_one, proptype, refurb_new, solflag, uniqsubs, wrkwoman, churn, adjmou_binnum, adjqty_d_binnum, adjrev_binnum, avgmou_binnum, avgqty_binnum, avgrev_binnum, eqpdays_d_binnum, mou_mean_d_binnum, ovrrev_mean_d_binnum, rev_mean_d_binnum, rev_range_d_binnum, totcalls_d_binnum, totmrc_mean_d_binnum, totrev_binnum)
 
 ratioMetric: "globalratio"
-minRatioMetric: 5.0
+minRatioMetric: 2.0
 minSupport: 0.02
 maxOrder: 2
 
