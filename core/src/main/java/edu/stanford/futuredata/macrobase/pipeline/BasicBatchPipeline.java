@@ -229,21 +229,23 @@ public class BasicBatchPipeline implements Pipeline {
         Explanation output = summarizer.getResults();
 
         //TODO : Hack ... this savetoDB needs to be somewhere else ...
-        if (inputURI.contains("jdbc")) {
-            String outputTable = baseTable + "_Explained" ;
-            saveDataFrameToJDBC(getConnection(), outputTable,
-                    getExplanationAsDataFrame(output), true);
-            SimpleExplanationNLG e = new SimpleExplanationNLG(conf, (APLExplanation) output , outputTable, metric );
+        Connection conn = getConnection();
+        if (conn != null){
+            String outputTable = baseTable + "_Explained";
+            saveDataFrameToJDBC(conn, outputTable,
+                getExplanationAsDataFrame(output), true);
+            SimpleExplanationNLG e = new SimpleExplanationNLG(conf, (APLExplanation)output, outputTable, metric);
             System.out.println(e.explainAsText());
         }
+
         return output;
     }
 
-    private Connection connection = null;
+     //private Connection connection = null;
 
     private Connection getConnection() throws SQLException {
         //TODO: Not thread safe
-        if (connection == null ) {
+        if (this.providedConn == null && this.inputURI != null ) {
             try {
                 Class.forName("io.snappydata.jdbc.ClientDriver"); // fix later
             } catch (ClassNotFoundException e) {
@@ -251,9 +253,9 @@ public class BasicBatchPipeline implements Pipeline {
                 System.exit(-1);
             }
 
-            connection = DriverManager.getConnection(inputURI);
+            this.providedConn = DriverManager.getConnection(inputURI);
         }
-        return connection;
+        return this.providedConn;
     }
 
     public DataFrame getExplanationAsDataFrame(Explanation e) throws Exception{
