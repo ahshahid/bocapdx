@@ -7,8 +7,8 @@ import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
 import edu.stanford.futuredata.macrobase.ingest.JDBCDataFrameLoader;
 import edu.stanford.futuredata.macrobase.ingest.RESTDataFrameLoader;
 import edu.stanford.futuredata.macrobase.util.MacroBaseException;
-import macrobase.ingest.SQLIngester;
 
+import java.sql.Connection;
 import java.util.Map;
 import java.util.List;
 
@@ -19,13 +19,13 @@ public class PipelineUtils {
             List<String> requiredColumns,
             String baseTable,
             String extraPredicate,
-            SQLIngester ingester
+            Connection providedConn
     ) throws Exception {
         return PipelineUtils.loadDataFrame(
                 inputURI, colTypes, null, null, false,
                 requiredColumns,
                 baseTable,
-                extraPredicate, ingester
+                extraPredicate, providedConn
         );
     }
 
@@ -69,9 +69,9 @@ public class PipelineUtils {
             List<String> requiredColumns,
             String baseTable,
             String extraPredicate,
-            SQLIngester ingester
+            Connection providedConn
     ) throws Exception {
-        if (ingester == null) {
+        if (providedConn == null) {
             if (inputURI.startsWith("csv")) {
                 // take off "csv://" from inputURI
                 CSVDataFrameParser loader = new CSVDataFrameParser(inputURI.substring(6), requiredColumns);

@@ -134,6 +134,31 @@ public class JoinTablesResponseTester {
       System.out.println("\n\n");
 
 
+      // deep insifgt fetch
+      String deepInsightUrl = "http://" + host + ":9090/api/deepInsight";
+      httpPost = new HttpPost(deepInsightUrl);
+      httpPost.addHeader("content-type", "application/json;charset=UTF-8");
+      data = new StringEntity("{\"workflowid\":" + workflowid +", \"metric\":\"telecom_churn_networkq_churn\", \"objective\":\"xxx\"," +
+          "\"optionalConf\":" +
+          "{" +
+             "\"attributes\":" +
+             "[\"models\", \"iwylis_vce_mean\", \"adjrev\", \"uniqsubs\", \"drop_vce_mean\", \"avg3qty\",\"plcd_vce_mean\", \"avg3mou\", \"totrev\", \"comp_vce_mean\", \"drop_vce_range\"]," +
+             "\"extraPredicate\":\"where avg3qty > 0 and avgqty > 0\"" +
+          "}" +
+          "}"
+          );
+      httpPost.addHeader("User-Agent", "Apache HTTPClient");
+
+      httpPost.setEntity(data);
+      response = client.execute(httpPost, httpContext);
+
+      entity = response.getEntity();
+      content = EntityUtils.toString(entity);
+      System.out.println("\n\n");
+      System.out.println(content);
+      System.out.println("\n\n");
+
+
     } finally {
 
       if (httpPost != null) {

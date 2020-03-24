@@ -1,5 +1,7 @@
 package macrobase.runtime.resources;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import edu.stanford.futuredata.macrobase.pipeline.BasicBatchPipeline;
 import edu.stanford.futuredata.macrobase.pipeline.PipelineConfig;
 import io.boca.internal.tables.DependencyData;
@@ -12,6 +14,25 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.StatementVisitor;
+import net.sf.jsqlparser.statement.StatementVisitorAdapter;
+import net.sf.jsqlparser.statement.Statements;
+import net.sf.jsqlparser.statement.alter.Alter;
+import net.sf.jsqlparser.statement.create.index.CreateIndex;
+import net.sf.jsqlparser.statement.create.table.CreateTable;
+import net.sf.jsqlparser.statement.create.view.CreateView;
+import net.sf.jsqlparser.statement.delete.Delete;
+import net.sf.jsqlparser.statement.drop.Drop;
+import net.sf.jsqlparser.statement.insert.Insert;
+import net.sf.jsqlparser.statement.replace.Replace;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.truncate.Truncate;
+import net.sf.jsqlparser.statement.update.Update;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,45 +59,21 @@ public class DeepInsightResource extends BaseResource {
 
   static class DeepInsightRequest {
     public int workflowid;
-    public List<String> attributes;
     public String metric;  //outlier column
-    public String classifier;  // percentile, predicate etc
     public String objective;
-    public String extraPredicate;
-    public String predicate;
-    public String ratioMetric;
-    /// numeric data data
-    public String cutoff;
-    public String minRatioMetric;
-    public String minSupport;
-    public String maxOrder;
-
-
-
+    public Map<String, Object> optionalConf;
   }
 
   static class DeepInsightResponse {
-    public List<KpiData> kpidata;
+
     public String errorMessage;
-    static class KpiData {
-      public String kpicolname;
-      public String kpitype;
-      public List<PredictorData> pearsonfeatures;
-      public List<PredictorData> chisquarefeatures;
-      public List<PredictorData> anovafeatures;
-      static class PredictorData {
-        public String predictorname;
-        public double corr;
-        public PredictorData(String name, double val) {
-          predictorname = name;
-          corr = val;
-        }
-      }
+    public Explanation expl = null;
+    private DeepInsightResponse() {}
+    private DeepInsightResponse (Explanation expl) {
+      this.expl = expl;
     }
+
   }
-
-
-
 
 
   public DeepInsightResource(MacroBaseConf conf) {
@@ -86,7 +83,7 @@ public class DeepInsightResource extends BaseResource {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   public DeepInsightResponse getSchema(DeepInsightRequest dir) {
-    DeepInsightResponse response = new DeepInsightResponse();
+    DeepInsightResponse response ;
     HttpSession ss = request.getSession();
     try {
       SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
@@ -103,47 +100,64 @@ public class DeepInsightResource extends BaseResource {
         metricCol = actualCols.get(0).getName();
       }
       String tableName = preppedTableData.getTableOrView();
-      Map<String, Object> conf = new HashMap<>();
-      conf.put(MacroBaseConf.BASE_TABLE_KEY, tableName);
-      if (dir.extraPredicate != null && !dir.extraPredicate.trim().isEmpty()) {
-        conf.put(MacroBaseConf.EXTRA_PRED_KEY, dir.extraPredicate);
+      // validate optionalConf
+      Map<String, Object> optionalConf = dir.optionalConf;
+      if (optionalConf != null) {
+        // validate keys
+        optionalConf.keySet().stream().forEach(key -> {
+          boolean found = false;
+          for(String param: MacroBaseConf.optionalParams) {
+            if (key.equals(param)) {
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            throw new RuntimeException("Unknown optional param = " + key);
+          }
+        });
+      } else {
+        optionalConf = new HashMap<>();
       }
-      if (dir.classifier != null && !dir.classifier.trim().isEmpty()) {
-        conf.put(MacroBaseConf.CLASSIFIER_KEY, dir.classifier);
-      }
-      conf.put(MacroBaseConf.METRIC_KEY, metricCol);
-      if (dir.predicate != null && !dir.predicate.trim().isEmpty()) {
-        conf.put(MacroBaseConf.PRED_KEY, dir.predicate);
+      optionalConf.put(MacroBaseConf.BASE_TABLE_KEY, tableName);
+      optionalConf.put(MacroBaseConf.METRIC_KEY, metricCol);
+      optionalConf.put(MacroBaseConf.PROVIDED_CONN_KEY, ingester.getConnection());
+      optionalConf.put(MacroBaseConf.SUMMARIZER_KEY, "apriori");
+      /*
+      if (optionalConf.containsKey(MacroBaseConf.EXTRA_PRED_KEY)) {
+        String extraPred = (String)optionalConf.get(MacroBaseConf.EXTRA_PRED_KEY);
+        if (extraPred != null && !extraPred.trim().isEmpty()) {
+          String query = "select * from " + tableName + " " + extraPred;
+          Select select = (Select)CCJSqlParserUtil.parse(query);
+          Expression expr = ((PlainSelect)select.getSelectBody()).getWhere();
+          expr.accept(new ExpressionVisitorAdapter(){
+            @Override
+            public void visit(Column column) {
+              final String columnName = column.getColumnName();
+              List<Schema.SchemaColumn> actualCols = preppedTableData.getSchema().getColumns().stream().
+                  filter(sc -> sc.getName().
+                      equalsIgnoreCase(MacroBaseDefaults.BOCA_SHADOW_TABLE_UNBINNED_COL_PREFIX + columnName)).
+                  collect(Collectors.toList());
+              String newColumnName = columnName;
+              if (!actualCols.isEmpty()) {
+                newColumnName = actualCols.get(0).getName();
+              }
+              column.setColumnName(newColumnName);
+            }
+          });
+
+
+        }
       }
 
-      if (dir.attributes != null && !dir.attributes.isEmpty()) {
-        conf.put(MacroBaseConf.ATTRIBUTES_KEY, dir.attributes);
-      }
-      conf.put(MacroBaseConf.INGESTER_KEY, ingester);
-
-      if (dir.cutoff != null && !dir.cutoff.trim().isEmpty()) {
-        conf.put(MacroBaseConf.CUT_OFF_KEY, Double.parseDouble(dir.cutoff));
-      }
-      if (dir.ratioMetric != null && !dir.ratioMetric.trim().isEmpty()) {
-        conf.put(MacroBaseConf.RATIO_METRIC_KEY, dir.ratioMetric);
-      }
-
-      if (dir.minRatioMetric != null && !dir.minRatioMetric.trim().isEmpty()) {
-        conf.put(MacroBaseConf.MIN_RATIO_METRIC_KEY, Double.parseDouble(dir.minRatioMetric));
-      }
-
-      if (dir.minSupport != null && !dir.minSupport.trim().isEmpty()) {
-        conf.put(MacroBaseConf.MIN_SUPPORT_KEY, Double.parseDouble(dir.minSupport));
-      }
-
-      if (dir.maxOrder != null && !dir.maxOrder.trim().isEmpty()) {
-        conf.put(MacroBaseConf.MAX_ORDER_KEY, Integer.parseInt(dir.maxOrder));
-      }
-      PipelineConfig config = new PipelineConfig(conf);
+      */
+      PipelineConfig config = new PipelineConfig(optionalConf);
       BasicBatchPipeline bbp = new BasicBatchPipeline(config);
-
+      Explanation expl = bbp.results();
+      response = new DeepInsightResponse(expl);
 
     } catch (Exception e) {
+      response = new DeepInsightResponse();
       log.error("An error occurred while processing a request: {}", e);
       response.errorMessage = ExceptionUtils.getStackTrace(e);
     }

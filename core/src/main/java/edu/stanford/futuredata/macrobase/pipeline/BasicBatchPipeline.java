@@ -11,8 +11,6 @@ import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.util.MacroBaseException;
-import macrobase.conf.MacroBaseConf;
-import macrobase.ingest.SQLIngester;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,13 +51,13 @@ public class BasicBatchPipeline implements Pipeline {
 
     private boolean useFDs;
     private int[] functionalDependencies;
-    private SQLIngester ingester;
+    private Connection providedConn;
 
 
     public BasicBatchPipeline (PipelineConfig conf) {
         this.conf = conf;
         inputURI = conf.get("inputURI");
-        this.ingester = conf.get(MacroBaseConf.INGESTER_KEY);
+        this.providedConn = conf.get("providedConnection");
         baseTable = conf.get("baseTable", "NULL");
         extraPredicate = conf.get("extraPredicate", "");
         classifierType = conf.get("classifier", "percentile");
@@ -204,7 +202,7 @@ public class BasicBatchPipeline implements Pipeline {
         }
         requiredColumns.add(metric);
         return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns, baseTable, extraPredicate,
-            this.ingester);
+            this.providedConn);
     }
 
     @Override
