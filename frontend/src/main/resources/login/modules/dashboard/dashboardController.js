@@ -38,18 +38,22 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
              $scope.tables = response.results;
         })
     }
+    $scope.workflowid;
     $scope.getData = function(table,dragged) {
        
+        /* for local
+        $scope.workflowid = table;
+        */
            $scope.tableName = table;
            $scope.clearColumnSelection();
-           //console.log($scope.myTable.selected);
            $scope.worksheet=true;
           var temp =[];
           $scope.createJsonForSchema(table);
             ApiFactory.schema.save({
-                /* tablename: $scope.tableName */table: $scope.jsonSchema
+                table: $scope.jsonSchema
             }, function (response) {
                 $scope.columnList = response.schema.columns;
+                $scope.workflowid =response.workflowid;
                 var newJson=[]
                 angular.forEach(response.schema.columns, function(value,key) {
                     var name =value.name
@@ -75,7 +79,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
            
 
             ApiFactory.getRows.save({
-                tablename: table
+                workflowid: $scope.workflowid
             }, function (response) {
                 var data = response.rows;
                 $scope.rowCount = response.rowCount;
