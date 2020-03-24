@@ -2,12 +2,10 @@ app.factory('ApiFactory', ['$resource',
 	function ($resource) {
 
         /*for server */
-         const server = '';
-
+        const server = '';
 
         /*local server  */
         //const server = 'http://localhost:3000/'; 
-
         return {
             login: $resource(server +'api/login'),
             refreshTables: $resource(server +'api/refreshTables'),
