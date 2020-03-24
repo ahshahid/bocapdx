@@ -82,7 +82,7 @@ public class DeepInsightResource extends BaseResource {
 
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
-  public DeepInsightResponse getSchema(DeepInsightRequest dir) {
+  public DeepInsightResponse getDeepInsight(DeepInsightRequest dir) {
     DeepInsightResponse response ;
     HttpSession ss = request.getSession();
     try {

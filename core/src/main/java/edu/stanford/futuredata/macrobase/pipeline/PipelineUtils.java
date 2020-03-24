@@ -101,7 +101,7 @@ public class PipelineUtils {
                 throw new MacroBaseException("Unsupported URI");
             }
         } else {
-            JDBCDataFrameLoader loader = new JDBCDataFrameLoader(inputURI, baseTable, requiredColumns, extraPredicate);
+            JDBCDataFrameLoader loader = new JDBCDataFrameLoader(providedConn, baseTable, requiredColumns, extraPredicate);
             loader.setColumnTypes(colTypes);
             DataFrame df = loader.load();
             return df;
