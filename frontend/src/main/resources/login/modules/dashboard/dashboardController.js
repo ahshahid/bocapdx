@@ -41,9 +41,9 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     $scope.workflowid;
     $scope.getData = function(table,dragged) {
        
-        /* for local
+        //for local
         $scope.workflowid = table;
-        */
+       
            $scope.tableName = table;
            $scope.clearColumnSelection();
            $scope.worksheet=true;
@@ -74,24 +74,25 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
                 })
                 $scope.schemaCols = newJson;
                 $scope.createWorkSheetTables(table);
+                ApiFactory.getRows.save({
+                    workflowid: $scope.workflowid
+                }, function (response) {
+                    var data = response.rows;
+                    $scope.rowCount = response.rowCount;
+                   $scope.convertKeyValueJson($scope.schemaCols, response.rows);
+                   $scope.schemaRows =  new NgTableParams({page: 1,
+                    count: 10,
+                    filter: {},
+                    sorting: {}}, 
+                    {dataset: $scope.temp});
+                    $scope.isRowRes = true;
+                    $scope.createWorkSheetTables(table);
+                });
             });
 
            
 
-            ApiFactory.getRows.save({
-                workflowid: $scope.workflowid
-            }, function (response) {
-                var data = response.rows;
-                $scope.rowCount = response.rowCount;
-               $scope.convertKeyValueJson($scope.schemaCols, response.rows);
-               $scope.schemaRows =  new NgTableParams({page: 1,
-                count: 10,
-                filter: {},
-                sorting: {}}, 
-                {dataset: $scope.temp});
-                $scope.isRowRes = true;
-                $scope.createWorkSheetTables(table);
-            });
+            
             
     }
 // Todo Implement the json logic
