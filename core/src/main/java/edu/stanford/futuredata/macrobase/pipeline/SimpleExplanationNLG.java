@@ -17,14 +17,17 @@ public class SimpleExplanationNLG {
     private final APLExplanation explainObj;
     private final Map<String, String> colDescriptions;
     private final String metric;
-    private Connection conn;
+    private final Connection conn;
 
-    public SimpleExplanationNLG(PipelineConfig conf, APLExplanation explainObj , String outputTable, String metric ) throws Exception {
+    public SimpleExplanationNLG(PipelineConfig conf, APLExplanation explainObj ,
+        String outputTable, String metric, Connection conn ) throws Exception {
         this.conf = conf;
         this.explainObj =explainObj;
         this.outputTable = outputTable;
         this.metric = metric;
-        this.colDescriptions = getColDescriptions();
+        this.conn = conn;
+        this.colDescriptions = getColDescriptions(conn);
+
     }
 
     public String explainAsText() throws Exception {
@@ -60,7 +63,8 @@ public class SimpleExplanationNLG {
 
 
     public void rawExplainTable(StringBuffer outputText) throws Exception {
-        List rows = getRows("select * from " + outputTable + " order by global_ratio desc, support limit 10").getRows();
+        List rows = getRows("select * from " + outputTable + " order by global_ratio desc, support limit 10",
+            this.conn).getRows();
         for (int i = 0; i < rows.size(); i++) {
             rawExplainRow((RowSet.Row)(rows.get(i)), outputText, i);
         }
@@ -114,10 +118,10 @@ public class SimpleExplanationNLG {
         return out;
     }
 
-    private Map<String,String> getColDescriptions() throws Exception{
+    private Map<String,String> getColDescriptions(Connection conn) throws Exception{
         String table = BasicBatchPipeline.removeSuffix(outputTable, "_prepped_Explained").toLowerCase();
         String sql = "Select columnname, description from columnDescriptions where tablename = '" + table + "'";
-        RowSet rs = getRows(sql);
+        RowSet rs = getRows(sql, conn);
         Map<String, String> m = new HashMap<>();
         for (RowSet.Row r: rs.getRows()) {
             List<ColumnValue> v = r.getColumnValues();
@@ -211,8 +215,7 @@ public class SimpleExplanationNLG {
     }
 
 
-    private RowSet getRows(String query) throws SQLException {
-        Connection connection = getConnection();
+    private static RowSet getRows(String query, Connection connection) throws SQLException {
 
         Statement stmt = connection.createStatement();
         ResultSet rs = stmt.executeQuery(query);
@@ -232,10 +235,6 @@ public class SimpleExplanationNLG {
         return new RowSet(rows);
     }
 
-    private Connection getConnection() throws SQLException {
-        if (conn == null)
-         conn =  DriverManager.getConnection(conf.get("inputURI"));
-        return conn; // thread safety ?
-    }
+
 
 }

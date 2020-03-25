@@ -234,7 +234,8 @@ public class BasicBatchPipeline implements Pipeline {
             String outputTable = baseTable + "_Explained";
             saveDataFrameToJDBC(conn, outputTable,
                 getExplanationAsDataFrame(output), true);
-            SimpleExplanationNLG e = new SimpleExplanationNLG(conf, (APLExplanation)output, outputTable, metric);
+            SimpleExplanationNLG e = new SimpleExplanationNLG(conf, (APLExplanation)output, outputTable,
+                metric, this.getConnection());
             System.out.println(e.explainAsText());
         }
 
