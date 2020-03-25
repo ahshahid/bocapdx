@@ -42,6 +42,7 @@ import javax.servlet.http.HttpSession;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -119,6 +120,15 @@ public class DeepInsightResource extends BaseResource {
       } else {
         optionalConf = new HashMap<>();
       }
+      Object pred = optionalConf.get(MacroBaseConf.PRED_KEY);
+      if (pred != null) {
+        optionalConf.put(MacroBaseConf.CLASSIFIER_KEY, MacroBaseConf.CLASSIFIER_PRED);
+      } else {
+        assert tdOrig.getColumnData(dir.metric).sqlType == Types.DOUBLE;
+        optionalConf.put(MacroBaseConf.CLASSIFIER_KEY, MacroBaseConf.CLASSIFIER_PERCENTILE);
+      }
+
+
       optionalConf.put(MacroBaseConf.BASE_TABLE_KEY, tableName);
       optionalConf.put(MacroBaseConf.METRIC_KEY, metricCol);
       optionalConf.put(MacroBaseConf.PROVIDED_CONN_KEY, ingester.getConnection());

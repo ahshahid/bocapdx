@@ -143,10 +143,11 @@ public class JoinTablesResponseTester {
           "{" +
              "\"attributes\":" +
              "[\"models\", \"iwylis_vce_mean\", \"adjrev\", \"uniqsubs\", \"drop_vce_mean\", \"avg3qty\",\"plcd_vce_mean\", \"avg3mou\", \"totrev\", \"comp_vce_mean\", \"drop_vce_range\"]," +
-             "\"extraPredicate\":\"where avg3qty > 0 and avgqty > 0\"" +
+             "\"predicate\":\"!=\"," +
+             "\"cutoff\":\"0\"" +
           "}" +
-          "}"
-          );
+       "}"
+      );
       httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
       httpPost.setEntity(data);

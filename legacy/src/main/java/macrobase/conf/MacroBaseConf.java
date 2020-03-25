@@ -78,10 +78,16 @@ public class MacroBaseConf extends Configuration {
     public static final String METRIC_KEY = "metric";
     public static final String SUMMARIZER_KEY = "summarizer";
     public static final String PROVIDED_CONN_KEY = "providedConnection";
+    public static final String PRED_KEY = "predicate";
     public static final String EXTRA_PRED_KEY = "extraPredicate";
-    public static final String[] optionalParams = {"inputURI", EXTRA_PRED_KEY, "classifier",
-        "cutoff", "includeHi", "includeLo", "predicate", "attributes", "ratioMetric",  "minRatioMetric",
+    public static final String CLASSIFIER_KEY = "classifier";
+    public static final String[] optionalParams = {"inputURI", EXTRA_PRED_KEY, CLASSIFIER_KEY,
+        "cutoff", "includeHi", "includeLo", PRED_KEY, "attributes", "ratioMetric",  "minRatioMetric",
         "minSupport", "maxOrder"};
+    public static final String CLASSIFIER_PERCENTILE = "percentile";
+    public static final String CLASSIFIER_PRED = "predicate";
+    public static final String CLASSIFIER_CMS = "countmeanshift";
+
     private final DatumEncoder datumEncoder;
 
     public MacroBaseConf() {
