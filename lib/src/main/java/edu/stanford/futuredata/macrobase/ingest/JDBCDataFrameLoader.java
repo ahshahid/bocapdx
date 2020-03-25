@@ -68,7 +68,7 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
         Schema schema = new Schema();
 
         for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
-            String colName = rs.getMetaData().getColumnName(i);
+            String colName = rs.getMetaData().getColumnName(i).toLowerCase();
             Schema.ColType t = Schema.ColType.STRING;
             int type = rs.getMetaData().getColumnType(i);
             switch (type) {
@@ -77,7 +77,11 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
                 case Types.FLOAT:
                     t = Schema.ColType.DOUBLE ;
             }
-            schema.addColumn(t, colName.toLowerCase());
+            //TODO : hack ... all attributes are always Strings (Category) for Explanation engine
+            if (columnTypes.get(colName) != null ) // Only metric is in columnTypes
+                schema.addColumn(t, colName);
+            else
+                schema.addColumn(Schema.ColType.STRING, colName);
         }
         return  schema;
     }
@@ -152,6 +156,7 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
 
         rs.close();
         df.prettyPrint();
+        System.out.println("===> SCHEMA ======\n" + df.getSchema() );
         return df;
     }
 }
