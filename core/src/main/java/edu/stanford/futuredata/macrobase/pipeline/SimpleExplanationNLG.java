@@ -1,8 +1,13 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
+import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
+
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 // Just a hack for initial prototype ....
 
-public class SimpleExplanationNLG {
+public class SimpleExplanationNLG implements Explanation {
 
     private final PipelineConfig conf;
     private final String outputTable;
@@ -29,6 +34,21 @@ public class SimpleExplanationNLG {
         this.colDescriptions = getColDescriptions(conn);
 
     }
+
+    @JsonProperty("rawExplanation")
+    public Explanation rawExplanation() {
+      return this.explainObj;
+    }
+
+    @JsonProperty("nlgText")
+    public String getNlgText() {
+      try {
+          return this.explainAsText();
+      } catch (Exception e) {
+         return "Error in getting NLG text";
+      }
+    }
+
 
     public String explainAsText() throws Exception {
         StringBuffer outputText = new StringBuffer();
@@ -61,6 +81,19 @@ public class SimpleExplanationNLG {
         return outputText.toString();
     }
 
+    public String prettyPrint() {
+
+       try {
+           return explainAsText();
+       } catch (Exception e) {
+           e.printStackTrace();
+           return this.explainObj.prettyPrint();
+       }
+    }
+
+    public double numTotal() {
+       return this.explainObj.numTotal();
+    }
 
     public void rawExplainTable(StringBuffer outputText) throws Exception {
         List rows = getRows("select * from " + outputTable + " order by global_ratio desc, support limit 10",

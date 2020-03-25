@@ -237,10 +237,13 @@ public class BasicBatchPipeline implements Pipeline {
             SimpleExplanationNLG e = new SimpleExplanationNLG(conf, (APLExplanation)output, outputTable,
                 metric, this.getConnection());
             System.out.println(e.explainAsText());
+            return e;
+        } else {
+            return output;
         }
-
-        return output;
     }
+
+
 
      //private Connection connection = null;
 
