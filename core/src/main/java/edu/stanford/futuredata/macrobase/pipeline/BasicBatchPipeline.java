@@ -245,7 +245,7 @@ public class BasicBatchPipeline implements Pipeline {
 
     private Connection getConnection() throws SQLException {
         //TODO: Not thread safe
-        if (this.providedConn == null && this.inputURI != null ) {
+        if (this.providedConn == null && this.inputURI.contains("jdbc") ) {
             try {
                 Class.forName("io.snappydata.jdbc.ClientDriver"); // fix later
             } catch (ClassNotFoundException e) {

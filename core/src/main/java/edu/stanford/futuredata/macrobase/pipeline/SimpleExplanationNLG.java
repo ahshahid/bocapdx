@@ -190,8 +190,10 @@ public class SimpleExplanationNLG {
             } else {
                 s += " " + rawCutoff + " ";
             }
-        } else
-            throw new Exception("Please help add support for non-predicate classifier in SimpleNLG ...");
+        } else {
+            //TODO: Fix support for percentile ...
+            s += conf.get("cutoff") + " percentile ";
+        }
 
         return s;
     }

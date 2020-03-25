@@ -27,7 +27,7 @@ attributes:
   - "rev_range"
 #
   - "adjqty"
-  - "adjrev"
+  - "adjrev_bin"
   - "avgmou"
   - "avgrev"
   - "eqpdays"

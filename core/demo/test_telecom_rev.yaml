@@ -1,6 +1,6 @@
 pipeline: "BasicBatchPipeline"
 
-objective: "increase monthly revenue"
+objective: "What is driving higher monthly revenue?"
 
 inputURI: "jdbc:snappydata://10.80.141.102:1527"
 
@@ -11,7 +11,7 @@ metric: "avgrev"
 predicate: ">"
 cutoff: 100.0
 
-# extraPredicate: "where age1 > 0 and age2 > 0"
+# extraPredicate: "where models != '5'"
 
 summarizer: "aplinear"
 #summarizer: "fpgrowth"
@@ -21,7 +21,7 @@ summarizer: "aplinear"
 ########
 
 attributes:
-#  - "adjmou_bin"
+  - "adjmou_bin"
 #  - "adjqty_d_bin"
 #  - "adjrev_bin"
 #  - "avgmou_bin"

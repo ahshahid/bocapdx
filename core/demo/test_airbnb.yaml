@@ -11,6 +11,10 @@ metric: "rent"
 predicate: ">"
 cutoff: 400.0
 
+#classifier: "percentile"
+#metric: "rent"
+#cutoff: 10.0
+
 
 summarizer: "aplinear"
 #summarizer: "fpgrowth"
