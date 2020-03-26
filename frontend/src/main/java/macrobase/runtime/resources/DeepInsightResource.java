@@ -140,7 +140,10 @@ public class DeepInsightResource extends BaseResource {
           if (cutoff != null && cutoff instanceof  String) {
             if (metricColCd.sqlType == Types.INTEGER) {
               newCutOff = Double.valueOf(Integer.parseInt((String)cutoff));
-            } else if (metricColCd.sqlType == Types.FLOAT || metricColCd.sqlType == Types.REAL) {
+            } else if (metricColCd.sqlType == Types.BIGINT) {
+              newCutOff = Double.valueOf(Long.parseLong((String)cutoff));
+            }
+            else if (metricColCd.sqlType == Types.FLOAT || metricColCd.sqlType == Types.REAL) {
               newCutOff = Double.valueOf(Float.parseFloat((String)cutoff));
             } else if (metricColCd.sqlType == Types.DOUBLE) {
               newCutOff = Double.parseDouble((String)cutoff);
@@ -148,7 +151,10 @@ public class DeepInsightResource extends BaseResource {
           } else if (cutoff != null) {
             if (cutoff instanceof  Integer) {
               newCutOff = ((Integer)cutoff).doubleValue();
-            } else if (cutoff instanceof  Float) {
+            } else if (cutoff instanceof  Long) {
+              newCutOff = ((Long)cutoff).doubleValue();
+            }
+            else if (cutoff instanceof  Float) {
               newCutOff = ((Float)cutoff).doubleValue();
             }
           }
@@ -157,7 +163,10 @@ public class DeepInsightResource extends BaseResource {
           if (!(cutoff instanceof String)) {
             if (cutoff instanceof  Integer) {
               newCutOff = String.valueOf((Integer)((Integer)cutoff).intValue());
-            } else if (cutoff instanceof  Float) {
+            } else if (cutoff instanceof  Long) {
+              newCutOff = String.valueOf((Long)((Long)cutoff).longValue());
+            }
+            else if (cutoff instanceof  Float) {
               newCutOff = String.valueOf((Float)((Float)cutoff).floatValue());
             } else if (cutoff instanceof  Double) {
               newCutOff = String.valueOf((Double)((Double)cutoff).doubleValue());

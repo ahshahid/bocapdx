@@ -143,8 +143,7 @@ public class JoinTablesResponseTester {
           "{" +
              "\"attributes\":" +
              "[\"models\", \"iwylis_vce_mean\", \"adjrev\", \"uniqsubs\", \"drop_vce_mean\", \"avg3qty\",\"plcd_vce_mean\", \"avg3mou\", \"totrev\", \"comp_vce_mean\", \"drop_vce_range\"]," +
-             "\"predicate\":\"!=\"," +
-             "\"cutoff\":0" +
+             "\"predicate\":\"telecom_churn_networkq_churn != 0\"" +
           "}" +
        "}"
       );
