@@ -14,8 +14,8 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;
+import net.sf.jsqlparser.expression.*;
+import net.sf.jsqlparser.expression.operators.relational.IsNullExpression;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.StatementVisitor;
@@ -91,13 +91,14 @@ public class DeepInsightResource extends BaseResource {
 
       final TableData tdOrig = TableManager.getTableData(dir.workflowid);
       final TableData preppedTableData = tdOrig.getTableDataForFastInsights();
-
+      TableData.ColumnData metricColCd = tdOrig.getColumnData(dir.metric);
       List<Schema.SchemaColumn> actualCols = preppedTableData.getSchema().getColumns().stream().
           filter(sc -> sc.getName().
               equalsIgnoreCase(MacroBaseDefaults.BOCA_SHADOW_TABLE_UNBINNED_COL_PREFIX + dir.metric)).
           collect(Collectors.toList());
       String metricCol = dir.metric;
-      if (!actualCols.isEmpty()) {
+      boolean metricColShadowExists = !actualCols.isEmpty();
+      if (metricColShadowExists) {
         metricCol = actualCols.get(0).getName();
       }
       String tableName = preppedTableData.getTableOrView();
@@ -120,11 +121,54 @@ public class DeepInsightResource extends BaseResource {
       } else {
         optionalConf = new HashMap<>();
       }
-      Object pred = optionalConf.get(MacroBaseConf.PRED_KEY);
+      String pred = (String)optionalConf.get(MacroBaseConf.PRED_KEY);
       if (pred != null) {
         optionalConf.put(MacroBaseConf.CLASSIFIER_KEY, MacroBaseConf.CLASSIFIER_PRED);
+
+        // parse the pred
+
+        String query = "select * from " + tableName + " where " + pred;
+        Object[] results = parseExpression(query);
+
+        Object cutoff = results[2];
+        Object newCutOff = cutoff;
+        if (metricColShadowExists) {
+          // this means that actual metric column in prepped table is of data type double, irrespective of type in
+          // actual table
+
+          // actual data type in base table
+          if (cutoff != null && cutoff instanceof  String) {
+            if (metricColCd.sqlType == Types.INTEGER) {
+              newCutOff = Double.valueOf(Integer.parseInt((String)cutoff));
+            } else if (metricColCd.sqlType == Types.FLOAT || metricColCd.sqlType == Types.REAL) {
+              newCutOff = Double.valueOf(Float.parseFloat((String)cutoff));
+            } else if (metricColCd.sqlType == Types.DOUBLE) {
+              newCutOff = Double.parseDouble((String)cutoff);
+            }
+          } else if (cutoff != null) {
+            if (cutoff instanceof  Integer) {
+              newCutOff = ((Integer)cutoff).doubleValue();
+            } else if (cutoff instanceof  Float) {
+              newCutOff = ((Float)cutoff).doubleValue();
+            }
+          }
+        } else {
+          // cateoriocal column, all to be treated as string
+          if (!(cutoff instanceof String)) {
+            if (cutoff instanceof  Integer) {
+              newCutOff = String.valueOf((Integer)((Integer)cutoff).intValue());
+            } else if (cutoff instanceof  Float) {
+              newCutOff = String.valueOf((Float)((Float)cutoff).floatValue());
+            } else if (cutoff instanceof  Double) {
+              newCutOff = String.valueOf((Double)((Double)cutoff).doubleValue());
+            }
+          }
+        }
+        optionalConf.put(MacroBaseConf.PRED_KEY, results[1]);
+        optionalConf.put(MacroBaseConf.CUT_OFF_KEY, newCutOff);
+
       } else {
-        assert tdOrig.getColumnData(dir.metric).sqlType == Types.DOUBLE;
+        assert metricColCd.sqlType == Types.DOUBLE;
         optionalConf.put(MacroBaseConf.CLASSIFIER_KEY, MacroBaseConf.CLASSIFIER_PERCENTILE);
       }
 
@@ -172,6 +216,65 @@ public class DeepInsightResource extends BaseResource {
       response.errorMessage = ExceptionUtils.getStackTrace(e);
     }
     return response;
+  }
+
+  // returns 3 element array. the first two elements are strings ( column name & operator)
+  // the third is the value  ( string, int, double, null any thing)
+  // for now ignore the 1st column which will always have to be kpi
+  private Object[] parseExpression(String query) throws Exception {
+
+    Select select = (Select)CCJSqlParserUtil.parse(query);
+    Expression expr = ((PlainSelect)select.getSelectBody()).getWhere();
+    final Object[] results = new Object[3];
+    expr.accept(new ExpressionVisitorAdapter(){
+      protected void visitBinaryExpression(BinaryExpression expr) {
+        results[1] = expr.getStringExpression();
+        expr.getLeftExpression().accept(this);
+        expr.getRightExpression().accept(this);
+      }
+      public void visit(NullValue value) {
+        results[2] = null;
+      }
+
+      public void visit(DoubleValue value) {
+        results[2] = value.getValue();
+      }
+
+      public void visit(LongValue value) {
+        results[2] = value.getValue();
+      }
+
+      public void visit(DateValue value) {
+        results[2] = value.getValue();
+      }
+
+      public void visit(TimeValue value) {
+        results[2] = value.getValue();
+      }
+
+      public void visit(TimestampValue value) {
+        results[2] = value.getValue();
+      }
+
+
+      public void visit(StringValue value) {
+        results[2] = value.getValue();
+      }
+
+      public void visit(Column column) {
+        results[0] = column.getColumnName();
+      }
+
+      public void visit(IsNullExpression expr) {
+        results[1] = expr.isNot() ? "IS NOT " : "IS";
+        results[2] = null;
+        expr.getLeftExpression().accept(this);
+      }
+
+    });
+
+    return results;
+
   }
 }
 

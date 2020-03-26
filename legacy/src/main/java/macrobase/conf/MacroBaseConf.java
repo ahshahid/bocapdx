@@ -81,8 +81,9 @@ public class MacroBaseConf extends Configuration {
     public static final String PRED_KEY = "predicate";
     public static final String EXTRA_PRED_KEY = "extraPredicate";
     public static final String CLASSIFIER_KEY = "classifier";
+    public static final String CUT_OFF_KEY = "cutoff";
     public static final String[] optionalParams = {"inputURI", EXTRA_PRED_KEY, CLASSIFIER_KEY,
-        "cutoff", "includeHi", "includeLo", PRED_KEY, "attributes", "ratioMetric",  "minRatioMetric",
+        CUT_OFF_KEY, "includeHi", "includeLo", PRED_KEY, "attributes", "ratioMetric",  "minRatioMetric",
         "minSupport", "maxOrder"};
     public static final String CLASSIFIER_PERCENTILE = "percentile";
     public static final String CLASSIFIER_PRED = "predicate";
