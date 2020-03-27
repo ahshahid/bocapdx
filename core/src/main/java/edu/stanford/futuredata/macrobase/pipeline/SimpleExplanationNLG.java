@@ -53,7 +53,7 @@ public class SimpleExplanationNLG implements Explanation {
     public String explainAsText() throws Exception {
         StringBuffer outputText = new StringBuffer();
 
-
+        outputText.append(this.explainObj.prettyPrint());
         int count = explainObj.getResults().size();
         if (count == 0) {
             outputText.append("\nOops. The analysis did not generate any explanations. " +
