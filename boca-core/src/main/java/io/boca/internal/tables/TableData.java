@@ -156,7 +156,7 @@ public class TableData {
       + "OldLabeledPoint(label, OldVectors.fromML(features));"
       + "};"
       + "val chiSqTestResult = Statistics.chiSqTest(input).zipWithIndex;"
-      + "val features = chiSqTestResult.filter { case (res, _) => res.pValue < pValueThreshold};"
+      + "val features = chiSqTestResult;//.filter { case (res, _) => res.pValue < pValueThreshold};\n"
       + "val outputSchema = StructType(Seq(StructField(\"depCol\", StringType, false),"
       + "StructField(\"pValue\", DoubleType, false)));"
       + "val rows = features.map {"
