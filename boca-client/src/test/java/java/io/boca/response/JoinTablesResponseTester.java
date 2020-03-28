@@ -141,9 +141,10 @@ public class JoinTablesResponseTester {
       data = new StringEntity("{\"workflowid\":" + workflowid +", \"metric\":\"telecom_churn_networkq_churn\", \"objective\":\"xxx\"," +
           "\"optionalConf\":" +
           "{" +
-             "\"attributes\":" +
-             "[\"models\", \"iwylis_vce_mean\", \"adjrev\", \"uniqsubs\", \"drop_vce_mean\", \"avg3qty\",\"plcd_vce_mean\", \"avg3mou\", \"totrev\", \"comp_vce_mean\", \"drop_vce_range\"]," +
-             "\"predicate\":\"telecom_churn_networkq_churn != 0\"" +
+            /* "\"attributes\":" +
+             "[\"models\", \"iwylis_vce_mean\", \"adjrev\", \"uniqsubs\", \"drop_vce_mean\", \"avg3qty\",\"plcd_vce_mean\", \"avg3mou\", \"totrev\", \"comp_vce_mean\", \"drop_vce_range\"]," + */
+             "\"predicate\":\"telecom_churn_networkq_churn = 0\"," +
+             "\"minSupport\": 0.0001" +
           "}" +
        "}"
       );
