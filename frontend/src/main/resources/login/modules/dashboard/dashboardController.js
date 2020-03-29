@@ -42,7 +42,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     $scope.getData = function(table,dragged) {
        
         //for local
-        $scope.workflowid = table;
+       // $scope.workflowid = table;
        
            $scope.tableName = table;
            $scope.clearColumnSelection();
@@ -64,7 +64,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
                         "title": name,
                         "sortable": name,
                         "filter": {
-                            name: "text"
+                            name: value.type =='INTEGER' ?'number' : "text"
                         },
                         "show": true,
                         "field":name
@@ -315,7 +315,7 @@ $scope.addBarChart = function(){
            /*  title: 'Company Performance',
             subtitle: 'Sales, Expenses, and Profit: 2014-2017', */
           },
-          colors:['#297db9','#53a8e1', '#79defc'],
+          colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
           bars: 'horizontal' // Required for Material Bar Charts.
         };
 
@@ -340,7 +340,7 @@ $scope.addBarChart = function(){
            /*  title: 'Company Performance', */
             hAxis: {title: 'Year',  titleTextStyle: {color: '#333'}},
             vAxis: {minValue: 0},
-            colors:['#297db9','#53a8e1', '#79defc'],
+            colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
             pointShape: 'circle',
             selectionMode: 'multiple',
             pointsVisible : false
@@ -372,7 +372,7 @@ $scope.addBarChart = function(){
   
           var options = {
            /*  title: 'My Daily Activities', */
-            colors:['#297db9','#53a8e1', '#79defc']
+            colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87']
           };
   
           var chart = new google.visualization.PieChart(document.getElementById('pieChart'));
@@ -395,7 +395,7 @@ $scope.addBarChart = function(){
         var options = {
         /*   title: 'Company Performance', */
           curveType: 'function',
-          colors:['#297db9','#53a8e1', '#79defc'],
+          colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
           legend: { position: 'bottom' }
         };
 
@@ -434,7 +434,7 @@ $scope.addBarChart = function(){
           hAxis: {title: 'Life Expectancy'},
           vAxis: {title: 'Fertility Rate'},
           bubble: {textStyle: {fontSize: 10}},
-          colors:['#297db9','#53a8e1', '#79defc'],
+          colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
         };
   
         var chart = new google.visualization.BubbleChart(document.getElementById('bubbleChart'));

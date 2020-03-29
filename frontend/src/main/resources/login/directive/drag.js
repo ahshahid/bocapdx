@@ -100,7 +100,8 @@ app.directive('ngDraggable', function($document) {
         $document.unbind('mousemove', mousemove);
         $document.unbind('mouseup', mouseup);
         elem.css({
-          'z-index': 10
+          'z-index': 10,
+          'position': 'absolute'
         });
         if (stop) stop(e);
       }
