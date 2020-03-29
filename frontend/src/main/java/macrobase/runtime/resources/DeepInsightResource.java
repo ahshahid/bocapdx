@@ -44,6 +44,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,7 @@ import java.util.stream.Collectors;
 @Produces(MediaType.APPLICATION_JSON)
 
 public class DeepInsightResource extends BaseResource {
-  private static final Logger log = LoggerFactory.getLogger(FastInsightResource.class);
+  private static final Logger log = LoggerFactory.getLogger(DeepInsightResource.class);
 
   @Context
   private HttpServletRequest request;
@@ -180,7 +181,14 @@ public class DeepInsightResource extends BaseResource {
         assert metricColCd.sqlType == Types.DOUBLE;
         optionalConf.put(MacroBaseConf.CLASSIFIER_KEY, MacroBaseConf.CLASSIFIER_PERCENTILE);
       }
-
+      List<String> attributes = (List<String>)optionalConf.getOrDefault(
+          MacroBaseConf.ATTRIBUTES_KEY, Collections.emptyList());
+      if (attributes.isEmpty()) {
+       List<String> allProj =  tdOrig.getSchema().getColumns().stream().
+            filter(sc -> !sc.getName().equalsIgnoreCase(dir.metric)).map(sc -> sc.getName()).
+            collect(Collectors.toList());
+       optionalConf.put(MacroBaseConf.ATTRIBUTES_KEY, allProj);
+      }
 
       optionalConf.put(MacroBaseConf.BASE_TABLE_KEY, tableName);
       optionalConf.put(MacroBaseConf.METRIC_KEY, metricCol);

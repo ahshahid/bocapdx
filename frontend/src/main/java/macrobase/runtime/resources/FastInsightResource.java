@@ -25,6 +25,9 @@ import java.util.stream.Collectors;
 
 public class FastInsightResource extends BaseResource {
   private static final Logger log = LoggerFactory.getLogger(FastInsightResource.class);
+  private static double pearsonCorrCriteria = .5d;
+  private static double annovaCorrCriteria = .5d;
+  private static double chiCriteria = .1d;
 
   @Context
   private HttpServletRequest request;
@@ -89,19 +92,25 @@ public class FastInsightResource extends BaseResource {
         Map<String, Double> chiSquareMap = dd.getChisquareFeatureMap();
         Map<String, Double> anovaMap = dd.getAnovaFeatureMap();
         if (!pearsonMap.isEmpty()) {
-          kpid.pearsonfeatures = pearsonMap.entrySet().stream().map(entry ->
+          kpid.pearsonfeatures = pearsonMap.entrySet().stream().filter(entry ->
+              Math.abs(entry.getValue()) > pearsonCorrCriteria).sorted((e1, e2) ->
+              e2.getValue().compareTo(e1.getValue())).map(entry ->
               new FastInsightResponse.KpiData.PredictorData(entry.getKey(),
                   entry.getValue())).collect(Collectors.toList());
         }
 
         if (!chiSquareMap.isEmpty()) {
-          kpid.chisquarefeatures = chiSquareMap.entrySet().stream().map(entry ->
+          kpid.chisquarefeatures = chiSquareMap.entrySet().stream().filter(entry ->
+              entry.getValue()< chiCriteria ).sorted((e1, e2) ->
+              e1.getValue().compareTo(e2.getValue())).map(entry ->
               new FastInsightResponse.KpiData.PredictorData(entry.getKey(),
                   entry.getValue())).collect(Collectors.toList());
         }
 
         if (!anovaMap.isEmpty()) {
-          kpid.anovafeatures = anovaMap.entrySet().stream().map(entry ->
+          kpid.anovafeatures = anovaMap.entrySet().stream().filter(entry ->
+              entry.getValue() > annovaCorrCriteria ).sorted((e1, e2) ->
+              e2.getValue().compareTo(e1.getValue())).map(entry ->
               new FastInsightResponse.KpiData.PredictorData(entry.getKey(),
                   entry.getValue())).collect(Collectors.toList());
         }
