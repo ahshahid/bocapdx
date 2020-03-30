@@ -8,6 +8,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanatio
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,16 @@ public class SimpleExplanationNLG implements Explanation {
     private final String metric;
     private final Connection conn;
 
+
+    static class EachExplanation {
+        public String explanationStr;
+        public List<String> features;
+        EachExplanation(String expl, List<String> ft) {
+            this.explanationStr = expl;
+            this.features = ft;
+        }
+    }
+
     public SimpleExplanationNLG(PipelineConfig conf, APLExplanation explainObj ,
         String outputTable, String metric, Connection conn ) throws Exception {
         this.conf = conf;
@@ -35,56 +46,75 @@ public class SimpleExplanationNLG implements Explanation {
 
     }
 
-    @JsonProperty("rawExplanation")
+    @JsonProperty("header")
+    public String getNlgHeaderText() {
+        try {
+            return this.explainAsHeader();
+        } catch (Exception e) {
+            return "Error in getting NLG text";
+        }
+    }
+
+    /*@JsonProperty("rawExplanation")*/
     public Explanation rawExplanation() {
       return this.explainObj;
     }
 
-    @JsonProperty("nlgText")
-    public String getNlgText() {
+    @JsonProperty("nlgExplanation")
+    public List<EachExplanation> getNlgText() {
       try {
-          return this.explainAsText();
+          return rawExplainTable();
       } catch (Exception e) {
-         return "Error in getting NLG text";
+         return Collections.singletonList(new EachExplanation("Error in getting NLG text", Collections.EMPTY_LIST));
       }
     }
 
+    @JsonProperty("footer")
+    public String getFooter() {
+        return "\"\\n==========================================================\\n\"";
+    }
 
-    public String explainAsText() throws Exception {
+    private String explainAsHeader() throws Exception {
         StringBuffer outputText = new StringBuffer();
 
         outputText.append(this.explainObj.prettyPrint());
         int count = explainObj.getResults().size();
         if (count == 0) {
             outputText.append("\nOops. The analysis did not generate any explanations. " +
-                    "We suggest looking for more rare event patterns and try again.");
+                "We suggest looking for more rare event patterns and try again.");
             return outputText.toString();
         }
         else if (count > 10) {
             outputText.append("\n==========================================================\n" +
-                    "Well, turns out your analysis generated quite a few explanations. " +
-                    "While our NLG in the future will summarize all these effectively, for now," +
-                    " we present the most important ones. You could change 'Support' for more common" +
-                    " patterns and try again. You can view all the explanations here(URL).");
+                "Well, turns out your analysis generated quite a few explanations. " +
+                "While our NLG in the future will summarize all these effectively, for now," +
+                " we present the most important ones. You could change 'Support' for more common" +
+                " patterns and try again. You can view all the explanations here(URL).");
         }
 
         outputText.append("\n==========================================================\n");
         outputText.append("\n Your OBJECTIVE :: " + conf.get("objective", "Not specified") +
-                              "\n==========================================================\n");
+            "\n==========================================================\n");
         outputText.append("Analysis for your objective meant we had to carry out statistical analysis and " +
-                "comparison of records where \"" + getPredicateString() + "\" with the rest. \n");
+            "comparison of records where \"" + getPredicateString() + "\" with the rest. \n");
 
         outputText.append("Good news. The FastInsights engine produced " + count + " specific facts that " +
-                "drive your objective. Here are the important ones(upto 10)  ...\n");
-        rawExplainTable(outputText);
-        outputText.append("\n==========================================================\n");
+            "drive your objective. Here are the important ones(upto 10)  ...\n");
+
         return outputText.toString();
     }
+
+
 
     public String prettyPrint() {
 
        try {
-           return explainAsText();
+           StringBuilder outputText = new StringBuilder();
+           outputText.append(explainAsHeader());
+           List<EachExplanation> explanations = rawExplainTable();
+           explanations.forEach(expl -> outputText.append(expl.explanationStr));
+           outputText.append(getFooter());
+           return outputText.toString();
        } catch (Exception e) {
            e.printStackTrace();
            return this.explainObj.prettyPrint();
@@ -95,20 +125,23 @@ public class SimpleExplanationNLG implements Explanation {
        return this.explainObj.numTotal();
     }
 
-    public void rawExplainTable(StringBuffer outputText) throws Exception {
+    private List<EachExplanation> rawExplainTable() throws Exception {
         List rows = getRows("select * from " + outputTable + " order by global_ratio desc, support limit 10",
             this.conn).getRows();
+        List<EachExplanation> explanations = new ArrayList<>();
         for (int i = 0; i < rows.size(); i++) {
-            rawExplainRow((RowSet.Row)(rows.get(i)), outputText, i);
+            explanations.add(rawExplainRow((RowSet.Row)(rows.get(i)), i));
         }
+        return explanations;
     }
 
 
-    public void rawExplainRow(RowSet.Row r, StringBuffer outputText, int rowNum) throws Exception {
+    public EachExplanation rawExplainRow(RowSet.Row r,  int rowNum) throws Exception {
         String supportString ="";
         String ratioString = "";
         long supportPercent = 0;
-
+        StringBuilder outputText = new StringBuilder();
+        List<String> features = new ArrayList<>();
         outputText.append("\n("  + (++rowNum) + ")" + " When the value of ");
         List<ColumnValue> l = r.getColumnValues();
         String temp = "";
@@ -125,8 +158,9 @@ public class SimpleExplanationNLG implements Explanation {
             if (c.equals("global_ratio") || c.equals("outliers") || c.equals("count") || c.equals("support"))
                 continue;
             if (value == null || value.equalsIgnoreCase("NULL")) continue;
-
-            temp += (getDescription(l.get(i).getColumn()) + " is " + value);
+            String actualColumn = l.get(i).getColumn();
+            features.add(actualColumn);
+            temp += (getDescription(actualColumn) + " is " + value);
             if (i < (l.size() -1) ) temp += " and ";
         }
         if (temp.endsWith("and ")) outputText.append(temp.substring(0, temp.lastIndexOf("and"))) ;
@@ -140,6 +174,7 @@ public class SimpleExplanationNLG implements Explanation {
                     ratioString + " times higher than usual. This represents " +
                     supportPercent + " percent of all records that meet your objective.");
         }
+        return  new EachExplanation(outputText.toString(), features);
     }
 
     private String getDescription(String column) {

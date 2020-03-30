@@ -236,7 +236,7 @@ public class BasicBatchPipeline implements Pipeline {
                 getExplanationAsDataFrame(output), true);
             SimpleExplanationNLG e = new SimpleExplanationNLG(conf, (APLExplanation)output, outputTable,
                 metric, this.getConnection());
-            System.out.println(e.explainAsText());
+            System.out.println(e.prettyPrint());
             return e;
         } else {
             return output;
