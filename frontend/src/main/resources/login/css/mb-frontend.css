@@ -142,6 +142,19 @@ body{
     background: #5e6d76;
     color: #2d3e50;
 }
+.popup-btn {
+    background: transparent;
+    color: #2d3e50;
+    border-radius: 5px;
+    margin-right: 20px;
+    border: 1px solid #8E9C9C;
+}
+.popup-btn.focus, .popup-btn:focus, .popup-btn:hover, .blue-btn:hover, .blue-btn:focus {
+    color: #FFF;
+    text-decoration: none;
+    background: #fe5c4a;
+    border: 1px solid #fe5c4a;
+}
 .row-search-panel {
     display: block;
     height: 75px;
@@ -241,15 +254,16 @@ col.active{
 
 .modal-body {
     position: relative;
-    padding: 15px;
     display: flex;
-    padding: 0px 15px;
+    padding: 0px 30px;
 }
 .modal-dialog {
     width: 500px;
 }
 .modal-content {
-    background: #f1f8fe;
+    background: #ffffff;
+    box-shadow: none;
+    border: 0;
 }
 .column h3, .modal-title {
     font-size: 14px;
@@ -257,13 +271,12 @@ col.active{
 }
 button.close {
     border-radius: 28px;
-    background: #2799f6;
     width: 28px;
     height: 28px;
     opacity: 0.6;
 }
 button.close span{
-    color: #ffff;
+    color: #ffffff;
     font-weight: 100;
 }
 .modal-footer {
@@ -278,7 +291,7 @@ button.close span{
     position: relative;
 }
 .modal-body .column ul{
-    background: #FFF;
+    background: #f1f2f6;
     list-style: none;
     padding: 10px;
     height: 300px;
@@ -305,7 +318,7 @@ button.close span{
 }
 .column button.close {
     border-radius: 20px;
-    background: #2799f6;
+    background: #fe5c4a;
     width: 18px;
     height: 18px;
     opacity: 0.6;
@@ -392,7 +405,7 @@ ul.column-list-selected li label{
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: #269afe;
+    background: #fe5c4a;
     cursor: pointer;
   }
   
@@ -400,7 +413,7 @@ ul.column-list-selected li label{
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: #269afe;
+    background: #fe5c4a;
     cursor: pointer;
   }
   .slider-container{
@@ -545,7 +558,10 @@ ul.column-list-selected li label{
     .table-bordered>tbody>tr>td, .table-bordered>tbody>tr>th, .table-bordered>tfoot>tr>td, .table-bordered>tfoot>tr>th, .table-bordered>thead>tr>td, .table-bordered>thead>tr>th {
         border: 1px solid #dbdcdd;
     }
-
+   /*  td:nth-child(1)
+    {
+      background-color: orange !important;
+    } */
     .table>thead>tr>th{
         font-size: 14px !important;
         font-weight: 700;
@@ -577,4 +593,17 @@ ul.column-list-selected li label{
         width: 17px;
         margin-top: -35px;
         margin-right: 10px;
+    }
+    .modal-header {
+        padding: 5px 15px;
+       background: #fe5c4a;
+        border: 0px;
+    }
+  .modal-title {
+        color: #fff;
+        font-weight: 400;
+        font-size: 16px;
+    }
+    .column h3 {
+        color: #212e3c;
     }

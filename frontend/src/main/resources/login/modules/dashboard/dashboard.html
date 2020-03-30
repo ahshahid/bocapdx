@@ -215,7 +215,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="myModalLabel">Influncer Insights</h4>
+            <h4 class="modal-title" id="myModalLabel">Instant Insights based on</h4>
           </div>
           <div class="modal-body">
            <div class="column">
@@ -228,7 +228,7 @@
           </ul>
            </div>
            <div class="column mar-left-4">
-            <h3>Selection</h3>
+            <h3>Selected Columns</h3>
             <ul class="column-list" >
               <li  ng-repeat="cols in selectedCols track by $index">
                   <label for="{{cols}}" id="{{cols}}" class="title"><span>{{cols}}</span></label>
@@ -250,8 +250,8 @@
               <label>Explain Risk Ratio</label>
               <input type="range" min="0" max="100" value="50" ng-model="riskRatio" class="slider" id="riskRatio" data-toggle="tooltip" data-placement="top" title="{{riskRatio}}">
             </div>
-            <button type="button" class="btn blue-btn" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn blue-btn" ng-click="goToTab('influncer')">Submit</button>
+            <button type="button" class="btn popup-btn" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn popup-btn" ng-click="goToTab('influncer')">Submit</button>
           </div>
         </div>
       </div>

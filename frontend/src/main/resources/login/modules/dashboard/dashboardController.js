@@ -175,7 +175,8 @@ $scope.tableList = [];
             });
     }
 
-    $scope.toggleColumnSelection = function(columnName){
+    $scope.toggleColumnSelection = function(columnName, index){
+        console.log(index)
             if($scope.selectedCols.indexOf(columnName) == -1) {
                 $scope.selectedCols.push(columnName);
                 var sel = document.querySelectorAll('col#'+columnName)[0].className='active';
