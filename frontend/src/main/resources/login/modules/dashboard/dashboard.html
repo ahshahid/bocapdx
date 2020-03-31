@@ -1,10 +1,55 @@
 <div ng-controller="dashboardController as dashboard" ng-init="init()">
+  <!-- Sidebar -->
+  <div class="sidebar-menu toggle-others main-sidebar">
+			
+    <div class="sidebar-menu-inner">	
+        
+        <header>
+            <div class="logo">
+              <div class="navbar-header">
+                <a class="navbar-brand" ng-href="/#!/dashboard"><img src="../../assets/Fast-Insights-Logo.png"></a>
+              </div>
+            </div>
+        </header>
+        <ul id="main-menu" class="main-menu">
+            <li>
+                <a ng-href="/#!/dashboard">
+                    <img src="../../assets/Icon 1_Left Nav_Pinboard.png">
+                    <span class="title">Pinboard</span>
+                </a>
+            </li>
+            <li>
+                <a ng-href="/#!/dashboard">
+                  <img src="../../assets/Icon 2_Left Nav_Objective.png">
+                  <span class="title">Objetive</span>
+                </a>
+            </li>
+            <li>
+                <a ng-href="/#!/dashboard">
+                  <img src="../../assets/Icon 3_Left Nav_Metabase.png">
+                  <span class="title">Explore with Metabase</span>
+                </a>
+            </li>
+            <li>
+                <a ng-href="/#!/dashboard">
+                  <img src="../../assets/Icon 4_Left Nav_Settings.png">
+                  <span class="title">Settings</span>
+                </a>
+            </li>
+            <li>
+              <a ng-href="/#!/dashboard">
+                  <img src="../../assets/Icon 5_Left Nav_Help.png">
+                  <span class="title">Help</span>
+              </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  <!-- End sidebar -->
   <!-- Header start -->
     <nav class="navbar navbar-boca">
         <div class="container-fluid">
-            <div class="navbar-header">
-                <a class="navbar-brand" ng-href="/#!/dashboard"><img src="../../assets/Fast-Insights-Logo.png"></a>
-              </div>
+            
         <!-- Collect the nav links, forms, and other content for toggling -->
           <div class="" id="bs-example-navbar-collapse-1">
             <form class="navbar-form navbar-left" role="search">
@@ -26,10 +71,12 @@
         </div><!-- /.container-fluid -->
     </nav>
       <!-- Header Ends -->
+      
       <!-- main container -->
       <div class="row">
         <!-- Sidebar start -->
-      <div class="col-md-2 no-padding-left no-padding-right" class="md-toolbar-tools">
+        
+      <div class="data-set-column no-padding-left no-padding-right" class="md-toolbar-tools">
         <div class="sidebar-menu toggle-others">
 			
             <div class="sidebar-menu-inner">	
@@ -54,7 +101,7 @@
         </div>
       </div>
       <!-- Sidebar Ends -->
-    <div class="col-md-10 tab-container">
+    <div class="tab-container">
       <ul class="nav nav-tabs">
         <li role="presentation" class="active">
           <a  aria-controls="worksheetTab" role="tab" data-toggle="tab" ng-click="goToTab('worksheet')">My Worksheet</a>
@@ -113,7 +160,7 @@
       </div>
       <!-- influncerTab Start -->
       <div class="panel panel-gray tab-pane"  role="tabpanel" ng-show="influncerTab"  id="influncer">
-        <div class="col-md-2 selected-list">
+        <div class=" selected-list">
           <h6>Insights based on 
             <i  ng-click="editPopup()" class="icon-pencil pull-right" ></i></h6>
           <ul class="column-list-selected" >
@@ -123,7 +170,7 @@
           </ul>
         </div>
         <!-- Charts  -->
-        <div class="col-md-10 " style="margin-left: -20px;margin-top: 10px;">
+        <div class="chart-panel ">
           <h4 style="margin-left: 10px;">We looked into 12555522 rows of data in 135 secs to find out results on 8 factors affecting the most.</h4>
           <div id="barChartContainer">
             <div class="charts-details">

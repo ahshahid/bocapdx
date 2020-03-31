@@ -65,7 +65,15 @@ body{
     height: auto;
 }
 .navbar-boca{
-    margin-bottom: 0;    
+    margin-bottom: 0;
+    width: calc(100% - 160px);
+    display: block;
+    height: 80px;
+    float: left;    
+}
+.main-sidebar .sidebar-menu-inner{
+    padding-left: 0px;
+    padding-right: 0px;
 }
 /* .navbar-boca input{
     background: #7fc4fd;
@@ -82,6 +90,10 @@ body{
 }
 .tab-container{
     padding-left: 15px;
+    width: calc(100% - 440px);
+    display: block;
+    float: left;
+    padding-right: 15px;
 }
 .worksheet-tab{
     min-height: 260px;
@@ -363,6 +375,15 @@ ul.column-list-selected li label{
     -webkit-box-shadow: 2px 2px 2px 2px rgba(0,0,0,0.1);
     -moz-box-shadow: 2px 2px 2px 2px rgba(0,0,0,0.1);
     box-shadow: 2px 2px 2px 2px rgba(0,0,0,0.1);
+    float: left;
+    display: block;
+    width: 180px;
+}
+.chart-panel{
+    float: left;
+    width: calc(100% - 210px);
+    display: block;
+    margin-top: 10px;
 }
 .selected-list  h6 {
     font-size: 14px;
@@ -433,7 +454,7 @@ ul.column-list-selected li label{
     margin-top: 5px;
   }
   #barChartContainer, #areaChartContainer, #lineChartContainer, #pieChartContainer, #bubbleChartContainer{
-	width: 400px;
+	width: 680px;
 	height:420px;
 	padding:0.5em;
 	text-align:center;
@@ -505,8 +526,8 @@ ul.column-list-selected li label{
         font-weight: 700;
     }
     .sidebar-menu-inner {
-        padding-left: 26px;
-        padding-right: 11px;
+        padding-left: 15px;
+    padding-right: 15px;
     }
     header i {
         font-size: 14px;
@@ -525,7 +546,7 @@ ul.column-list-selected li label{
     } 
     .row-search-panel input.theme-style {
         display: block;
-        min-width: 240px;
+        min-width: 200px;
     }
     .row-search-panel .filters{
         margin-left: 20px;
