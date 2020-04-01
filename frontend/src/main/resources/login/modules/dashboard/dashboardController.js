@@ -243,6 +243,9 @@ $scope.resize= false;
             $scope.addPieChart();
             $scope.addBubbleChart();
            
+        }else if(tabName == 'deepExplanation'){
+            $scope.influncerTab=false;
+            $scope.worksheetTab=true;
         }
 
     }
@@ -251,8 +254,14 @@ $scope.resize= false;
     }
 
 
-$scope.colsForSelection =[]
-    $scope.updateColumnList = function(){
+$scope.colsForSelection =[];
+$scope.deepExplanation = false;
+    $scope.updateColumnList = function(btn){
+        if(btn == 'deepExplanation'){
+            $scope.deepExplanation = true;
+        }else{
+            $scope.deepExplanation = false;
+        }
         $scope.colsForSelection =[]
         angular.forEach($scope.columnList, function(key) {
             if($scope.colsForSelection.indexOf(key.name) == -1) {

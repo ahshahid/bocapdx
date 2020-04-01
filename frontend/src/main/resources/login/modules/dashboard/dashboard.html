@@ -129,17 +129,17 @@
           <input type="text" class="theme-style" placeholder="Search Columns"></p>
           <!-- Single button -->
           <div class="filters">
-            <button type="button" ng-click="updateColumnList()" data-toggle="modal" data-target="#myModal" class="btn mar-top-10" >
+            <button type="button" data-toggle="modal" data-target="#myModal" class="btn mar-top-10" >
               <img src="../../assets/Icon 11_Auto Classify_Disabled.png" >Auto-classify Outliers
             </button>
               <button type="button" class="btn mar-top-10 right-btn">
                 <img src="../../assets/Icon 12_Outlier Filter_Disabled.png" >Outlier Filter <!-- <span class="caret"></span> -->
               </button>
           </div>
-          <button type="button" class="btn blue-btn pull-right mar-top-10" >
+          <button type="button" ng-click="updateColumnList('deepExplanation')" data-toggle="modal" data-target="#myModal" class="btn blue-btn pull-right mar-top-10" >
             Deep Explanations
           </button>
-          <button type="button" ng-click="updateColumnList()" data-toggle="modal" data-target="#myModal" class="btn blue-btn pull-right mar-top-10" style="margin-right: 20px;">
+          <button type="button" ng-click="updateColumnList('instantInsight')" data-toggle="modal" data-target="#myModal" class="btn blue-btn pull-right mar-top-10" style="margin-right: 20px;">
             Instant Insights
           </button>
           
@@ -262,11 +262,18 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="myModalLabel">Instant Insights based on</h4>
+            <h4 ng-if="!deepExplanation" class="modal-title" id="myModalLabel">Instant Insights based on</h4>
+            <h4 ng-if="deepExplanation" class="modal-title" id="myModalLabel">Deep Explanations</h4>
           </div>
           <div class="modal-body">
+            <div class="column">
+              <h3>Available Columns</h3>
+              </div>
+              <div class="column mar-left-4">
+                <h3>Selected Columns</h3>
+                </div>
+            <input type="text" style="margin-top: 0; margin-bottom: 15px;" placeholder="Search Columns" class="theme-style">
            <div class="column">
-             <h3>Available Columns</h3>
              <ul class="column-list">
               <li ng-click="addColumn(cols); $event.preventDefault()" ng-repeat="cols in colsForSelection track by $index">
                   <input type="checkbox" id="{{cols}}Test" ng-model="selectedColumns.selected[cols]" class="pull-right" >
@@ -275,7 +282,6 @@
           </ul>
            </div>
            <div class="column mar-left-4">
-            <h3>Selected Columns</h3>
             <ul class="column-list" >
               <li  ng-repeat="cols in selectedCols track by $index">
                   <label for="{{cols}}" id="{{cols}}" class="title"><span>{{cols}}</span></label>
@@ -289,16 +295,17 @@
 
           
           <div class="modal-footer">
-            <div class="slider-container">
+            <div class="slider-container" ng-if="deepExplanation">
               <label>Explain Rare Events</label>
               <input type="range" min="0" max="100" value="50" ng-model="rareEvent" class="slider" id="rareEvent" data-toggle="tooltip" data-placement="top" title="{{riskRatio}}">
             </div>
-            <div class="slider-container">
+            <div class="slider-container" ng-if="deepExplanation">
               <label>Explain Risk Ratio</label>
               <input type="range" min="0" max="100" value="50" ng-model="riskRatio" class="slider" id="riskRatio" data-toggle="tooltip" data-placement="top" title="{{riskRatio}}">
             </div>
             <button type="button" class="btn popup-btn" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn popup-btn" ng-click="goToTab('influncer')">Submit</button>
+            <button type="button" class="btn popup-btn" ng-if="!deepExplanation" ng-click="goToTab('influncer')">Submit</button>
+            <button type="button" class="btn popup-btn" ng-if="deepExplanation" ng-click="goToTab('deepExplanation')">Submit</button>
           </div>
         </div>
       </div>

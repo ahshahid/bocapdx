@@ -161,7 +161,7 @@ body{
     margin-right: 20px;
     border: 1px solid #8E9C9C;
 }
-.popup-btn.focus, .popup-btn:focus, .popup-btn:hover, .blue-btn:hover, .blue-btn:focus {
+.popup-btn:hover, .blue-btn:hover{
     color: #FFF;
     text-decoration: none;
     background: #fe5c4a;
@@ -266,8 +266,9 @@ col.active{
 
 .modal-body {
     position: relative;
-    display: flex;
+    display: block;
     padding: 0px 30px;
+    float: left;
 }
 .modal-dialog {
     width: 500px;
@@ -276,6 +277,8 @@ col.active{
     background: #ffffff;
     box-shadow: none;
     border: 0;
+    display: block;
+    float: left;
 }
 .column h3, .modal-title {
     font-size: 14px;
@@ -295,6 +298,10 @@ button.close span{
     text-align: center;
     border: none;
     padding: 15px 0;
+    display: block;
+    position: relative;
+    float: left;
+    width: 100%;
 }
 
 .modal-body .column {
@@ -454,7 +461,7 @@ ul.column-list-selected li label{
     margin-top: 5px;
   }
   #barChartContainer, #areaChartContainer, #lineChartContainer, #pieChartContainer, #bubbleChartContainer{
-	width: 680px;
+	width: 670px;
 	height:420px;
 	padding:0.5em;
 	text-align:center;
