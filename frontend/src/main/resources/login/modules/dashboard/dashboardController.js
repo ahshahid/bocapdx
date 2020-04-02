@@ -270,6 +270,33 @@ $scope.deepExplanation = false;
                 }
             }
         })
+        $scope.selectedCols =[];
+        ApiFactory.getInsight.save({
+            "workflowid": 1,
+            "kpicols": $scope.selectedCols
+        }, function (response) {
+            
+        if(response.kpidata[0].pearsonfeatures != null && response.kpidata[0].pearsonfeatures.length > 0){
+            angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {
+                $scope.selectedCols.push(key.predictorname);
+            })
+        }
+        if(response.kpidata[0].chisquarefeatures != null && response.kpidata[0].chisquarefeatures.length > 0){
+            angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {
+                $scope.selectedCols.push(key.predictorname);
+            })
+        }
+        if(response.kpidata[0].anovafeatures != null && response.kpidata[0].anovafeatures.length > 0){
+            angular.forEach(response.kpidata[0].anovafeatures, function(key, name) {
+                $scope.selectedCols.push(key.predictorname);
+            })
+        }
+        console.log(response.kpidata[0]);
+             /* $scope.tables = response.results; */
+        })
+        
+
+
     }
 
     
