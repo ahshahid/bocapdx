@@ -63,8 +63,11 @@ public class GraphResource extends BaseResource {
   private static int FAST_EXPL = 1;
   private static String BAR_CHART = "bar";
   private static String AREA_CHART = "area";
+  private static String HISTOGRAM = "histogram";
+  private static String CLUSTERED_BAR_CHART = "clustered_bar";
 
   private static String QUERY_DEEP_METRIC_CONTI = "select count(*), avg(%1$s), %2$s from %3$s group by %2$s";
+  private static String QUERY_DEEP_METRIC_CAT = "select count(*), %1$s, %2$s from %3$s group by %1$s, %2$s";
   @Context
   private HttpServletRequest request;
 
@@ -80,26 +83,23 @@ public class GraphResource extends BaseResource {
     public String errorMessage;
     public String graphType;
     public List<GraphPoint> dataPoints;
-
+    public boolean isMetricNumeric;
+    public boolean isFeatureNumeric;
+    public boolean isFeatureRange;
   }
 
   static class GraphPoint {
     public long numElements;
     public String feature;
     public String metric;
-    public boolean isMetricNumeric;
-    public boolean isFeatureNumeric;
-    public boolean isFeatureRange;
+
     public String featureLowerBound;
     public String featureUpperBound;
 
-    GraphPoint(long n, String f, String m, boolean ismn, boolean isfn, boolean isfr, String flb,  String fub) {
+    GraphPoint(long n, String f, String m, String flb,  String fub) {
       this.numElements = n;
       this.feature = f;
       this.metric = m;
-      this.isMetricNumeric = ismn;
-      this.isFeatureNumeric = isfn;
-      this.isFeatureRange = isfr;
       this.featureLowerBound = flb;
       this.featureUpperBound = fub;
     }
@@ -157,6 +157,18 @@ public class GraphResource extends BaseResource {
       boolean isFeatureNumeric = false;
       boolean isFeatureRange = false;
       int numRows = 0;
+      if (featureColType == Types.VARCHAR) {
+        if (actualFeatureColType == Types.VARCHAR) {
+          isFeatureNumeric = false;
+          isFeatureRange = false;
+        } else {
+          isFeatureNumeric = true;
+          isFeatureRange = true;
+        }
+      } else {
+        isFeatureNumeric = true;
+        isFeatureRange = false;
+      }
       while (rs.next()) {
         long count = rs.getLong(1);
         double avg = rs.getDouble(2);
@@ -166,32 +178,86 @@ public class GraphResource extends BaseResource {
 
         if (featureColType == Types.VARCHAR) {
           key = rs.getString(3);
-          if (actualFeatureColType == Types.VARCHAR) {
-            isFeatureNumeric = false;
-            isFeatureRange = false;
-          } else {
-            isFeatureNumeric = true;
-            isFeatureRange = true;
+          if (isFeatureNumeric && isFeatureRange) {
             lb = key.substring(0, key.indexOf(" - ")).trim();
             ub = key.substring(key.indexOf(" - ")).trim();
           }
         } else {
           key = rs.getObject(3).toString();
-          isFeatureNumeric = true;
-          isFeatureRange = false;
         }
 
-        GraphPoint gp = new GraphPoint(count, key, String.valueOf(avg), isMetricNumeric,
-            isFeatureNumeric, isFeatureRange, lb, ub);
+        GraphPoint gp = new GraphPoint(count, key, String.valueOf(avg), lb, ub);
         dataPoints.add(gp);
         ++numRows;
       }
 
       GraphResponse gr = new GraphResponse();
+      gr.isFeatureNumeric = isFeatureNumeric;
+      gr.isFeatureRange = isFeatureRange;
+      gr.isMetricNumeric = isMetricNumeric;
       gr.dataPoints = dataPoints;
-      gr.graphType = numRows > 50? AREA_CHART : BAR_CHART;
+      gr.graphType = numRows > 50? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART;
       return gr;
 
+    } else if (!metricColCd.skip && metricColCd.ft.equals(FeatureType.categorical)) {
+      String query = String.format(QUERY_DEEP_METRIC_CAT,featureCol, metricCol, tableName);
+      ResultSet rs = ingester.executeQuery(query);
+      int featureColType = rs.getMetaData().getColumnType(2);
+      int metricColType = rs.getMetaData().getColumnType(3);
+      List<GraphPoint> dataPoints = new LinkedList<>();
+      boolean isMetricNumeric = false;
+      boolean isFeatureNumeric = false;
+      boolean isFeatureRange = false;
+      int numRows = 0;
+      if (featureColType == Types.VARCHAR) {
+        if (actualFeatureColType == Types.VARCHAR) {
+          isFeatureNumeric = false;
+          isFeatureRange = false;
+        } else {
+          isFeatureNumeric = true;
+          isFeatureRange = true;
+        }
+      } else {
+        isFeatureNumeric = true;
+        isFeatureRange = false;
+      }
+
+      if (metricColCd.sqlType == Types.VARCHAR) {
+        isMetricNumeric = false;
+      } else {
+        isMetricNumeric = true;
+      }
+
+      while (rs.next()) {
+        long count = rs.getLong(1);
+        String key = null;
+        String lb = null;
+        String ub = null;
+
+        if (featureColType  == Types.VARCHAR) {
+          key = rs.getString(2);
+          if (isFeatureNumeric && isFeatureRange) {
+            lb = key.substring(0, key.indexOf(" - ")).trim();
+            ub = key.substring(key.indexOf(" - ")).trim();
+          }
+        } else {
+          key = rs.getObject(2).toString();
+        }
+
+        String kpi = rs.getObject(3).toString();
+
+        GraphPoint gp = new GraphPoint(count, key, kpi, lb, ub);
+        dataPoints.add(gp);
+        ++numRows;
+      }
+
+      GraphResponse gr = new GraphResponse();
+      gr.isFeatureNumeric = isFeatureNumeric;
+      gr.isFeatureRange = isFeatureRange;
+      gr.isMetricNumeric = isMetricNumeric;
+      gr.dataPoints = dataPoints;
+      gr.graphType = CLUSTERED_BAR_CHART;
+      return gr;
     }
     return  null;
   }
