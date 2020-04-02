@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class FastInsightResource extends BaseResource {
   private static final Logger log = LoggerFactory.getLogger(FastInsightResource.class);
   private static double pearsonCorrCriteria = .5d;
-  private static double annovaCorrCriteria = .5d;
+  private static double annovaCorrCriteria = .1d;
   private static double chiCriteria = .1d;
 
   @Context
