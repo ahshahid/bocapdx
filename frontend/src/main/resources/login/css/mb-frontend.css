@@ -65,7 +65,15 @@ body{
     height: auto;
 }
 .navbar-boca{
-    margin-bottom: 0;    
+    margin-bottom: 0;
+    width: calc(100% - 160px);
+    display: block;
+    height: 80px;
+    float: left;    
+}
+.main-sidebar .sidebar-menu-inner{
+    padding-left: 0px;
+    padding-right: 0px;
 }
 /* .navbar-boca input{
     background: #7fc4fd;
@@ -82,6 +90,10 @@ body{
 }
 .tab-container{
     padding-left: 15px;
+    width: calc(100% - 440px);
+    display: block;
+    float: left;
+    padding-right: 15px;
 }
 .worksheet-tab{
     min-height: 260px;
@@ -149,7 +161,7 @@ body{
     margin-right: 20px;
     border: 1px solid #8E9C9C;
 }
-.popup-btn.focus, .popup-btn:focus, .popup-btn:hover, .blue-btn:hover, .blue-btn:focus {
+.popup-btn:hover, .blue-btn:hover{
     color: #FFF;
     text-decoration: none;
     background: #fe5c4a;
@@ -254,8 +266,9 @@ col.active{
 
 .modal-body {
     position: relative;
-    display: flex;
+    display: block;
     padding: 0px 30px;
+    float: left;
 }
 .modal-dialog {
     width: 500px;
@@ -264,6 +277,8 @@ col.active{
     background: #ffffff;
     box-shadow: none;
     border: 0;
+    display: block;
+    float: left;
 }
 .column h3, .modal-title {
     font-size: 14px;
@@ -283,6 +298,10 @@ button.close span{
     text-align: center;
     border: none;
     padding: 15px 0;
+    display: block;
+    position: relative;
+    float: left;
+    width: 100%;
 }
 
 .modal-body .column {
@@ -363,6 +382,15 @@ ul.column-list-selected li label{
     -webkit-box-shadow: 2px 2px 2px 2px rgba(0,0,0,0.1);
     -moz-box-shadow: 2px 2px 2px 2px rgba(0,0,0,0.1);
     box-shadow: 2px 2px 2px 2px rgba(0,0,0,0.1);
+    float: left;
+    display: block;
+    width: 180px;
+}
+.chart-panel{
+    float: left;
+    width: calc(100% - 210px);
+    display: block;
+    margin-top: 10px;
 }
 .selected-list  h6 {
     font-size: 14px;
@@ -433,7 +461,7 @@ ul.column-list-selected li label{
     margin-top: 5px;
   }
   #barChartContainer, #areaChartContainer, #lineChartContainer, #pieChartContainer, #bubbleChartContainer{
-	width: 400px;
+	width: 670px;
 	height:420px;
 	padding:0.5em;
 	text-align:center;
@@ -505,8 +533,8 @@ ul.column-list-selected li label{
         font-weight: 700;
     }
     .sidebar-menu-inner {
-        padding-left: 26px;
-        padding-right: 11px;
+        padding-left: 15px;
+    padding-right: 15px;
     }
     header i {
         font-size: 14px;
@@ -525,7 +553,7 @@ ul.column-list-selected li label{
     } 
     .row-search-panel input.theme-style {
         display: block;
-        min-width: 240px;
+        min-width: 200px;
     }
     .row-search-panel .filters{
         margin-left: 20px;

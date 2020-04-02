@@ -197,3 +197,52 @@ body{
 ::-webkit-scrollbar-corner {
   background-color: transparent;
 }
+.main-sidebar{
+  width: 160px;
+  float: left;
+  background: #2d3e50;
+  border-right: 1px solid #8E9C9C;
+}
+.data-set-column{
+  width: 260px;
+    float: left;
+    display: block;
+}
+.main-sidebar header {
+  height: 80px;
+  border-bottom: 1px solid #8E9C9C;
+}
+.main-sidebar .main-menu {
+  margin-top: 0px;
+  padding-left: 0px;
+  list-style: none;
+  padding-right: 0px;
+  padding-top: 0px;
+  color: #8E9C9C;
+}
+.main-sidebar .main-menu li {
+  color: #8E9C9C;
+  border-bottom: 1px solid #8E9C9C;
+}
+.main-sidebar .main-menu li img {
+  width: 24px;
+  margin-right: 14px;
+  height: 100%;
+  display: block;
+  float: left;
+}
+.main-sidebar .main-menu li a {
+    color: #8E9C9C;
+    padding-top: 25px;
+    padding-bottom: 24px;
+    padding-left: 10px;
+}
+.main-sidebar .main-menu a > span {
+  display: initial;
+}
+.main-sidebar .main-menu a:hover, .main-sidebar .main-menu li.active > a {
+  color: #000000;
+  color: #ffffff;
+  background: #212e3c !important;
+  display: block;
+}

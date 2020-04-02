@@ -243,6 +243,9 @@ $scope.resize= false;
             $scope.addPieChart();
             $scope.addBubbleChart();
            
+        }else if(tabName == 'deepExplanation'){
+            $scope.influncerTab=false;
+            $scope.worksheetTab=true;
         }
 
     }
@@ -251,8 +254,14 @@ $scope.resize= false;
     }
 
 
-$scope.colsForSelection =[]
-    $scope.updateColumnList = function(){
+$scope.colsForSelection =[];
+$scope.deepExplanation = false;
+    $scope.updateColumnList = function(btn){
+        if(btn == 'deepExplanation'){
+            $scope.deepExplanation = true;
+        }else{
+            $scope.deepExplanation = false;
+        }
         $scope.colsForSelection =[]
         angular.forEach($scope.columnList, function(key) {
             if($scope.colsForSelection.indexOf(key.name) == -1) {
@@ -312,12 +321,9 @@ $scope.addBarChart = function(){
         var data = google.visualization.arrayToDataTable($scope.rawChartDate);
 
         var options = {
-          chart: {
-           /*  title: 'Company Performance',
-            subtitle: 'Sales, Expenses, and Profit: 2014-2017', */
-          },
           colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
-          bars: 'horizontal' // Required for Material Bar Charts.
+          bars: 'horizontal',
+          legend: { position: 'bottom' }
         };
 
         var chart = new google.charts.Bar(document.getElementById('barChart'));
@@ -344,7 +350,8 @@ $scope.addBarChart = function(){
             colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
             pointShape: 'circle',
             selectionMode: 'multiple',
-            pointsVisible : false
+            pointsVisible : false,
+            legend: { position: 'bottom' },
           };
   
           var chart = new google.visualization.AreaChart(document.getElementById('areaChart'));
@@ -373,7 +380,8 @@ $scope.addBarChart = function(){
   
           var options = {
            /*  title: 'My Daily Activities', */
-            colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87']
+            colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
+            legend: { position: 'bottom' }
           };
   
           var chart = new google.visualization.PieChart(document.getElementById('pieChart'));
