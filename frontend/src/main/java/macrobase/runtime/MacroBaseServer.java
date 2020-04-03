@@ -45,6 +45,7 @@ public class MacroBaseServer extends Application<MacroBaseConf> {
         environment.jersey().register(new SampleRowsResource(configuration));
         environment.jersey().register(new FastInsightResource(configuration));
         environment.jersey().register(new DeepInsightResource(configuration));
+        environment.jersey().register(new GraphResource(configuration));
         environment.healthChecks().register("basic", new HealthCheck() {
             @Override
             protected Result check() throws Exception {

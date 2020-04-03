@@ -75,7 +75,7 @@ public class GraphResource extends BaseResource {
     public int workflowid;
     public String metric;  //outlier column
     public String feature;
-    public int graphFor;
+    public int graphfor;
   }
 
   static class GraphResponse {
@@ -131,7 +131,7 @@ public class GraphResource extends BaseResource {
         metricCol = actualCols.get(0).getName();
       }
       String tableName = preppedTableData.getTableOrView();
-      if (gr.graphFor == DEEP_EXPL) {
+      if (gr.graphfor == DEEP_EXPL) {
         response = this.getResponseForDeepInsights(tableName, gr.feature, actualFeatureColType,
             gr.metric, metricCol, ingester, metricColCd);
       }

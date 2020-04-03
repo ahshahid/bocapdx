@@ -133,32 +133,10 @@ public class JoinTablesResponseTester {
       System.out.println(content);
       System.out.println("\n\n");
 
+      // deepInsightFetch(workflowid, client, httpContext);
+      //graphFetch(workflowid, client, httpContext, "avgrev", "", 0);
 
-      // deep insifgt fetch
-      String deepInsightUrl = "http://" + host + ":9090/api/deepInsight";
-      httpPost = new HttpPost(deepInsightUrl);
-      httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-      data = new StringEntity("{\"workflowid\":" + workflowid +", \"metric\":\"telecom_churn_networkq_churn\", \"objective\":\"xxx\"," +
-          "\"optionalConf\":" +
-          "{" +
-            /* "\"attributes\":" +
-             "[\"models\", \"iwylis_vce_mean\", \"adjrev\", \"uniqsubs\", \"drop_vce_mean\", \"avg3qty\",\"plcd_vce_mean\", \"avg3mou\", \"totrev\", \"comp_vce_mean\", \"drop_vce_range\"]," + */
-             "\"predicate\":\"telecom_churn_networkq_churn = 0\"," +
-             "\"minSupport\": 0.0001" +
-          "}" +
-       "}"
-      );
-      httpPost.addHeader("User-Agent", "Apache HTTPClient");
-      /*
-      httpPost.setEntity(data);
-      response = client.execute(httpPost, httpContext);
 
-      entity = response.getEntity();
-      content = EntityUtils.toString(entity);
-      System.out.println("\n\n");
-      System.out.println(content);
-      System.out.println("\n\n");
-      */
 
     } finally {
 
@@ -167,5 +145,52 @@ public class JoinTablesResponseTester {
         httpPost.releaseConnection();
       }
     }
+  }
+
+  private void graphFetch(int workflowid, HttpClient client, HttpContext httpContext, String metric, String feature, int graphFor) throws Exception {
+    //
+    String graphUrl = "http://" + host + ":9090/api/graph";
+    HttpPost httpPost = new HttpPost(graphUrl);
+    httpPost.addHeader("content-type", "application/json;charset=UTF-8");
+    StringEntity data = new StringEntity("{\"workflowid\":" + workflowid +", \"metric\":\"" +metric + "\", \"feature\":\""+ feature +"\"," +
+        "\"graphfor\":" + graphFor+"}"
+    );
+    httpPost.addHeader("User-Agent", "Apache HTTPClient");
+
+    httpPost.setEntity(data);
+    HttpResponse response = client.execute(httpPost, httpContext);
+
+    HttpEntity entity = response.getEntity();
+    String content = EntityUtils.toString(entity);
+    System.out.println("\n\n");
+    System.out.println(content);
+    System.out.println("\n\n");
+  }
+
+  private void deepInsightFetch(int workflowid, HttpClient client, HttpContext httpContext) throws Exception {
+    // deep insifgt fetch
+    String deepInsightUrl = "http://" + host + ":9090/api/deepInsight";
+    HttpPost httpPost = new HttpPost(deepInsightUrl);
+    httpPost.addHeader("content-type", "application/json;charset=UTF-8");
+    StringEntity data = new StringEntity("{\"workflowid\":" + workflowid +", \"metric\":\"telecom_churn_networkq_churn\", \"objective\":\"xxx\"," +
+        "\"optionalConf\":" +
+        "{" +
+            /* "\"attributes\":" +
+             "[\"models\", \"iwylis_vce_mean\", \"adjrev\", \"uniqsubs\", \"drop_vce_mean\", \"avg3qty\",\"plcd_vce_mean\", \"avg3mou\", \"totrev\", \"comp_vce_mean\", \"drop_vce_range\"]," + */
+        "\"predicate\":\"telecom_churn_networkq_churn = 0\"," +
+        "\"minSupport\": 0.0001" +
+        "}" +
+        "}"
+    );
+    httpPost.addHeader("User-Agent", "Apache HTTPClient");
+
+    httpPost.setEntity(data);
+    HttpResponse response = client.execute(httpPost, httpContext);
+
+    HttpEntity entity = response.getEntity();
+    String content = EntityUtils.toString(entity);
+    System.out.println("\n\n");
+    System.out.println(content);
+    System.out.println("\n\n");
   }
 }
