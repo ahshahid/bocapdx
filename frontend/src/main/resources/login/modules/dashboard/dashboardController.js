@@ -277,17 +277,17 @@ $scope.deepExplanation = false;
         }, function (response) {
             $('#myModal').modal('toggle')
             $scope.selectedCols =[];
-        if(response.kpidata[0].pearsonfeatures != null && response.kpidata[0].pearsonfeatures.length > 0){
+        if(response.kpidata[0].pearsonfeatures != undefined && response.kpidata[0].pearsonfeatures != null && response.kpidata[0].pearsonfeatures.length > 0){
             angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {
                 $scope.selectedCols.push(key.predictorname);
             })
         }
-        if(response.kpidata[0].chisquarefeatures != null && response.kpidata[0].chisquarefeatures.length > 0){
+        if(response.kpidata[0].chisquarefeatures != undefined && response.kpidata[0].chisquarefeatures != null && response.kpidata[0].chisquarefeatures.length > 0){
             angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {
                 $scope.selectedCols.push(key.predictorname);
             })
         }
-        if(response.kpidata[0].anovafeatures != null && response.kpidata[0].anovafeatures.length > 0){
+        if(response.kpidata[0].anovafeatures != undefined && response.kpidata[0].anovafeatures != null && response.kpidata[0].anovafeatures.length > 0){
             angular.forEach(response.kpidata[0].anovafeatures, function(key, name) {
                 $scope.selectedCols.push(key.predictorname);
             })
