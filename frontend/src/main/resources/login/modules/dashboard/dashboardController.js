@@ -270,12 +270,13 @@ $scope.deepExplanation = false;
                 }
             }
         })
-        $scope.selectedCols =[];
+       // $scope.selectedCols =[];
         ApiFactory.getInsight.save({
             "workflowid": 1,
             "kpicols": $scope.selectedCols
         }, function (response) {
-            
+            $('#myModal').modal('toggle')
+            $scope.selectedCols =[];
         if(response.kpidata[0].pearsonfeatures != null && response.kpidata[0].pearsonfeatures.length > 0){
             angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {
                 $scope.selectedCols.push(key.predictorname);
