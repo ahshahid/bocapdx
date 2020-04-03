@@ -53,7 +53,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
                 table: $scope.jsonSchema
             }, function (response) {
                 $scope.columnList = response.schema.columns;
-                $scope.workflowid =response.workflowid;
+                $scope.workflowid = response.workflowid;
                 var newJson=[]
                 angular.forEach(response.schema.columns, function(value,key) {
                     var name =value.name
@@ -272,7 +272,7 @@ $scope.deepExplanation = false;
         })
        // $scope.selectedCols =[];
         ApiFactory.getInsight.save({
-            "workflowid": 1,
+            "workflowid": $scope.workflowid,
             "kpicols": $scope.selectedCols
         }, function (response) {
             $('#myModal').modal('toggle')
