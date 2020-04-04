@@ -74,6 +74,7 @@ public class MacroBaseConf extends Configuration {
 
 
 
+    public static final String OBJECTIVE_KEY = "objective";
     public static final String BASE_TABLE_KEY = "baseTable";
     public static final String METRIC_KEY = "metric";
     public static final String SUMMARIZER_KEY = "summarizer";

@@ -176,6 +176,7 @@ public class DeepInsightResource extends BaseResource {
         }
         optionalConf.put(MacroBaseConf.PRED_KEY, results[1]);
         optionalConf.put(MacroBaseConf.CUT_OFF_KEY, newCutOff);
+        optionalConf.put(MacroBaseConf.OBJECTIVE_KEY, dir.objective);
 
       } else {
         assert metricColCd.sqlType == Types.DOUBLE;
