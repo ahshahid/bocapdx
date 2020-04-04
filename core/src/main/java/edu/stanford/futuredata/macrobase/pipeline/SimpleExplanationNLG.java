@@ -69,7 +69,7 @@ public class SimpleExplanationNLG implements Explanation {
       }
     }
 
-    public String getFooter() {
+    private String getFooter() {
         return "\"\\n==========================================================\\n\"";
     }
 
