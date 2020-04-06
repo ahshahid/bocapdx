@@ -100,7 +100,7 @@ body{
 }
 #worksheet{
     width : 100%;
-    height: 260px;
+    height: 380px;
     /* min-height: 260px; */
    /*  padding: 0;
     border-bottom: 1px solid #c4dff5; */
@@ -108,7 +108,7 @@ body{
 #data-table{
     max-height: 550px;
     overflow-y: scroll;
-    font-size: 11px;
+    font-size: 12px;
     text-transform: capitalize;
     background: #F1F2F6;
 }
@@ -196,6 +196,7 @@ body{
     font-size: 24px;
     margin-right: 22px !important;
     cursor: pointer;
+    color: #8E9C9D;
 }
 .custom-text-p i{
     border: 1px solid #FE5C4A;
@@ -217,24 +218,39 @@ body{
     float: left;
     margin-right: 20px;
     margin-top: 9px;
+    font-size: 15px;
+    color: #8E9C9D;
 }
 .custom-text-p input{
     width: 150px;
     margin-top: -6px;
-    background-color: #212E3C;
     border: 0px;
-    color: #FFF;
+    color: #fff;
     min-width: 300px;
     border: 1px solid #FE5C4A;
-    padding: 6px 20px;
+    padding: 6px 15px;
+    font-style: italic;
+}
+.navbar-form .custom-text-p input{
+    font-size: 16px;
+    height: 40px;
+    background: #2D3E50;
 }
 .custom-text-p input::placeholder{
-    color: #FFF;
+    color: #8E9C9D;
 }
 .custom-text-p input:focus{
-    outline: -webkit-focus-ring-color auto 1px;
-    outline-color: #8E9C9C;
-    border-radius: 5px;
+    outline: -webkit-focus-ring-color auto 0px;
+    outline-color: #FE5C4A;
+    border-radius: 4px;
+    background-color: #212E3C;
+}
+
+.form-control:focus, input:focus,.btn:focus {
+    border-color: #FE5C4A;
+    outline: 0;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 1px rgba(254, 92, 74, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 1px rgba(254, 92, 74, 0.6);
 }
 .table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
     padding: 4px;
@@ -634,4 +650,7 @@ ul.column-list-selected li label{
     }
     .column h3 {
         color: #212e3c;
+    }
+    .img-icon {
+        width: 24px;
     }

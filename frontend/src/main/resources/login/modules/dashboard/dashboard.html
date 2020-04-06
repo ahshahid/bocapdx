@@ -56,16 +56,15 @@
               <div class="form-group">
                 <i class="icon-reorder more-option"></i>
                 <p class="custom-text-p"><span>My Objective </span>
-                  <input type="text" class="form-control" placeholder="User text here"> 
+                  <input type="text" class="form-control" placeholder="Enter your objective here"> 
                   <i class="icon-long-arrow-up active"></i>
                   <i class="icon-long-arrow-down"></i>
                 </p>
               </div>
             </form>
             <ul class="nav navbar-nav navbar-right custom-color">
-              
-              <li><a ><i class="icon-pushpin "></i></a></li>
-              <li><a ><i class="icon-pushpin"></i></a></li>
+              <li><a ><img class="img-icon" src="../../assets/Icon 10_Share.png"></a></li>
+              <li><a ><img class="img-icon" src="../../assets/Icon 1_Left Nav_Pinboard.png"></a></li>
             </ul>
           </div><!-- /.navbar-collapse -->
         </div><!-- /.container-fluid -->
@@ -94,7 +93,7 @@
                 <ul id="data-table" class="main-menu" drop-on-me >
                     <li ng-click="getData(table); $event.preventDefault()" ng-repeat="table in tableNames track by $index">
                         <input type="checkbox" id="{{table}}" ng-model="myTable.selected[table]" class="pull-right" >
-                        <label drag-me for="{{table}}" id="{{table}}" class="title"><span>{{table}}</span></label>
+                        <label drag-me for="{{table}}" id="{{table}}" class="title"  tooltip-placement="top" tooltip="{{table}}"><span>{{table}}</span></label>
                     </li>
                 </ul>
             </div>
@@ -107,7 +106,7 @@
           <a  aria-controls="worksheetTab" role="tab" data-toggle="tab" ng-click="goToTab('worksheet')">My Worksheet</a>
         </li>
         <li role="presentation" ng-if="influncer">
-          <a  aria-controls="influncer" role="tab" data-toggle="tab" ng-click="goToTab('influncer')">Instant Insight</a>
+          <a  aria-controls="influncer" role="tab" data-toggle="tab" ng-click="goToTab('influncer')">Influencer Insights</a>
         </li>
       </ul>
       
@@ -129,7 +128,7 @@
           <input type="text" class="theme-style" placeholder="Search Columns"></p>
           <!-- Single button -->
           <div class="filters">
-            <button type="button" data-toggle="modal" data-target="#myModal" class="btn mar-top-10" >
+            <button type="button" class="btn mar-top-10" >
               <img src="../../assets/Icon 11_Auto Classify_Disabled.png" >Auto-classify Outliers
             </button>
               <button type="button" class="btn mar-top-10 right-btn">
@@ -140,7 +139,7 @@
             Deep Explanations
           </button>
           <button type="button" ng-click="updateColumnList('instantInsight')" class="btn blue-btn pull-right mar-top-10" style="margin-right: 20px;">
-            Instant Insights
+            Influencer Insights
           </button>
           
         </div>
@@ -262,7 +261,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 ng-if="!deepExplanation" class="modal-title" id="myModalLabel">Instant Insights based on</h4>
+            <h4 ng-if="!deepExplanation"  class="modal-title" id="myModalLabel">Influencer Insights based on</h4>
             <h4 ng-if="deepExplanation" class="modal-title" id="myModalLabel">Deep Explanations</h4>
           </div>
           <div class="modal-body">
@@ -297,11 +296,11 @@
           <div class="modal-footer">
             <div class="slider-container" ng-if="deepExplanation">
               <label>Explain Rare Events</label>
-              <input type="range" min="0" max="100" value="50" ng-model="rareEvent" class="slider" id="rareEvent" data-toggle="tooltip" data-placement="top" title="{{riskRatio}}">
+              <input type="range" min="0" max="100" value="50" ng-model="rareEvent" class="slider" id="rareEvent" tooltip-placement="top" tooltip="{{rareEvent}}">
             </div>
             <div class="slider-container" ng-if="deepExplanation">
               <label>Explain Risk Ratio</label>
-              <input type="range" min="0" max="100" value="50" ng-model="riskRatio" class="slider" id="riskRatio" data-toggle="tooltip" data-placement="top" title="{{riskRatio}}">
+              <input type="range" min="0" max="100" value="50" ng-model="riskRatio" class="slider" id="riskRatio"  tooltip-placement="top" tooltip="{{riskRatio}}" >
             </div>
             <button type="button" class="btn popup-btn" data-dismiss="modal">Cancel</button>
             <button type="button" class="btn popup-btn" ng-if="!deepExplanation" ng-click="goToTab('influncer')">Submit</button>

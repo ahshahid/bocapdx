@@ -28,10 +28,10 @@ body{
   }
   .sidebar-menu .main-menu {
     margin-top: 0px;
-    padding-left: 10px;
+    padding-left: 15px;
     list-style: none;
     padding-right: 10px;
-    padding-top: 10px;
+    padding-top: 15px;
   }
   .sidebar-menu .main-menu a {
     color: #3d3d3d;
@@ -154,7 +154,7 @@ body{
   z-index: 0;
 }
 #data-table li label span{
-  max-width: 140px !important;
+  max-width: 160px !important;
   white-space: nowrap;
   overflow: hidden !important;
   text-overflow: ellipsis;
@@ -245,4 +245,12 @@ body{
   color: #ffffff;
   background: #212e3c !important;
   display: block;
+}
+.navbar-form {
+  padding-left: 0;
+  margin-top: 19px;
+  margin-bottom: 19px;
+}
+.navbar-right {
+  margin-top: 19px;
 }

@@ -17,7 +17,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     $scope.tableNames  = $stateParams.table;
     $scope.isColumnRes = false;
     $scope.isRowRes = false;
-
+    $scope.dynamicTooltip = 'Hello, World!';
 
 
     $scope.dragOptions = {
@@ -41,6 +41,15 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     $scope.workflowid;
     $scope.getData = function(table,dragged) {
        
+        $(document).ready(function(){
+            $('[data-toggle=tooltip]').hover(function(){
+                // on mouseenter
+                $(this).tooltip('show');
+            }, function(){
+                // on mouseleave
+                $(this).tooltip('hide');
+            });
+        });
         //for local
        // $scope.workflowid = table;
        
@@ -134,6 +143,9 @@ $scope.tableList = [];
             for(var i = $scope.workSheetTables.length - 1; i >= 0; i--){
                 if($scope.workSheetTables[i].name == tableName){
                     $scope.workSheetTables.splice(i,1);
+                    if($scope.workSheetTables.length == 0){
+                        $scope.schemaCols = {};
+                    }
                 }
             }
         }
@@ -275,7 +287,8 @@ $scope.deepExplanation = false;
             "workflowid": $scope.workflowid,
             "kpicols": $scope.selectedCols
         }, function (response) {
-            $('#myModal').modal('toggle')
+            $('#myModal').modal('show')
+           /*  $('#myModal').modal('toggle') */
             $scope.selectedCols =[];
         if(response.kpidata[0].pearsonfeatures != undefined && response.kpidata[0].pearsonfeatures != null && response.kpidata[0].pearsonfeatures.length > 0){
             angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {
@@ -283,7 +296,7 @@ $scope.deepExplanation = false;
             })
         }
         if(response.kpidata[0].chisquarefeatures != undefined && response.kpidata[0].chisquarefeatures != null && response.kpidata[0].chisquarefeatures.length > 0){
-            angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {
+            angular.forEach(response.kpidata[0].chisquarefeatures, function(key, name) {
                 $scope.selectedCols.push(key.predictorname);
             })
         }
