@@ -49,7 +49,7 @@ public class SimpleExplanationNLG implements Explanation {
     @JsonProperty("header")
     public String getNlgHeaderText() {
         try {
-            return this.explainAsHeader();
+            return this.explainAsHeader(false);
         } catch (Exception e) {
             return "Error in getting NLG text";
         }
@@ -69,15 +69,15 @@ public class SimpleExplanationNLG implements Explanation {
       }
     }
 
-    @JsonProperty("footer")
-    public String getFooter() {
+    private String getFooter() {
         return "\"\\n==========================================================\\n\"";
     }
 
-    private String explainAsHeader() throws Exception {
+    private String explainAsHeader(boolean detailedOutput) throws Exception {
         StringBuffer outputText = new StringBuffer();
-
-        outputText.append(this.explainObj.prettyPrint());
+        if (detailedOutput) {
+            outputText.append(this.explainObj.prettyPrint());
+        }
         int count = explainObj.getResults().size();
         if (count == 0) {
             outputText.append("\nOops. The analysis did not generate any explanations. " +
@@ -110,7 +110,7 @@ public class SimpleExplanationNLG implements Explanation {
 
        try {
            StringBuilder outputText = new StringBuilder();
-           outputText.append(explainAsHeader());
+           outputText.append(explainAsHeader(true));
            List<EachExplanation> explanations = rawExplainTable();
            explanations.forEach(expl -> outputText.append(expl.explanationStr));
            outputText.append(getFooter());
@@ -142,7 +142,7 @@ public class SimpleExplanationNLG implements Explanation {
         long supportPercent = 0;
         StringBuilder outputText = new StringBuilder();
         List<String> features = new ArrayList<>();
-        outputText.append("\n("  + (++rowNum) + ")" + " When the value of ");
+        outputText.append("("  + (++rowNum) + ")" + " When the value of ");
         List<ColumnValue> l = r.getColumnValues();
         String temp = "";
         for (int i = 0; i < l.size() ; i++) {

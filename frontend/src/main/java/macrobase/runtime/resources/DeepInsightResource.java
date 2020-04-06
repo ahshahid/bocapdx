@@ -122,6 +122,7 @@ public class DeepInsightResource extends BaseResource {
       } else {
         optionalConf = new HashMap<>();
       }
+      optionalConf.put(MacroBaseConf.OBJECTIVE_KEY, dir.objective);
       String pred = (String)optionalConf.get(MacroBaseConf.PRED_KEY);
       if (pred != null) {
         optionalConf.put(MacroBaseConf.CLASSIFIER_KEY, MacroBaseConf.CLASSIFIER_PRED);
