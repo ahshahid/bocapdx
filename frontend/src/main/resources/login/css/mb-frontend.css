@@ -151,6 +151,10 @@ body{
     float: left;
 }
 .blue-btn {
+    background: #8e9c9c;
+    color: #2d3e50;
+}
+.blue-btn[disabled]{
     background: #5e6d76;
     color: #2d3e50;
 }
@@ -158,13 +162,20 @@ body{
     background: transparent;
     color: #2d3e50;
     border-radius: 5px;
-    margin-right: 20px;
     border: 1px solid #8E9C9C;
+    margin-top: 15px;
+    margin-bottom: 20px;
+    min-width: 70px;
 }
 .popup-btn:hover, .blue-btn:hover{
     color: #FFF;
     text-decoration: none;
     background: #fe5c4a;
+    border: 1px solid #fe5c4a;
+}
+.red-bg{
+   background: #fe5c4a;
+    color: #FFF;
     border: 1px solid #fe5c4a;
 }
 .row-search-panel {
@@ -295,10 +306,11 @@ col.active{
     border: 0;
     display: block;
     float: left;
+    border-radius: 0px;
 }
 .column h3, .modal-title {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 100;
 }
 button.close {
     border-radius: 28px;
@@ -350,6 +362,8 @@ button.close span{
     overflow: hidden !important;
     text-overflow: ellipsis;
     display: inline-block;
+    font-size: 15px;
+    font-weight: 100;
 }
 .column button.close {
     border-radius: 20px;
@@ -430,11 +444,10 @@ ul.column-list-selected li label{
 .slider {
     -webkit-appearance: none;
     width: 100%;
-    height: 2px;
-    border-radius: 5px;
-    background: #000004;
+    height: 4px;
+    background: #8e9c9c;
     outline: none;
-    opacity: 0.7;
+    opacity: 0.9;
     -webkit-transition: .2s;
     transition: opacity .2s;
   }
@@ -448,7 +461,6 @@ ul.column-list-selected li label{
     appearance: none;
     width: 12px;
     height: 12px;
-    border-radius: 50%;
     background: #fe5c4a;
     cursor: pointer;
   }
@@ -456,25 +468,24 @@ ul.column-list-selected li label{
   .slider::-moz-range-thumb {
     width: 12px;
     height: 12px;
-    border-radius: 50%;
     background: #fe5c4a;
     cursor: pointer;
   }
   .slider-container{
-    height: 40px;
-    padding: 0 15px;
-    text-align: left;
+    display: block;
+    float: left;
   }
   .slider-container label{
-    display: inline-block;
-    width: 150px;
+    display: block;
     float: left;
+    color: #364657;
+    margin-top: 10px;
   }
   .slider-container input[type=range]{
     display: block;
     float: left;
-    width: 316px;
-    margin-top: 5px;
+    width: 100%;
+    margin-top: 20px;
   }
   #barChartContainer, #areaChartContainer, #lineChartContainer, #pieChartContainer, #bubbleChartContainer{
 	width: 670px;
@@ -639,18 +650,37 @@ ul.column-list-selected li label{
         margin-right: 10px;
     }
     .modal-header {
-        padding: 5px 15px;
+        padding: 7px 15px;
        background: #fe5c4a;
         border: 0px;
+        padding-right: 5px;
     }
   .modal-title {
         color: #fff;
         font-weight: 400;
-        font-size: 16px;
+        font-size: 15px;
+        margin-top: 2px;
+        
     }
     .column h3 {
         color: #212e3c;
     }
     .img-icon {
         width: 24px;
+    }
+    .range span {
+        display: block;
+        margin-top: 12px;
+        font-size: 11px;
+        color: #96a3a3;
+    }
+    .range span.lable{
+        margin-top: 0px;
+    }
+    .tooltip {
+        letter-spacing: normal;
+        word-break: break-word;
+        word-spacing: normal;
+        word-wrap: normal;
+        white-space: normal;
     }
