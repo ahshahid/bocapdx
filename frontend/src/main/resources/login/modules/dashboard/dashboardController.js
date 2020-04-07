@@ -17,8 +17,15 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     $scope.tableNames  = $stateParams.table;
     $scope.isColumnRes = false;
     $scope.isRowRes = false;
-    $scope.dynamicTooltip = 'Hello, World!';
-
+    $scope.workflowid;
+    $scope.isColumnSelected =false;
+    $scope.tableList = [];
+    $scope.influncerTab=false;
+    $scope.influncer=false;
+    $scope.worksheetTab=true;
+    $scope.resize= false;
+    $scope.colsForSelection =[];
+    $scope.deepExplanation = false;
 
     $scope.dragOptions = {
         /* start: function(e) {
@@ -38,21 +45,8 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
              $scope.tables = response.results;
         })
     }
-    $scope.workflowid;
+    
     $scope.getData = function(table,dragged) {
-       
-        $(document).ready(function(){
-            $('[data-toggle=tooltip]').hover(function(){
-                // on mouseenter
-                $(this).tooltip('show');
-            }, function(){
-                // on mouseleave
-                $(this).tooltip('hide');
-            });
-        });
-        //for local
-       // $scope.workflowid = table;
-       
            $scope.tableName = table;
            $scope.clearColumnSelection();
            $scope.worksheet=true;
@@ -105,7 +99,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
             
     }
 // Todo Implement the json logic
-$scope.tableList = [];
+
     $scope.createJsonForSchema = function(tableName){
        
         if($scope.tableList.indexOf(tableName) == -1) {
@@ -199,15 +193,17 @@ $scope.tableList = [];
               }
         console.log($scope.selectedCols);
            // console.log(document.querySelectorAll('col#'+columnName));
+           if($scope.selectedCols.length > 0){
+                $scope.isColumnSelected =true;
+           }else{
+                $scope.isColumnSelected =false;
+           }
     }
         
     $scope.clearColumnSelection = function(){
         $scope.selectedCols =[];
     }
-$scope.influncerTab=false;
-$scope.influncer=false;
-$scope.worksheetTab=true;
-$scope.resize= false;
+
     $scope.goToTab = function(tabName){
         if(tabName == 'worksheet'){
             $scope.influncerTab=false;
@@ -265,9 +261,7 @@ $scope.resize= false;
         $('#myModal').modal('show')
     }
 
-
-$scope.colsForSelection =[];
-$scope.deepExplanation = false;
+    
     $scope.updateColumnList = function(btn){
         if(btn == 'deepExplanation'){
             $scope.deepExplanation = true;
@@ -321,9 +315,11 @@ $scope.deepExplanation = false;
             $scope.colsForSelection.splice(index, 1);   
         }
     }
+
     $scope.selectedColumns = {
         selected:{}
     };
+
     $scope.removeColumn = function(column){
         if($scope.colsForSelection.indexOf(column) == -1) {
             $scope.colsForSelection.push(column);
@@ -332,7 +328,6 @@ $scope.deepExplanation = false;
         }
     }
     
-
 $scope.rawChartDate = [
     ['Year', 'Sales', 'Expenses', 'Profit'],
       ['2014', 1000, 400, 200],
@@ -350,7 +345,6 @@ $scope.rawChartDate = [
       ['2026', 150, 580, 312]
   ]
 $scope.addBarChart = function(){
-    
     if($scope.resize){
         drawChart();
         $scope.resize = false;
@@ -399,6 +393,7 @@ $scope.addBarChart = function(){
           chart.draw(data, options);
         }
     }
+
     $scope.addPieChart = function(){
 
         if($scope.resize){
@@ -454,6 +449,7 @@ $scope.addBarChart = function(){
         chart.draw(data, options);
       }
     }
+
     $scope.addBubbleChart = function(){
         if($scope.resize){
             drawSeriesChart();
