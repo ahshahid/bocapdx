@@ -80,22 +80,19 @@ public class SimpleExplanationNLG implements Explanation {
         }
         int count = explainObj.getResults().size();
         if (count == 0) {
-            outputText.append("\nOops. The analysis did not generate any explanations. " +
+            outputText.append("Oops. The analysis did not generate any explanations. " +
                 "We suggest looking for more rare event patterns and try again.");
             return outputText.toString();
         }
         else if (count > 10) {
-            outputText.append("\n==========================================================\n" +
-                "Well, turns out your analysis generated quite a few explanations. " +
+            outputText.append("Well, turns out your analysis generated quite a few explanations. " +
                 "While our NLG in the future will summarize all these effectively, for now," +
                 " we present the most important ones. You could change 'Support' for more common" +
                 " patterns and try again. You can view all the explanations here(URL).");
         }
 
-        outputText.append("\n==========================================================\n");
-        outputText.append("\n Your OBJECTIVE :: " + conf.get("objective", "Not specified") +
-            "\n==========================================================\n");
-        outputText.append("Analysis for your objective meant we had to carry out statistical analysis and " +
+       outputText.append("\n\nYour OBJECTIVE :: " + conf.get("objective", "Not specified") );
+        outputText.append("\nAnalysis for your objective meant we had to carry out statistical analysis and " +
             "comparison of records where \"" + getPredicateString() + "\" with the rest. \n");
 
         outputText.append("Good news. The FastInsights engine produced " + count + " specific facts that " +
