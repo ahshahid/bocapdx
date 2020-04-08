@@ -12,7 +12,8 @@ app.factory('ApiFactory', ['$resource',
             refreshTables: $resource(server +'api/refreshTables'),
             schema: $resource(server +'api/schema'),
             getRows: $resource(server +'api/sampleRows'),
-            getInsight: $resource(server +'api/fastInsight')
+            getInsight: $resource(server +'api/fastInsight'),
+            deepInsight: $resource(server +'api/deepInsight')
         }
        
 		

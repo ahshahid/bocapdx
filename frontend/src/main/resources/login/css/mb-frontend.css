@@ -397,7 +397,7 @@ ul.column-list-selected li label{
     text-overflow: ellipsis;
     display: inline-block;
 }
-#influncer {
+#influncer, #deepExplanation {
     min-height: 500px;
     display: block;
     clear: both;
@@ -683,4 +683,14 @@ ul.column-list-selected li label{
         word-spacing: normal;
         word-wrap: normal;
         white-space: normal;
+    }
+    .pad-15{
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    .tooltip-inner {
+        background-color: #fe6d5c;
+    }
+    .tooltip.top .tooltip-arrow  {
+        border-top-color: #fe6d5c;
     }
