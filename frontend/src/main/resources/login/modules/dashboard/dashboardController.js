@@ -25,7 +25,11 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     $scope.worksheetTab=true;
     $scope.resize= false;
     $scope.colsForSelection =[];
+    $scope.deepExplanationTabLink = false;
+    $scope.deepExplanationTab =false;
     $scope.deepExplanation = false;
+    $scope.rareEvent = 50;
+    $scope.riskRatio = 100;
 
     $scope.dragOptions = {
         /* start: function(e) {
@@ -207,12 +211,15 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     $scope.goToTab = function(tabName){
         if(tabName == 'worksheet'){
             $scope.influncerTab=false;
+            $scope.deepExplanationTab=false;
             $scope.worksheetTab=true;
         }else if(tabName == 'influncer'){
             $('#influncer').tab('show');
+            $scope.worksheetTab=false;
+            $scope.deepExplanationTab=false;
             $scope.influncerTab=true;
             $scope.influncer=true;
-            $scope.worksheetTab=false;
+            
             $('#myModal').modal('hide');
             $('#barChartContainer').resizable({
                 stop: function( event, ui ) { 
@@ -252,13 +259,25 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
             $scope.addBubbleChart();
            
         }else if(tabName == 'deepExplanation'){
+            $('#deepExplanation').tab('show');
             $scope.influncerTab=false;
-            $scope.worksheetTab=true;
+            $scope.worksheetTab=false;
+            $scope.deepExplanationTab =true;
+            $scope.deepExplanationTabLink=true;
+            $('#myModal').modal('hide');
+            $('#deepExplanation').tab('show');
         }
 
     }
-    $scope.editPopup = function(){
-        $('#myModal').modal('show')
+
+
+    $scope.editPopup = function(val){
+        $('#myModal').modal('show');
+        if(val == 'deepExplanation'){
+            $scope.deepExplanation = true;
+        }else{
+            $scope.deepExplanation = false;
+        }
     }
 
     
