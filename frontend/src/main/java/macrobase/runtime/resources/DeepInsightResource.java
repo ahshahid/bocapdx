@@ -195,6 +195,8 @@ public class DeepInsightResource extends BaseResource {
       optionalConf.put(MacroBaseConf.METRIC_KEY, metricCol);
       optionalConf.put(MacroBaseConf.PROVIDED_CONN_KEY, ingester.getConnection());
       optionalConf.put(MacroBaseConf.SUMMARIZER_KEY, "apriori");
+      optionalConf.put(MacroBaseConf.WORKFLOWID_KEY, dir.workflowid);
+      optionalConf.put(MacroBaseConf.ORIGINAL_METRIC_COL_KEY, dir.metric);
       /*
       if (optionalConf.containsKey(MacroBaseConf.EXTRA_PRED_KEY)) {
         String extraPred = (String)optionalConf.get(MacroBaseConf.EXTRA_PRED_KEY);
