@@ -73,8 +73,11 @@ public class TableData {
       "val dfToOp = snappysession.sql(s\"select $projectionWithDoubleCast from $tablename\");" +
       "val dfToOpSchema =  dfToOp.schema;" +
       "import scala.math.Ordering.Implicits; " +
+      "import org.apache.spark.sql.functions._; " +
       "val sortedColsToModifyIndexes = colsToModifyIndexes.sorted;" +
-
+      "val sortedColNames = sortedColsToModifyIndexes.map(pos => dfToOpSchema(pos).name);" +
+      "val minMaxColExprs =  sortedColNames.flatMap(colName => Array(min(dfToOp.col(colName)), max(dfToOp.col(colName)) ));" +
+      "val minMaxRow = dfToOp.agg(minMaxColExprs.head, minMaxColExprs.tail: _*).collect()(0);" +
       "import org.apache.spark.ml.feature.Bucketizer;" +
       "import org.apache.spark.ml.feature.QuantileDiscretizer;" +
       "val (preppedDf, bucketizers) = sortedColsToModifyIndexes." +
@@ -92,14 +95,22 @@ public class TableData {
       "           val binValue = row.getDouble(schema.length + j); " +
       "           val splits = bucketizers(j).getSplits; " +
       "           part2(j) = row(i); " +
-      "           j += 1;" +
       "         /* val doubl = splits(binValue.toInt);" +
       "           (doubl * 10000).round / 10000.toDouble; */  " +
-      "           if (binValue.toInt < splits.length - 1) { " +
-      "              s\"${splits(binValue.toInt)} - ${splits(binValue.toInt + 1)}\";" +
-      "           } else {" +
-      "              s\"${splits(binValue.toInt)} - \";" +
-      "           }" +
+      "              var lb =  splits(binValue.toInt);  " +
+      "              var ub = if (binValue.toInt == splits.length - 1) {" +
+      "                          minMaxRow.getDouble(j + 1);  " +
+      "                       } else {" +
+      "                          splits(binValue.toInt + 1);" +
+      "                        };" +
+      "              if (lb.isNegInfinity) {" +
+      "                  lb = minMaxRow.getDouble(j);" +
+      "               }; " +
+      "              if (ub.isPosInfinity) {" +
+      "                  ub = minMaxRow.getDouble(j + 1);" +
+      "               }; " +
+      "              j += 1;" +
+      "              s\"$lb - $ub\";" +
       "        } else {" +
       "          row(i);" +
       "        }" +
