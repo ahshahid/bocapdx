@@ -72,8 +72,8 @@ public class MacroBaseConf extends Configuration {
 
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
-
-
+    public static final String ORIGINAL_METRIC_COL_KEY = "originalMetricColumn";
+    public static final String WORKFLOWID_KEY = "workflowid";
     public static final String OBJECTIVE_KEY = "objective";
     public static final String BASE_TABLE_KEY = "baseTable";
     public static final String METRIC_KEY = "metric";

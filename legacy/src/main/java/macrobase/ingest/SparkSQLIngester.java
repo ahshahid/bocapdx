@@ -3,6 +3,7 @@ package macrobase.ingest;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 public class SparkSQLIngester extends SQLIngester{
@@ -13,6 +14,10 @@ public class SparkSQLIngester extends SQLIngester{
     }
     public SparkSQLIngester(MacroBaseConf conf) throws ConfigurationException, SQLException {
         super(conf);
+    }
+
+    public SparkSQLIngester(Connection conn) throws ConfigurationException, SQLException {
+        super(new MacroBaseConf(), conn);
     }
 
     @Override

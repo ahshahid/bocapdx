@@ -5,6 +5,9 @@ import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
+import io.boca.internal.tables.GraphResponse;
+import io.boca.internal.tables.TableData;
+import io.boca.internal.tables.TableManager;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -13,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 // Just a hack for initial prototype ....
 
@@ -24,25 +28,32 @@ public class SimpleExplanationNLG implements Explanation {
     private final Map<String, String> colDescriptions;
     private final String metric;
     private final Connection conn;
+    private final int workflowid;
+    private final String originalMetricColumn;
 
 
     static class EachExplanation {
         public String explanationStr;
         public List<String> features;
-        EachExplanation(String expl, List<String> ft) {
+        public List<GraphResponse> graphs;
+        EachExplanation(String expl, List<String> ft, List<GraphResponse> graphs) {
             this.explanationStr = expl;
             this.features = ft;
+            this.graphs = graphs;
         }
     }
 
     public SimpleExplanationNLG(PipelineConfig conf, APLExplanation explainObj ,
-        String outputTable, String metric, Connection conn ) throws Exception {
+        String outputTable, String metric, Connection conn, int workflowid, String originalMetricColumn ) throws Exception {
         this.conf = conf;
         this.explainObj =explainObj;
         this.outputTable = outputTable;
         this.metric = metric;
         this.conn = conn;
         this.colDescriptions = getColDescriptions(conn);
+        this.workflowid = workflowid;
+        this.originalMetricColumn = originalMetricColumn;
+
 
     }
 
@@ -65,7 +76,8 @@ public class SimpleExplanationNLG implements Explanation {
       try {
           return rawExplainTable();
       } catch (Exception e) {
-         return Collections.singletonList(new EachExplanation("Error in getting NLG text", Collections.EMPTY_LIST));
+         return Collections.singletonList(new EachExplanation("Error in getting NLG text", Collections.EMPTY_LIST,
+                 Collections.emptyList()));
       }
     }
 
@@ -137,6 +149,12 @@ public class SimpleExplanationNLG implements Explanation {
         String supportString ="";
         String ratioString = "";
         long supportPercent = 0;
+        final TableData td ;
+        if (workflowid != -1) {
+            td = TableManager.getTableData(workflowid);
+        } else {
+            td = null;
+        }
         StringBuilder outputText = new StringBuilder();
         List<String> features = new ArrayList<>();
         outputText.append("("  + (++rowNum) + ")" + " When the value of ");
@@ -171,7 +189,13 @@ public class SimpleExplanationNLG implements Explanation {
                     ratioString + " times higher than usual. This represents " +
                     supportPercent + " percent of all records that meet your objective.");
         }
-        return  new EachExplanation(outputText.toString(), features);
+
+        List<GraphResponse> graphs = Collections.emptyList();
+        if (workflowid != -1) {
+            graphs = features.stream().map(ft -> td.getDeepInsightGraphData(this.originalMetricColumn, ft, conn)).
+                    collect(Collectors.toList());
+        }
+        return  new EachExplanation(outputText.toString(), features, graphs);
     }
 
     private String getDescription(String column) {

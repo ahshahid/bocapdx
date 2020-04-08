@@ -52,6 +52,8 @@ public class BasicBatchPipeline implements Pipeline {
     private boolean useFDs;
     private int[] functionalDependencies;
     private Connection providedConn;
+    private final int workflowid;
+    private final String originalMetricCol;
 
 
     public BasicBatchPipeline (PipelineConfig conf) {
@@ -62,7 +64,7 @@ public class BasicBatchPipeline implements Pipeline {
         extraPredicate = conf.get("extraPredicate", "");
         classifierType = conf.get("classifier", "percentile");
         metric = ((String)conf.get("metric")).toLowerCase();
-
+        workflowid = (Integer)conf.get("workflowid", -1).intValue();
         if (classifierType.equals("predicate") || classifierType.equals("countmeanshift")){
             Object rawCutoff = conf.get("cutoff");
             isStrPredicate = rawCutoff instanceof String;
@@ -88,7 +90,7 @@ public class BasicBatchPipeline implements Pipeline {
         maxOrder = conf.get("maxOrder", 3);
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
         bitmapRatioThreshold = conf.get("bitmapRatioThreshold", 256);
-
+        this.originalMetricCol = conf.get("originalMetricColumn", metric);
 
         //if FDs are behind used, parse them into bitmaps. For now, all FDs must be in the first 31 attributes
         useFDs = conf.get("useFDs", false);
@@ -235,7 +237,7 @@ public class BasicBatchPipeline implements Pipeline {
             saveDataFrameToJDBC(conn, outputTable,
                 getExplanationAsDataFrame(output), true);
             SimpleExplanationNLG e = new SimpleExplanationNLG(conf, (APLExplanation)output, outputTable,
-                metric, this.getConnection());
+                metric, this.getConnection(), workflowid, this.originalMetricCol);
             System.out.println(e.prettyPrint());
             return e;
         } else {

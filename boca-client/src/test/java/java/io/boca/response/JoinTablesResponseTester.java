@@ -134,7 +134,7 @@ public class JoinTablesResponseTester {
       System.out.println("\n\n");
 
       deepInsightFetch(workflowid, client, httpContext);
-      graphFetch(workflowid, client, httpContext, "avgrev", "avgmou", 0);
+     // graphFetch(workflowid, client, httpContext, "avgrev", "avgmou", 0);
 
 
 

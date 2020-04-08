@@ -4,10 +4,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import edu.stanford.futuredata.macrobase.pipeline.BasicBatchPipeline;
 import edu.stanford.futuredata.macrobase.pipeline.PipelineConfig;
-import io.boca.internal.tables.DependencyData;
-import io.boca.internal.tables.FeatureType;
-import io.boca.internal.tables.TableData;
-import io.boca.internal.tables.TableManager;
+import io.boca.internal.tables.*;
 import macrobase.analysis.pipeline.BasicBatchedPipeline;
 import macrobase.analysis.pipeline.Pipeline;
 import macrobase.conf.MacroBaseConf;
@@ -61,13 +58,7 @@ public class GraphResource extends BaseResource {
 
   private static int DEEP_EXPL = 0;
   private static int FAST_EXPL = 1;
-  private static String BAR_CHART = "bar";
-  private static String AREA_CHART = "area";
-  private static String HISTOGRAM = "histogram";
-  private static String CLUSTERED_BAR_CHART = "clustered_bar";
 
-  private static String QUERY_DEEP_METRIC_CONTI = "select count(*), avg(%1$s), %2$s from %3$s group by %2$s";
-  private static String QUERY_DEEP_METRIC_CAT = "select count(*), %1$s, %2$s from %3$s group by %1$s, %2$s";
   @Context
   private HttpServletRequest request;
 
@@ -78,32 +69,9 @@ public class GraphResource extends BaseResource {
     public int graphfor;
   }
 
-  static class GraphResponse {
 
-    public String errorMessage;
-    public String graphType;
-    public List<GraphPoint> dataPoints;
-    public boolean isMetricNumeric;
-    public boolean isFeatureNumeric;
-    public boolean isFeatureRange;
-  }
 
-  static class GraphPoint {
-    public long numElements;
-    public String feature;
-    public String metric;
 
-    public String featureLowerBound;
-    public String featureUpperBound;
-
-    GraphPoint(long n, String f, String m, String flb,  String fub) {
-      this.numElements = n;
-      this.feature = f;
-      this.metric = m;
-      this.featureLowerBound = flb;
-      this.featureUpperBound = fub;
-    }
-  }
 
   public GraphResource(MacroBaseConf conf) {
     super(conf);
@@ -117,26 +85,6 @@ public class GraphResource extends BaseResource {
     try {
       SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
 
-      final TableData tdOrig = TableManager.getTableData(gr.workflowid);
-      int actualFeatureColType = tdOrig.getColumnData(gr.feature).sqlType;
-      final TableData preppedTableData = tdOrig.getTableDataForFastInsights();
-      TableData.ColumnData metricColCd = tdOrig.getColumnData(gr.metric);
-      List<Schema.SchemaColumn> actualCols = preppedTableData.getSchema().getColumns().stream().
-          filter(sc -> sc.getName().
-              equalsIgnoreCase(MacroBaseDefaults.BOCA_SHADOW_TABLE_UNBINNED_COL_PREFIX + gr.metric)).
-          collect(Collectors.toList());
-      String metricCol = gr.metric;
-      boolean metricColShadowExists = !actualCols.isEmpty();
-      if (metricColShadowExists) {
-        metricCol = actualCols.get(0).getName();
-      }
-      String tableName = preppedTableData.getTableOrView();
-      if (gr.graphfor == DEEP_EXPL) {
-        response = this.getResponseForDeepInsights(tableName, gr.feature, actualFeatureColType,
-            gr.metric, metricCol, ingester, metricColCd);
-      }
-
-
     } catch (Exception e) {
       response = new GraphResponse();
       log.error("An error occurred while processing a request: {}", e);
@@ -145,126 +93,9 @@ public class GraphResource extends BaseResource {
     return response;
   }
 
-  private GraphResponse getResponseForDeepInsights(String tableName, String featureCol,int actualFeatureColType,
-      String metricCol,
-      String unbinnedMetricCol, SQLIngester ingester, TableData.ColumnData metricColCd) throws SQLException {
-    if (!metricColCd.skip && metricColCd.ft.equals(FeatureType.continuous)) {
-      String query = String.format(QUERY_DEEP_METRIC_CONTI, unbinnedMetricCol, featureCol, tableName);
-      ResultSet rs = ingester.executeQuery(query);
-      int featureColType = rs.getMetaData().getColumnType(3);
-      List<GraphPoint> dataPoints = new LinkedList<>();
-      boolean isMetricNumeric = true;
-      boolean isFeatureNumeric = false;
-      boolean isFeatureRange = false;
-      int numRows = 0;
-      if (featureColType == Types.VARCHAR) {
-        if (actualFeatureColType == Types.VARCHAR) {
-          isFeatureNumeric = false;
-          isFeatureRange = false;
-        } else {
-          isFeatureNumeric = true;
-          isFeatureRange = true;
-        }
-      } else {
-        isFeatureNumeric = true;
-        isFeatureRange = false;
-      }
-      while (rs.next()) {
-        long count = rs.getLong(1);
-        double avg = rs.getDouble(2);
-        String key = null;
-        String lb = null;
-        String ub = null;
 
-        if (featureColType == Types.VARCHAR) {
-          key = rs.getString(3);
-          if (isFeatureNumeric && isFeatureRange) {
-            lb = key.substring(0, key.indexOf(" - ")).trim();
-            ub = key.substring(key.indexOf(" - ")).trim();
-          }
-        } else {
-          key = rs.getObject(3).toString();
-        }
 
-        GraphPoint gp = new GraphPoint(count, key, String.valueOf(avg), lb, ub);
-        dataPoints.add(gp);
-        ++numRows;
-      }
 
-      GraphResponse gr = new GraphResponse();
-      gr.isFeatureNumeric = isFeatureNumeric;
-      gr.isFeatureRange = isFeatureRange;
-      gr.isMetricNumeric = isMetricNumeric;
-      gr.dataPoints = dataPoints;
-      gr.graphType = numRows > 50? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART;
-      return gr;
-
-    } else if (!metricColCd.skip && metricColCd.ft.equals(FeatureType.categorical)) {
-      String query = String.format(QUERY_DEEP_METRIC_CAT,featureCol, metricCol, tableName);
-      ResultSet rs = ingester.executeQuery(query);
-      int featureColType = rs.getMetaData().getColumnType(2);
-      int metricColType = rs.getMetaData().getColumnType(3);
-      List<GraphPoint> dataPoints = new LinkedList<>();
-      boolean isMetricNumeric = false;
-      boolean isFeatureNumeric = false;
-      boolean isFeatureRange = false;
-      int numRows = 0;
-      if (featureColType == Types.VARCHAR) {
-        if (actualFeatureColType == Types.VARCHAR) {
-          isFeatureNumeric = false;
-          isFeatureRange = false;
-        } else {
-          isFeatureNumeric = true;
-          isFeatureRange = true;
-        }
-      } else {
-        isFeatureNumeric = true;
-        isFeatureRange = false;
-      }
-
-      if (metricColCd.sqlType == Types.VARCHAR) {
-        isMetricNumeric = false;
-      } else {
-        isMetricNumeric = true;
-      }
-
-      while (rs.next()) {
-        long count = rs.getLong(1);
-        String key = null;
-        String lb = null;
-        String ub = null;
-
-        if (featureColType  == Types.VARCHAR) {
-          key = rs.getString(2);
-          if (isFeatureNumeric && isFeatureRange) {
-            lb = key.substring(0, key.indexOf(" - ")).trim();
-            ub = key.substring(key.indexOf(" - ")).trim();
-          }
-        } else {
-          key = rs.getObject(2).toString();
-        }
-
-        String kpi = rs.getObject(3).toString();
-
-        GraphPoint gp = new GraphPoint(count, key, kpi, lb, ub);
-        dataPoints.add(gp);
-        ++numRows;
-      }
-
-      GraphResponse gr = new GraphResponse();
-      gr.isFeatureNumeric = isFeatureNumeric;
-      gr.isFeatureRange = isFeatureRange;
-      gr.isMetricNumeric = isMetricNumeric;
-      gr.dataPoints = dataPoints;
-      gr.graphType = CLUSTERED_BAR_CHART;
-      return gr;
-    }
-    return  null;
-  }
-
-  private GraphResponse getResponseForFastInsights() {
-    return null;
-  }
 
 }
 
