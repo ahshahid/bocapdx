@@ -97,18 +97,25 @@ public class TableData {
       "           part2(j) = row(i); " +
       "         /* val doubl = splits(binValue.toInt);" +
       "           (doubl * 10000).round / 10000.toDouble; */  " +
-      "              var lb =  splits(binValue.toInt);  " +
-      "              var ub = if (binValue.toInt == splits.length - 1) {" +
-      "                          minMaxRow.getDouble(j + 1);  " +
+      "             val lb = if (binValue.toInt == 0) {" +
+      "                   minMaxRow.getDouble(j*2); " +
+      "                } else {" +
+      "                   splits(binValue.toInt);" +
+      "                };" +
+      "              var ub = if (binValue.toInt == splits.length - 2) {" +
+      "                          minMaxRow.getDouble(2*j + 1);  " +
       "                       } else {" +
       "                          splits(binValue.toInt + 1);" +
       "                        };" +
-      "              if (lb.isNegInfinity) {" +
-      "                  lb = minMaxRow.getDouble(j);" +
+      "                      if (binValue.toInt == splits.length-1) {" +
+      "                        throw new RuntimeException(\"unexpected bin count\");" +
+      "                       };" +
+      "           /*   if (lb.isNegInfinity) {" +
+      "                  lb = minMaxRow.getDouble(2*j);" +
       "               }; " +
       "              if (ub.isPosInfinity) {" +
-      "                  ub = minMaxRow.getDouble(j + 1);" +
-      "               }; " +
+      "                  ub = minMaxRow.getDouble(2*j + 1);" +
+      "               }; */" +
       "              j += 1;" +
       "              s\"$lb - $ub\";" +
       "        } else {" +
