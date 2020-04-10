@@ -31,6 +31,16 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     $scope.rareEvent = 50;
     $scope.riskRatio = 100;
 
+    $scope.minRareEvent =0.005;
+    $scope.maxRareEvent =0.1;
+    $scope.stepRareEvent =0.001;
+
+    $scope.minRiskRatio =1.5;
+    $scope.maxRiskRatio =10;
+    $scope.stepRiskRatio =0.1;
+
+    $scope.outlierFilter='';
+
     $scope.dragOptions = {
         /* start: function(e) {
             console.log("Start");
@@ -103,6 +113,11 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
             
     }
 // Todo Implement the json logic
+
+    $scope.applyOutlier = function(){
+        console.log($scope.outlierFilter)
+        $('#outlierModel').modal('hide');
+    }
 
     $scope.createJsonForSchema = function(tableName){
        
@@ -184,18 +199,20 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
                   $scope.temp.push(result);
             });
     }
-
+    $scope.metricCols=[];
     $scope.toggleColumnSelection = function(columnName, index){
-        console.log(index)
+        //console.log(index)
             if($scope.selectedCols.indexOf(columnName) == -1) {
                 $scope.selectedCols.push(columnName);
+                $scope.metricCols.push(columnName);
                 var sel = document.querySelectorAll('col#'+columnName)[0].className='active';
               }else{
                 var index = $scope.selectedCols.indexOf(columnName);
                 $scope.selectedCols.splice(index, 1);
+                $scope.metricCols.splice(index, 1);
                 var sel = document.querySelectorAll('col#'+columnName)[0].classList.remove('active');
               }
-        console.log($scope.selectedCols);
+        //console.log($scope.selectedCols);
            // console.log(document.querySelectorAll('col#'+columnName));
            if($scope.selectedCols.length > 0){
                 $scope.isColumnSelected =true;
@@ -214,7 +231,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
             $scope.deepExplanationTab=false;
             $scope.worksheetTab=true;
         }else if(tabName == 'influncer'){
-            $('#influncer').tab('show');
+            $('#influncer').tab('show')
             $scope.worksheetTab=false;
             $scope.deepExplanationTab=false;
             $scope.influncerTab=true;
@@ -259,15 +276,30 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
             $scope.addBubbleChart();
            
         }else if(tabName == 'deepExplanation'){
-            $('#deepExplanation').tab('show');
+
+            $('#deepExplanation').tab('show')
             $scope.influncerTab=false;
             $scope.worksheetTab=false;
             $scope.deepExplanationTab =true;
             $scope.deepExplanationTabLink=true;
             $('#myModal').modal('hide');
-            $('#deepExplanation').tab('show');
+            $scope.getDeepExplaination();
+            
         }
 
+    }
+
+    $scope.getDeepExplaination = function(){
+        ApiFactory.deepInsight.save({
+            "workflowid": $scope.workflowid[0],
+            "metric": $scope.metricCols,
+            "objective":$scope.objective,
+            "optionalConf":{
+                "attributes": $scope.selectedCols
+            }
+        }, function (response) {
+            
+        })
     }
 
 
@@ -280,7 +312,18 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
         }
     }
 
-    
+    $scope.applyRareEventRange = function(){
+        $scope.minRareEvent =$scope.minRareEventEdit;
+        $scope.maxRareEvent =$scope.maxRareEventEdit
+        $('#rareEventModel').modal('hide');
+    }
+
+    $scope.applyRiskRatioRange = function(){
+        $scope.minRiskRatio =$scope.minRiskRatioEdit;
+        $scope.maxRiskRatio =$scope.maxRiskRatioEdit
+        $('#riskRationModel').modal('hide');
+    }
+
     $scope.updateColumnList = function(btn){
         if(btn == 'deepExplanation'){
             $scope.deepExplanation = true;
@@ -291,7 +334,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
         angular.forEach($scope.columnList, function(key) {
             if($scope.colsForSelection.indexOf(key.name) == -1) {
                 if($scope.selectedCols.indexOf(key.name) == -1) {
-                    $scope.colsForSelection.push(key.name)
+                    $scope.colsForSelection.push(key.name);
                 }
             }
         })
@@ -303,22 +346,22 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
             $('#myModal').modal('show')
            /*  $('#myModal').modal('toggle') */
             $scope.selectedCols =[];
-        if(response.kpidata[0].pearsonfeatures != undefined && response.kpidata[0].pearsonfeatures != null && response.kpidata[0].pearsonfeatures.length > 0){
-            angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {
-                $scope.selectedCols.push(key.predictorname);
-            })
+            if(response.kpidata[0].pearsonfeatures != undefined && response.kpidata[0].pearsonfeatures != null && response.kpidata[0].pearsonfeatures.length > 0){
+                angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {
+                    $scope.selectedCols.push(key.predictorname);
+                })
+            }
+            if(response.kpidata[0].chisquarefeatures != undefined && response.kpidata[0].chisquarefeatures != null && response.kpidata[0].chisquarefeatures.length > 0){
+                angular.forEach(response.kpidata[0].chisquarefeatures, function(key, name) {
+                    $scope.selectedCols.push(key.predictorname);
+                })
+            }
+            if(response.kpidata[0].anovafeatures != undefined && response.kpidata[0].anovafeatures != null && response.kpidata[0].anovafeatures.length > 0){
+                angular.forEach(response.kpidata[0].anovafeatures, function(key, name) {
+                    $scope.selectedCols.push(key.predictorname);
+                })
         }
-        if(response.kpidata[0].chisquarefeatures != undefined && response.kpidata[0].chisquarefeatures != null && response.kpidata[0].chisquarefeatures.length > 0){
-            angular.forEach(response.kpidata[0].chisquarefeatures, function(key, name) {
-                $scope.selectedCols.push(key.predictorname);
-            })
-        }
-        if(response.kpidata[0].anovafeatures != undefined && response.kpidata[0].anovafeatures != null && response.kpidata[0].anovafeatures.length > 0){
-            angular.forEach(response.kpidata[0].anovafeatures, function(key, name) {
-                $scope.selectedCols.push(key.predictorname);
-            })
-        }
-        console.log(response.kpidata[0]);
+        //console.log(response.kpidata[0]);
              /* $scope.tables = response.results; */
         })
         

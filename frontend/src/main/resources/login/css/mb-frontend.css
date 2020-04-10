@@ -694,3 +694,21 @@ ul.column-list-selected li label{
     .tooltip.top .tooltip-arrow  {
         border-top-color: #fe6d5c;
     }
+   #riskRationModel .modal-body, #rareEventModel .modal-body{
+        width: 70%;
+        margin: auto;
+        float: none;
+    }
+    .editLink{
+        float: right;
+        font-size: 11px;
+        margin-top: 13px;
+    }
+    .editLink a{
+        color: #bec6c6;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    .editLink a:hover{
+        color: #fe6d5c;
+    }
