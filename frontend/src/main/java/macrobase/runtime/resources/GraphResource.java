@@ -79,18 +79,18 @@ public class GraphResource extends BaseResource {
 
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
-  public GraphResponse getGraphData(GraphRequest gr) {
-    GraphResponse response = null ;
+  public String getGraphData(GraphRequest gr) {
+    //GraphResponse response = null ;
     HttpSession ss = request.getSession();
     try {
       SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
 
     } catch (Exception e) {
-      response = new GraphResponse();
+      //response = new GraphResponse();
       log.error("An error occurred while processing a request: {}", e);
-      response.errorMessage = ExceptionUtils.getStackTrace(e);
+      //response.errorMessage = ExceptionUtils.getStackTrace(e);
     }
-    return response;
+    return null;
   }
 
 

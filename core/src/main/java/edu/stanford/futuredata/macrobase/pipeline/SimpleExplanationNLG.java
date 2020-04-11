@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
-import io.boca.internal.tables.GraphResponse;
 import io.boca.internal.tables.TableData;
 import io.boca.internal.tables.TableManager;
 
@@ -35,8 +34,8 @@ public class SimpleExplanationNLG implements Explanation {
     static class EachExplanation {
         public String explanationStr;
         public List<String> features;
-        public List<GraphResponse> graphs;
-        EachExplanation(String expl, List<String> ft, List<GraphResponse> graphs) {
+        public List<String> graphs;
+        EachExplanation(String expl, List<String> ft, List<String> graphs) {
             this.explanationStr = expl;
             this.features = ft;
             this.graphs = graphs;
@@ -190,9 +189,10 @@ public class SimpleExplanationNLG implements Explanation {
                     supportPercent + " percent of all records that meet your objective.");
         }
 
-        List<GraphResponse> graphs = Collections.emptyList();
+        List<String> graphs = Collections.emptyList();
         if (workflowid != -1) {
-            graphs = features.stream().map(ft -> td.getDeepInsightGraphData(this.originalMetricColumn, ft, conn)).
+            graphs = features.stream().map(
+                    ft -> String.valueOf(td.getDeepInsightGraphData(this.originalMetricColumn, ft, conn))).
                     collect(Collectors.toList());
         }
         return  new EachExplanation(outputText.toString(), features, graphs);

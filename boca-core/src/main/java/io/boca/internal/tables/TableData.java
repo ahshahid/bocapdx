@@ -13,6 +13,15 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.visualization.datasource.datatable.ColumnDescription;
+import com.google.visualization.datasource.datatable.DataTable;
+import com.google.visualization.datasource.datatable.TableCell;
+import com.google.visualization.datasource.datatable.TableRow;
+import com.google.visualization.datasource.datatable.value.NumberValue;
+import com.google.visualization.datasource.datatable.value.TextValue;
+import com.google.visualization.datasource.datatable.value.Value;
+import com.google.visualization.datasource.datatable.value.ValueType;
+import com.google.visualization.datasource.render.JsonRenderer;
 import macrobase.MacroBase;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.ingest.SQLIngester;
@@ -38,7 +47,7 @@ public class TableData {
   private final Future<TableData> shadowTableFuture;
   private final boolean isShadowTable;
   private final Set<String> joinCols;
-  private ConcurrentHashMap<String, GraphResponse> deepInsightGraphData = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<String, CharSequence> deepInsightGraphData = new ConcurrentHashMap<>();
 
   private static ExecutorService executorService = Executors.newCachedThreadPool();
 
@@ -523,14 +532,14 @@ public class TableData {
   };
 
 
-  private Function<String, GraphResponse> deepInsightGraphComputer = graphKey -> {
+  private Function<String, CharSequence> deepInsightGraphComputer = graphKey -> {
     String featureCol = graphKey.substring(0, graphKey.indexOf("||"));
     String metricCol = graphKey.substring(graphKey.indexOf("||") + "||".length());
     return getDeepInsightGraphResponse(featureCol, metricCol, ingesterThreadLocal.get());
   };
 
-   GraphResponse getDeepInsightGraphResponse(String feature, String metric, SQLIngester ingester) {
-    GraphResponse response = null ;
+  CharSequence getDeepInsightGraphResponse(String feature, String metric, SQLIngester ingester) {
+    CharSequence response = null ;
     try {
       int actualFeatureColType = getColumnData(feature).sqlType;
       final TableData preppedTableData = getTableDataForFastInsights();
@@ -555,16 +564,16 @@ public class TableData {
 
   }
 
-  private static GraphResponse getResponseForDeepInsights(String tableName, String featureCol,int actualFeatureColType,
-                                                          String metricCol,
-                                                          String unbinnedMetricCol, SQLIngester ingester,
-                                                  TableData.ColumnData metricColCd)  {
+  private static CharSequence getResponseForDeepInsights(String tableName, String featureCol, int actualFeatureColType,
+                                                      String metricCol,
+                                                      String unbinnedMetricCol, SQLIngester ingester,
+                                                      TableData.ColumnData metricColCd)  {
      try{
     if (!metricColCd.skip && metricColCd.ft.equals(FeatureType.continuous)) {
       String query = String.format(QUERY_DEEP_METRIC_CONTI, unbinnedMetricCol, featureCol, tableName);
       ResultSet rs = ingester.executeQuery(query);
       int featureColType = rs.getMetaData().getColumnType(3);
-      List<GraphResponse.GraphPoint> dataPoints = new LinkedList<>();
+      List<TableRow> dataPoints = new LinkedList<>();
       final boolean isMetricNumeric = true ;
       final boolean isFeatureNumeric ;
       final boolean isFeatureRange;
@@ -597,41 +606,61 @@ public class TableData {
         } else {
           key = rs.getObject(3).toString();
         }
-
-        GraphResponse.GraphPoint gp = new GraphResponse.GraphPoint(count, key, String.valueOf(avg), lb, ub);
-        dataPoints.add(gp);
+        TableRow tr = new TableRow();
+        tr.addCell(avg);
+        Value v = null;
+        if (featureColType == Types.VARCHAR) {
+          v = new TextValue(key.toString());
+        } else {
+          v = new NumberValue(Double.parseDouble(key));
+        }
+        TableCell tc = new TableCell(v, key);
+        tc.setCustomProperty("numElements", String.valueOf(count));
+        tc.setCustomProperty("featureLowerBound", lb);
+        tc.setCustomProperty("featureUpperBound", ub);
+        tr.addCell(tc);
+        dataPoints.add(tr);
         ++numRows;
       }
       if (isFeatureNumeric || isMetricNumeric) {
-        dataPoints = dataPoints.stream().sorted((gp1, gp2) -> {
+        dataPoints = dataPoints.stream().sorted((tr1, tr2) -> {
           if (isMetricNumeric) {
-            return Double.parseDouble(gp1.metric) < Double.parseDouble(gp2.metric) ? -1: 1;
+            return ((NumberValue)tr1.getCell(0).getValue()).getValue() <
+                    ((NumberValue)tr2.getCell(0).getValue()).getValue() ? -1: 1;
           } else {
             if (isFeatureRange) {
-              return Double.parseDouble(gp1.featureLowerBound) < Double.parseDouble(gp2.featureLowerBound) ? -1 : 1;
+              return Double.parseDouble(tr1.getCell(1).getCustomProperty("featureLowerBound")) <
+                      Double.parseDouble(tr2.getCell(1).getCustomProperty("featureLowerBound")) ? -1 : 1;
             } else {
-              return Double.parseDouble(gp1.feature) < Double.parseDouble(gp2.feature) ? -1: 1;
+              return Double.parseDouble(tr1.getCell(1).getFormattedValue()) <
+                      Double.parseDouble(tr2.getCell(1).getFormattedValue()) ? -1: 1;
             }
           }
         }).collect(Collectors.toList());
       }
-      GraphResponse gr = new GraphResponse();
-      gr.isFeatureNumeric = isFeatureNumeric;
-      gr.isFeatureRange = isFeatureRange;
-      gr.isMetricNumeric = isMetricNumeric;
-      gr.dataPoints = dataPoints;
-      gr.graphType = numRows > 50 ? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART;
-      return gr;
+      final DataTable dt = new DataTable();
+
+      ColumnDescription metricDesc = new ColumnDescription("metric",
+              isMetricNumeric ? ValueType.NUMBER : ValueType.TEXT, metricCol);
+      ColumnDescription featureDesc = new ColumnDescription("feature",
+              (isFeatureNumeric && !isFeatureRange) ? ValueType.NUMBER : ValueType.TEXT, featureCol);
+      featureDesc.setCustomProperty("isFeatureRange", Boolean.toString(isFeatureRange));
+      dt.addColumn(metricDesc);
+      dt.addColumn(featureDesc);
+      dt.addRows(dataPoints);
+      dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART);
+      return JsonRenderer.renderDataTable(dt, true, true);
+
 
     } else if (!metricColCd.skip && metricColCd.ft.equals(FeatureType.categorical)) {
       String query = String.format(QUERY_DEEP_METRIC_CAT, featureCol, metricCol, tableName);
       ResultSet rs = ingester.executeQuery(query);
       int featureColType = rs.getMetaData().getColumnType(2);
       int metricColType = rs.getMetaData().getColumnType(3);
-      List<GraphResponse.GraphPoint> dataPoints = new LinkedList<>();
-      boolean isMetricNumeric = false;
-      boolean isFeatureNumeric = false;
-      boolean isFeatureRange = false;
+      List<TableRow> dataPoints = new LinkedList<>();
+      final boolean isMetricNumeric;
+      final boolean isFeatureNumeric;
+      final boolean isFeatureRange;
       int numRows = 0;
       if (featureColType == Types.VARCHAR) {
         if (actualFeatureColType == Types.VARCHAR) {
@@ -669,22 +698,45 @@ public class TableData {
         }
 
         String kpi = rs.getObject(3).toString();
+        TableRow tr = new TableRow();
+        TableCell metricCell = new TableCell(new NumberValue(count));
+        metricCell.setCustomProperty("metricValue", kpi);
+        tr.addCell(metricCell);
 
-        GraphResponse.GraphPoint gp = new GraphResponse.GraphPoint(count, key, kpi, lb, ub);
-        dataPoints.add(gp);
+        Value v = null;
+        if (featureColType == Types.VARCHAR) {
+          v = new TextValue(key);
+        } else {
+          v = new NumberValue(Double.parseDouble(key));
+        }
+        TableCell tc = new TableCell(v, key);
+        tc.setCustomProperty("numElements", String.valueOf(count));
+        tc.setCustomProperty("featureLowerBound", lb);
+        tc.setCustomProperty("featureUpperBound", ub);
+        tr.addCell(tc);
+        dataPoints.add(tr);
         ++numRows;
       }
 
-      GraphResponse gr = new GraphResponse();
-      gr.isFeatureNumeric = isFeatureNumeric;
-      gr.isFeatureRange = isFeatureRange;
-      gr.isMetricNumeric = isMetricNumeric;
-      gr.dataPoints = dataPoints;
-      gr.graphType = CLUSTERED_BAR_CHART;
-      return gr;
+      dataPoints = dataPoints.stream().sorted((tr1, tr2) -> {
+            return ((NumberValue)tr1.getCell(0).getValue()).getValue() <
+          ((NumberValue)tr2.getCell(0).getValue()).getValue() ? -1: 1;
+        }).collect(Collectors.toList());
+      final DataTable dt = new DataTable();
+
+      ColumnDescription metricDesc = new ColumnDescription("metric",
+              ValueType.NUMBER, metricCol);
+      ColumnDescription featureDesc = new ColumnDescription("feature",
+              (isFeatureNumeric && !isFeatureRange) ? ValueType.NUMBER : ValueType.TEXT, featureCol);
+      featureDesc.setCustomProperty("isFeatureRange", Boolean.toString(isFeatureRange));
+      dt.addColumn(metricDesc);
+      dt.addColumn(featureDesc);
+      dt.addRows(dataPoints);
+      dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART);
+      return JsonRenderer.renderDataTable(dt, true, true);
     }
     return null;
-  } catch (SQLException sqle) {
+  } catch (Exception sqle) {
      throw new RuntimeException(sqle);
   }
   }
@@ -852,14 +904,14 @@ public class TableData {
     return this.schema;
   }
 
-  public GraphResponse getDeepInsightGraphData(String metricCol, String featureCol,
+  public CharSequence getDeepInsightGraphData(String metricCol, String featureCol,
                                                SQLIngester ingester) throws Exception {
     ingesterThreadLocal.set(ingester);
     String graphKey = featureCol + "||" + metricCol;
     return deepInsightGraphData.computeIfAbsent(graphKey, deepInsightGraphComputer );
   }
 
-  public GraphResponse getDeepInsightGraphData(String metricCol, String featureCol,
+  public CharSequence getDeepInsightGraphData(String metricCol, String featureCol,
                                                Connection conn)  {
      try {
        SQLIngester ingester = new SparkSQLIngester(conn);
