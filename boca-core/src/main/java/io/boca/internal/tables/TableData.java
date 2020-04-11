@@ -565,9 +565,9 @@ public class TableData {
       ResultSet rs = ingester.executeQuery(query);
       int featureColType = rs.getMetaData().getColumnType(3);
       List<GraphResponse.GraphPoint> dataPoints = new LinkedList<>();
-      boolean isMetricNumeric = true;
-      boolean isFeatureNumeric = false;
-      boolean isFeatureRange = false;
+      final boolean isMetricNumeric = true ;
+      final boolean isFeatureNumeric ;
+      final boolean isFeatureRange;
       int numRows = 0;
       if (featureColType == Types.VARCHAR) {
         if (actualFeatureColType == Types.VARCHAR) {
@@ -602,7 +602,19 @@ public class TableData {
         dataPoints.add(gp);
         ++numRows;
       }
-
+      if (isFeatureNumeric || isMetricNumeric) {
+        dataPoints = dataPoints.stream().sorted((gp1, gp2) -> {
+          if (isMetricNumeric) {
+            return Double.parseDouble(gp1.metric) < Double.parseDouble(gp2.metric) ? -1: 1;
+          } else {
+            if (isFeatureRange) {
+              return Double.parseDouble(gp1.featureLowerBound) < Double.parseDouble(gp2.featureLowerBound) ? -1 : 1;
+            } else {
+              return Double.parseDouble(gp1.feature) < Double.parseDouble(gp2.feature) ? -1: 1;
+            }
+          }
+        }).collect(Collectors.toList());
+      }
       GraphResponse gr = new GraphResponse();
       gr.isFeatureNumeric = isFeatureNumeric;
       gr.isFeatureRange = isFeatureRange;
