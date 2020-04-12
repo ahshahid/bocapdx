@@ -47,5 +47,5 @@ attributes:
 
 ratioMetric: "globalratio"
 minRatioMetric: 1.5
-minSupport: 0.05
+minSupport: 0.1
 

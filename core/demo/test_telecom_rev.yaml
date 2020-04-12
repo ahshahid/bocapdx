@@ -9,9 +9,11 @@ baseTable: "telecom_churn_billing_prepped"
 classifier: "predicate"
 metric: "avgrev"
 predicate: ">"
+
+
 cutoff: 100.0
 
-# extraPredicate: "where models != '5'"
+#extraPredicate: "where models = '5'"
 
 summarizer: "aplinear"
 #summarizer: "fpgrowth"
@@ -21,7 +23,8 @@ summarizer: "aplinear"
 ########
 
 attributes:
-  - "adjmou_bin"
+
+#  - "adjmou_bin"
 #  - "adjqty_d_bin"
 #  - "adjrev_bin"
 #  - "avgmou_bin"
