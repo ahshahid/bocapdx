@@ -1,5 +1,4 @@
 package io.boca.response;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -22,8 +21,15 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.junit.Test;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.apache.http.client.protocol.HttpClientContext.COOKIE_STORE;
 import static org.junit.Assert.assertEquals;
@@ -191,5 +197,40 @@ public class JoinTablesResponseTester {
     System.out.println("\n\n");
     System.out.println(content);
     System.out.println("\n\n");
+    generateChart(content);
+  }
+
+  private void generateChart(String deepResp)  throws Exception {
+    String fileName = "chart.template";
+    ClassLoader classLoader = getClass().getClassLoader();
+
+    File file = new File(classLoader.getResource(fileName).getFile());
+
+
+    //Read File Content
+    String content = new String(Files.readAllBytes(file.toPath()));
+
+     ObjectMapper objectMapper = new ObjectMapper();
+    JsonNode rootNode = objectMapper.readTree(deepResp);
+    ArrayNode arr =  (ArrayNode)rootNode.get("expl").get("nlgExplanation");
+    List<String> graphs = new ArrayList<>();
+    for( int i = 0; i < 1; ++i) {
+      JsonNode eachExpl = arr.get(i);
+      ArrayNode arrg = (ArrayNode) eachExpl.get("graphs");
+      for( int j = 0; j < arrg.size(); ++j) {
+        graphs.add(arrg.get(j).textValue());
+      }
+    }
+    String subst1 = graphs.stream().collect(Collectors.joining(","));
+    StringBuilder temp= new StringBuilder();
+    for(int j =0 ; j < graphs.size(); ++j) {
+      temp.append("<div id=").append(j).append("></div>\n");
+    }
+    String subst2 = temp.toString();
+    String newHtml = String.format(content, subst1, subst2);
+    File output = new File("charts.html");
+    FileOutputStream fos = new FileOutputStream(output);
+    fos.write(newHtml.getBytes());
+    fos.flush();
   }
 }

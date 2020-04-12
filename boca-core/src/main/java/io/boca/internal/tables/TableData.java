@@ -607,7 +607,7 @@ public class TableData {
           key = rs.getObject(3).toString();
         }
         TableRow tr = new TableRow();
-        tr.addCell(avg);
+
         Value v = null;
         if (featureColType == Types.VARCHAR) {
           v = new TextValue(key.toString());
@@ -619,21 +619,22 @@ public class TableData {
         tc.setCustomProperty("featureLowerBound", lb);
         tc.setCustomProperty("featureUpperBound", ub);
         tr.addCell(tc);
+        tr.addCell(avg);
         dataPoints.add(tr);
         ++numRows;
       }
       if (isFeatureNumeric || isMetricNumeric) {
         dataPoints = dataPoints.stream().sorted((tr1, tr2) -> {
           if (isMetricNumeric) {
-            return ((NumberValue)tr1.getCell(0).getValue()).getValue() <
-                    ((NumberValue)tr2.getCell(0).getValue()).getValue() ? -1: 1;
+            return ((NumberValue)tr1.getCell(1).getValue()).getValue() <
+                    ((NumberValue)tr2.getCell(1).getValue()).getValue() ? -1: 1;
           } else {
             if (isFeatureRange) {
-              return Double.parseDouble(tr1.getCell(1).getCustomProperty("featureLowerBound")) <
-                      Double.parseDouble(tr2.getCell(1).getCustomProperty("featureLowerBound")) ? -1 : 1;
+              return Double.parseDouble(tr1.getCell(0).getCustomProperty("featureLowerBound")) <
+                      Double.parseDouble(tr2.getCell(0).getCustomProperty("featureLowerBound")) ? -1 : 1;
             } else {
-              return Double.parseDouble(tr1.getCell(1).getFormattedValue()) <
-                      Double.parseDouble(tr2.getCell(1).getFormattedValue()) ? -1: 1;
+              return Double.parseDouble(tr1.getCell(0).getFormattedValue()) <
+                      Double.parseDouble(tr2.getCell(0).getFormattedValue()) ? -1: 1;
             }
           }
         }).collect(Collectors.toList());
@@ -645,8 +646,9 @@ public class TableData {
       ColumnDescription featureDesc = new ColumnDescription("feature",
               (isFeatureNumeric && !isFeatureRange) ? ValueType.NUMBER : ValueType.TEXT, featureCol);
       featureDesc.setCustomProperty("isFeatureRange", Boolean.toString(isFeatureRange));
-      dt.addColumn(metricDesc);
       dt.addColumn(featureDesc);
+      dt.addColumn(metricDesc);
+
       dt.addRows(dataPoints);
       dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART);
       return JsonRenderer.renderDataTable(dt, true, true);
@@ -701,7 +703,7 @@ public class TableData {
         TableRow tr = new TableRow();
         TableCell metricCell = new TableCell(new NumberValue(count));
         metricCell.setCustomProperty("metricValue", kpi);
-        tr.addCell(metricCell);
+
 
         Value v = null;
         if (featureColType == Types.VARCHAR) {
@@ -714,13 +716,14 @@ public class TableData {
         tc.setCustomProperty("featureLowerBound", lb);
         tc.setCustomProperty("featureUpperBound", ub);
         tr.addCell(tc);
+        tr.addCell(metricCell);
         dataPoints.add(tr);
         ++numRows;
       }
 
       dataPoints = dataPoints.stream().sorted((tr1, tr2) -> {
-            return ((NumberValue)tr1.getCell(0).getValue()).getValue() <
-          ((NumberValue)tr2.getCell(0).getValue()).getValue() ? -1: 1;
+            return ((NumberValue)tr1.getCell(1).getValue()).getValue() <
+          ((NumberValue)tr2.getCell(1).getValue()).getValue() ? -1: 1;
         }).collect(Collectors.toList());
       final DataTable dt = new DataTable();
 
@@ -729,8 +732,9 @@ public class TableData {
       ColumnDescription featureDesc = new ColumnDescription("feature",
               (isFeatureNumeric && !isFeatureRange) ? ValueType.NUMBER : ValueType.TEXT, featureCol);
       featureDesc.setCustomProperty("isFeatureRange", Boolean.toString(isFeatureRange));
-      dt.addColumn(metricDesc);
       dt.addColumn(featureDesc);
+      dt.addColumn(metricDesc);
+
       dt.addRows(dataPoints);
       dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART);
       return JsonRenderer.renderDataTable(dt, true, true);
