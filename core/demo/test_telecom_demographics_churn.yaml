@@ -11,7 +11,7 @@ metric: "churn"
 predicate: "=="
 cutoff: "1"
 
-extraPredicate: "where age1 > 0 and age2 > 0 and  hnd_webcap != 'NA' and mailresp !='NA' "
+#extraPredicate: "where age1 > 0 and age2 > 0 and  hnd_webcap != 'NA' and mailresp !='NA' "
 
 summarizer: "aplinear"
 #summarizer: "fpgrowth"

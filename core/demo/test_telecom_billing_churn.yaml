@@ -42,11 +42,11 @@ attributes:
 #  - "avg6qty"
   - "datovr_mean"
   - "datovr_range"
-  - "mou_range"
+#  - "mou_range"
   - "roam_mean"
 
 ratioMetric: "globalratio"
 minRatioMetric: 1.5
-minSupport: 0.02
+minSupport: 0.01
 maxOrder: 2
 
