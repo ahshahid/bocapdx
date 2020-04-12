@@ -214,7 +214,7 @@ public class JoinTablesResponseTester {
     JsonNode rootNode = objectMapper.readTree(deepResp);
     ArrayNode arr =  (ArrayNode)rootNode.get("expl").get("nlgExplanation");
     List<String> graphs = new ArrayList<>();
-    for( int i = 0; i < 1; ++i) {
+    for( int i = 0; i < arr.size(); ++i) {
       JsonNode eachExpl = arr.get(i);
       ArrayNode arrg = (ArrayNode) eachExpl.get("graphs");
       for( int j = 0; j < arrg.size(); ++j) {
