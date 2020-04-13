@@ -238,6 +238,12 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
             $scope.influncer=true;
             
             $('#myModal').modal('hide');
+           /*  $('.auto-panel').resizable({
+                stop: function( event, ui ) { 
+                    $scope.resize= true;
+                    $scope.addBarChart();
+                }
+            }); */
             $('#barChartContainer').resizable({
                 stop: function( event, ui ) { 
                     $scope.resize= true;
@@ -288,20 +294,39 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
         }
 
     }
-
+    $scope.deepExplanationList = [];
     $scope.getDeepExplaination = function(){
         ApiFactory.deepInsight.save({
-            "workflowid": $scope.workflowid[0],
-            "metric": $scope.metricCols,
+            "workflowid": $scope.workflowid,
+            "metric": $scope.metricCols[0],
             "objective":$scope.objective,
             "optionalConf":{
                 "attributes": $scope.selectedCols
             }
         }, function (response) {
-            
+            $scope.deepExplanationList = response.expl.nlgExplanation
         })
     }
 
+    $scope.runDeepExplaination = function(data, id){
+       /*  $('.auto-panel').resizable(); */
+        var graphId = data.graphs[0].graphType + id
+        var scollable = '#'+ graphId + 'scroll';
+        if(data.graphs[0].graphType == 'area'){
+           
+            $(scollable).resizable({
+                stop: function( event, ui ) { 
+                    $scope.resize= true;
+                    $scope.addAreaChart(data, graphId);
+                }
+            });
+            $scope.addAreaChart(data, graphId);
+            
+        }
+        else{
+            $scope.addBarChart(data, graphId);
+        }
+    }
 
     $scope.editPopup = function(val){
         $('#myModal').modal('show');
@@ -390,8 +415,8 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
         }
     }
     
-$scope.rawChartDate = [
-    ['Year', 'Sales', 'Expenses', 'Profit'],
+    $scope.rawChartDate = [
+      ['Year', 'Sales', 'Expenses', 'Profit'],
       ['2014', 1000, 400, 200],
       ['2015', 1170, 460, 250],
       ['2016', 660, 1120, 300],
@@ -405,34 +430,55 @@ $scope.rawChartDate = [
       ['2024', 250, 230, 310],
       ['2025', 180, 450, 350],
       ['2026', 150, 580, 312]
-  ]
-$scope.addBarChart = function(){
-    if($scope.resize){
-        drawChart();
-        $scope.resize = false;
-    }
-    google.charts.load('current', {'packages':['bar']});
-      google.charts.setOnLoadCallback(drawChart);
-
-      function drawChart() {
-        var data = google.visualization.arrayToDataTable($scope.rawChartDate);
-
-        var options = {
-          colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
-          bars: 'horizontal',
-          legend: { position: 'bottom' }
-        };
-
-        var chart = new google.charts.Bar(document.getElementById('barChart'));
-
-        chart.draw(data, google.charts.Bar.convertOptions(options));
-      }
+    ]
+    $scope.compileChartData = function(data){
+        $scope.compiledData = [];
+        $scope.compiledData.push([data.features[0], $scope.metricCols[0]]);
+        
+        angular.forEach(data.graphs[0].dataPoints, function(key,value) {
+                $scope.compiledData.push([key.feature, parseFloat(key.metric)]);
+        });
+        return $scope.compiledData;
     }
 
-    $scope.addAreaChart = function(){
+    $scope.addBarChart = function(deepData,id){
         if($scope.resize){
             drawChart();
             $scope.resize = false;
+        }
+        if(deepData){
+            $scope.compileChartData(deepData);
+            $scope.rawChartDate = $scope.compiledData;
+        }
+        google.charts.load('current', {'packages':['bar']});
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            var data = google.visualization.arrayToDataTable($scope.rawChartDate);
+
+            var options = {
+            colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
+            bars: 'horizontal',
+            legend: { position: 'bottom' }
+            };
+            if(deepData){
+                var chart = new google.charts.Bar(document.getElementById(id));
+                chart.draw(data, options);
+            }else{
+                var chart = new google.charts.Bar(document.getElementById('barChart'));
+                chart.draw(data, google.charts.Bar.convertOptions(options));
+            }
+        }
+    }
+
+    $scope.addAreaChart = function(deepData, id){
+        if($scope.resize){
+            drawChart();
+            $scope.resize = false;
+        }
+        if(deepData){
+            $scope.compileChartData(deepData);
+            $scope.rawChartDate = $scope.compiledData;
         }
         google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(drawChart);
@@ -442,22 +488,26 @@ $scope.addBarChart = function(){
   
           var options = {
            /*  title: 'Company Performance', */
-            hAxis: {title: 'Year',  titleTextStyle: {color: '#333'}},
-            vAxis: {minValue: 0},
+           /*  hAxis: {title: 'Year',  titleTextStyle: {color: '#333'}},
+            vAxis: {minValue: 0}, */
             colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
             pointShape: 'circle',
             selectionMode: 'multiple',
             pointsVisible : false,
             legend: { position: 'bottom' },
           };
-  
-          var chart = new google.visualization.AreaChart(document.getElementById('areaChart'));
-          chart.draw(data, options);
+          if(deepData){
+            var chart = new google.visualization.AreaChart(document.getElementById(id));
+            chart.draw(data, options);
+        }else{
+            var chart = new google.visualization.AreaChart(document.getElementById('areaChart'));
+            chart.draw(data, options);
+        }
+          
         }
     }
 
     $scope.addPieChart = function(){
-
         if($scope.resize){
             drawChart();
             $scope.resize = false;

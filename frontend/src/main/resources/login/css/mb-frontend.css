@@ -647,7 +647,8 @@ ul.column-list-selected li label{
     span.my-clickable-area img{
         width: 17px;
         margin-top: -35px;
-        margin-right: 10px;
+        margin-right: 7px;
+        margin-left: -70px;
     }
     .modal-header {
         padding: 7px 15px;
@@ -711,4 +712,41 @@ ul.column-list-selected li label{
     }
     .editLink a:hover{
         color: #fe6d5c;
+    }
+    .auto-panel{
+    width: calc(100% - 20px);
+    height: auto;
+    padding: 0.5em;
+    text-align: center;
+    font-weight: bold;
+    float: left;
+    display: block;
+    margin: 10px 10px;
+    border-radius: 2px;
+    position: relative;
+    background: #FFF;
+    -webkit-box-shadow: 2px 2px 3px 3px rgba(0,0,0,0.1);
+    -moz-box-shadow: 2px 2px 3px 3px rgba(0,0,0,0.1);
+    box-shadow: 2px 2px 3px 3px rgba(0,0,0,0.1);
+    }
+
+    .auto-panel .controls {
+        display: grid;
+        width: 50px;
+        float: right;
+        text-align: right;
+        margin-top: -10px;
+    }
+    .auto-panel .controls i{
+        padding-top: 10px;
+    }
+    
+    span.outcomeLable {
+        margin-left: 56px;
+        display: block;
+        margin-top: -35px;
+    }
+
+    .graph-description{
+        height: 350px;
     }

@@ -262,7 +262,7 @@
       <!-- influncerTab End -->
 
       <!-- Deep Explanation Tab Start -->
-      <div class="panel panel-gray tab-pane"  role="tabpanel" ng-show="deepExplanationTab"  id="deepExplanation">
+      <div class="panel panel-gray tab-pane"  role="tabpanel" ng-if="deepExplanationTab"  id="deepExplanation">
         <div class=" selected-list">
           <h6>Explanations based on 
             <i ng-click="editPopup('deepExplanation')" class="icon-pencil pull-right"></i></h6>
@@ -299,6 +299,34 @@
         <!-- Charts Section start-->
         <div class="chart-panel ">
           <h4 style="margin-left: 10px;">We looked into 12555522 rows of data in 135 secs to find out results on 8 factors affecting the most.</h4>
+          <div ng-repeat="deepEx in deepExplanationList track by $index">
+          <div class="auto-panel">
+            <div class="charts-details">
+              <div class="discription">
+              <p>{{deepEx.explanationStr}}</p>
+              </div>
+                <div class="controls">
+                  <i ng-click="editPopup()" class="glyphicon glyphicon-menu-hamburger pull-right"></i>
+                  <i ng-click="editPopup()" class="glyphicon glyphicon-info-sign pull-right"></i>
+                  <i ng-click="editPopup()" class="glyphicon glyphicon-info-sign pull-right"></i>
+                </div>
+            </div>
+          </div>
+          <div class="auto-panel"  id="{{deepEx.graphs[0].graphType}}{{$index}}scroll"  ng-init="runDeepExplaination(deepEx, $index)">
+            <div class="charts-details">
+              <div class="discription graph-description">
+              <p>{{deepEx.graphs[0].graphType}}</p>
+              <div id="{{deepEx.graphs[0].graphType}}{{$index}}" style="width: 100%; height: calc(100% - 75px);"></div>
+              </div>
+                <div class="controls">
+                  <i ng-click="editPopup()" class="glyphicon glyphicon-menu-hamburger pull-right"></i>
+                  <i ng-click="editPopup()" class="glyphicon glyphicon-info-sign pull-right"></i>
+                  <i ng-click="editPopup()" class="glyphicon glyphicon-info-sign pull-right"></i>
+                </div>
+            </div>
+            
+          </div>
+        </div>
           
         </div>
         <!-- Charts Section End-->
@@ -346,8 +374,8 @@
                   <span class="lable">Very Rare</span>
                 </div>
               </div>
-              <button type="button" class="btn popup-btn pull-right" ng-if="!deepExplanation" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn popup-btn pull-right" ng-if="deepExplanation" ng-click="goToTab('deepExplanation')">Default</button>
+              <button type="button" class="btn popup-btn pull-right" data-dismiss="modal">Cancel</button>
+              <!-- <button type="button" class="btn popup-btn pull-right" ng-if="deepExplanation"  data-dismiss="modal">Cancel</button> -->
            </div>
            <div class="column mar-left-4">
             <ul class="column-list" >
