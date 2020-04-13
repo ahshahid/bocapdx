@@ -312,11 +312,11 @@
                 </div>
             </div>
           </div>
-          <div class="auto-panel"  id="{{deepEx.graphs[0].graphType}}{{$index}}scroll"  ng-init="runDeepExplaination(deepEx, $index)">
+          <div class="auto-panel" id="scroll{{$index}}" ng-init="runDeepExplaination(deepEx, $index)">
             <div class="charts-details">
               <div class="discription graph-description">
-              <p>{{deepEx.graphs[0].graphType}}</p>
-              <div id="{{deepEx.graphs[0].graphType}}{{$index}}" style="width: 100%; height: calc(100% - 75px);"></div>
+              <!-- <p>{{deepEx.graphs}}</p> -->
+              <div id="graph{{$index}}" style="width: 100%; height: calc(100% - 75px);"></div>
               </div>
                 <div class="controls">
                   <i ng-click="editPopup()" class="glyphicon glyphicon-menu-hamburger pull-right"></i>

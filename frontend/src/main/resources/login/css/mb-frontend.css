@@ -403,6 +403,7 @@ ul.column-list-selected li label{
     clear: both;
     height: 100%;
     float: left;
+    width: 100%;
 }
 .selected-list{
     background: #ffffff;
