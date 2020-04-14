@@ -339,8 +339,8 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
        /*  $('.auto-panel').resizable(); */
         var graphId = 'graph' + id
         var scollable = '#scroll' + id;
-        var tem =  eval(data.graphs[0]);
-        var tem = tem.replace(/^"(.*)"$/, '$1');
+        var tem = data.graphs[0];
+       // var tem = tem.replace(/^"(.*)"$/, '$1');
 
           
         /*   tem = JSON.parse(tem); */
