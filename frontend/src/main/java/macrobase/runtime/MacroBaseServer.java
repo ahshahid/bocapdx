@@ -1,6 +1,10 @@
 package macrobase.runtime;
 
 import com.codahale.metrics.health.HealthCheck;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.visualization.datasource.datatable.DataTable;
+import edu.stanford.futuredata.macrobase.serializer.DataTableSerializer;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
@@ -26,6 +30,9 @@ public class MacroBaseServer extends Application<MacroBaseConf> {
 
     @Override
     public void initialize(Bootstrap<MacroBaseConf> bootstrap) {
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(DataTable.class, new DataTableSerializer());
+        bootstrap.getObjectMapper().registerModule(module);
         bootstrap.addBundle(new AssetsBundle("/login", "/", "index.html"));
     }
 
@@ -53,5 +60,7 @@ public class MacroBaseServer extends Application<MacroBaseConf> {
             }
         });
         environment.jersey().setUrlPattern("/api/*");
+
+
     }
 }

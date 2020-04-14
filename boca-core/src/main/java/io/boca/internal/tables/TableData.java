@@ -47,7 +47,7 @@ public class TableData {
   private final Future<TableData> shadowTableFuture;
   private final boolean isShadowTable;
   private final Set<String> joinCols;
-  private ConcurrentHashMap<String, CharSequence> deepInsightGraphData = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<String, DataTable> deepInsightGraphData = new ConcurrentHashMap<>();
 
   private static ExecutorService executorService = Executors.newCachedThreadPool();
 
@@ -532,14 +532,14 @@ public class TableData {
   };
 
 
-  private Function<String, CharSequence> deepInsightGraphComputer = graphKey -> {
+  private Function<String, DataTable> deepInsightGraphComputer = graphKey -> {
     String featureCol = graphKey.substring(0, graphKey.indexOf("||"));
     String metricCol = graphKey.substring(graphKey.indexOf("||") + "||".length());
     return getDeepInsightGraphResponse(featureCol, metricCol, ingesterThreadLocal.get());
   };
 
-  CharSequence getDeepInsightGraphResponse(String feature, String metric, SQLIngester ingester) {
-    CharSequence response = null ;
+  DataTable getDeepInsightGraphResponse(String feature, String metric, SQLIngester ingester) {
+    DataTable response = null ;
     try {
       int actualFeatureColType = getColumnData(feature).sqlType;
       final TableData preppedTableData = getTableDataForFastInsights();
@@ -564,7 +564,7 @@ public class TableData {
 
   }
 
-  private static CharSequence getResponseForDeepInsights(String tableName, String featureCol, int actualFeatureColType,
+  private static DataTable getResponseForDeepInsights(String tableName, String featureCol, int actualFeatureColType,
                                                       String metricCol,
                                                       String unbinnedMetricCol, SQLIngester ingester,
                                                       TableData.ColumnData metricColCd)  {
@@ -651,7 +651,7 @@ public class TableData {
 
       dt.addRows(dataPoints);
       dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART);
-      return JsonRenderer.renderDataTable(dt, true, true);
+      return dt;//JsonRenderer.renderDataTable(dt, true, true);
 
 
     } else if (!metricColCd.skip && metricColCd.ft.equals(FeatureType.categorical)) {
@@ -737,7 +737,7 @@ public class TableData {
 
       dt.addRows(dataPoints);
       dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART);
-      return JsonRenderer.renderDataTable(dt, true, true);
+      return dt;//JsonRenderer.renderDataTable(dt, true, true);
     }
     return null;
   } catch (Exception sqle) {
@@ -908,14 +908,14 @@ public class TableData {
     return this.schema;
   }
 
-  public CharSequence getDeepInsightGraphData(String metricCol, String featureCol,
+  public DataTable getDeepInsightGraphData(String metricCol, String featureCol,
                                                SQLIngester ingester) throws Exception {
     ingesterThreadLocal.set(ingester);
     String graphKey = featureCol + "||" + metricCol;
     return deepInsightGraphData.computeIfAbsent(graphKey, deepInsightGraphComputer );
   }
 
-  public CharSequence getDeepInsightGraphData(String metricCol, String featureCol,
+  public DataTable getDeepInsightGraphData(String metricCol, String featureCol,
                                                Connection conn)  {
      try {
        SQLIngester ingester = new SparkSQLIngester(conn);
