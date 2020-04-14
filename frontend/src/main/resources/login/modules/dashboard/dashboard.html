@@ -56,9 +56,11 @@
               <div class="form-group">
                 <i class="icon-reorder more-option"></i>
                 <p class="custom-text-p"><span>My Objective </span>
-                  <input type="text" class="form-control" placeholder="Enter your objective here"> 
-                  <i class="icon-long-arrow-up active"></i>
-                  <i class="icon-long-arrow-down"></i>
+                  <input type="text" class="form-control pull-left" ng-model="objective" placeholder="Enter your objective here"> 
+                    <a class="link-obj"><img src="../../assets/Icon 8_Increase.png" width="40"></a>
+                    <a class="link-obj"><img src="../../assets/Icon 9_Decrease.png" width="40"></a>
+                  <!-- <i class="icon-long-arrow-up active"></i>
+                  <i class="icon-long-arrow-down"></i> -->
                 </p>
               </div>
             </form>
@@ -190,8 +192,9 @@
                 ac eleifend.</p>
               </div>
                 <div class="controls">
-                  <i  ng-click="editPopup()" class="glyphicon glyphicon-menu-hamburger pull-right" ></i>
-                  <i  ng-click="editPopup()" class="glyphicon glyphicon-info-sign pull-right mar-right-10" ></i>
+                  <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 23_Like.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 24_Dislike.png" width="20px"> </a>
                 </div>
             </div>
             <div id="barChart" style="width: 100%; height: calc(100% - 75px);"></div>
@@ -205,8 +208,9 @@
                 ac eleifend.</p>
               </div>
                 <div class="controls">
-                  <i  ng-click="editPopup()" class="glyphicon glyphicon-menu-hamburger pull-right" ></i>
-                  <i  ng-click="editPopup()" class="glyphicon glyphicon-info-sign pull-right mar-right-10" ></i>
+                  <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 23_Like.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 24_Dislike.png" width="20px"> </a>
                 </div>
             </div>
             <div id="areaChart" style="width: 100%; height: calc(100% - 75px);"></div>
@@ -220,8 +224,9 @@
                 ac eleifend.</p>
               </div>
                 <div class="controls">
-                  <i  ng-click="editPopup()" class="glyphicon glyphicon-menu-hamburger pull-right" ></i>
-                  <i  ng-click="editPopup()" class="glyphicon glyphicon-info-sign pull-right mar-right-10" ></i>
+                  <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 23_Like.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 24_Dislike.png" width="20px"> </a>
                 </div>
             </div>
             <div id="lineChart" style="width: 100%; height: calc(100% - 75px);"></div>
@@ -235,8 +240,9 @@
                 ac eleifend.</p>
               </div>
                 <div class="controls">
-                  <i  ng-click="editPopup()" class="glyphicon glyphicon-menu-hamburger pull-right" ></i>
-                  <i  ng-click="editPopup()" class="glyphicon glyphicon-info-sign pull-right mar-right-10" ></i>
+                  <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 23_Like.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 24_Dislike.png" width="20px"> </a>
                 </div>
             </div>
             <div id="pieChart" style="width: 100%; height: calc(100% - 75px);"></div>
@@ -250,8 +256,9 @@
                 ac eleifend.</p>
               </div>
                 <div class="controls">
-                  <i  ng-click="editPopup()" class="glyphicon glyphicon-menu-hamburger pull-right" ></i>
-                  <i  ng-click="editPopup()" class="glyphicon glyphicon-info-sign pull-right mar-right-10" ></i>
+                  <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 23_Like.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 24_Dislike.png" width="20px"> </a>
                 </div>
             </div>
             <div id="bubbleChart" style="width: 100%; height: calc(100% - 75px);"></div>
@@ -298,18 +305,20 @@
         </div>
         <!-- Charts Section start-->
         <div class="chart-panel ">
-          <h4 style="margin-left: 10px;">We looked into 12555522 rows of data in 135 secs to find out results on 8 factors affecting the most.</h4>
+          <h4 style="margin-left: 10px;">We looked into {{rowCount}} rows of data in {{respTime}} secs to find out results on 8 factors affecting the most.</h4>
+          <a class="link-share"><img src="../../assets/Icon 3_Left Nav_Metabase.png" width="30px"> </a>
           <div ng-repeat="deepEx in deepExplanationList track by $index">
           <div class="auto-panel">
             <div class="charts-details">
               <div class="discription">
-              <p>{{deepEx.explanationStr}}</p>
+              <p class="deep-p">{{deepEx.explanationStr}}</p>
               </div>
                 <div class="controls">
-                  <i ng-click="editPopup()" class="glyphicon glyphicon-menu-hamburger pull-right"></i>
-                  <i ng-click="editPopup()" class="glyphicon glyphicon-info-sign pull-right"></i>
-                  <i ng-click="editPopup()" class="glyphicon glyphicon-info-sign pull-right"></i>
+                  <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 23_Like.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 24_Dislike.png" width="20px"> </a>
                 </div>
+                <p class="more"><a class="more-link">Explain Further</a></p>
             </div>
           </div>
           <div class="auto-panel" id="scroll{{$index}}" ng-init="runDeepExplaination(deepEx, $index)">
@@ -317,11 +326,12 @@
               <div class="discription graph-description">
               <!-- <p>{{deepEx.graphs}}</p> -->
               <div id="graph{{$index}}" style="width: 100%; height: calc(100% - 75px);"></div>
+              <p class="more"><a class="more-link">Explain Further</a></p>
               </div>
                 <div class="controls">
-                  <i ng-click="editPopup()" class="glyphicon glyphicon-menu-hamburger pull-right"></i>
-                  <i ng-click="editPopup()" class="glyphicon glyphicon-info-sign pull-right"></i>
-                  <i ng-click="editPopup()" class="glyphicon glyphicon-info-sign pull-right"></i>
+                  <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 23_Like.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 24_Dislike.png" width="20px"> </a>
                 </div>
             </div>
             

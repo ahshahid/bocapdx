@@ -113,7 +113,7 @@ body{
     background: #F1F2F6;
 }
 .table-details {
-    width: 145px;
+    width: 170px;
     border-radius: 5px;
     float: left;
     -webkit-box-shadow: 2px 2px 3px 3px rgba(0,0,0,0.1);
@@ -135,7 +135,8 @@ body{
     margin: 0;
     padding: 10px;
     word-break: break-word;
-    font-size: 12px;
+    font-size: 13px !important;
+    min-height: 60px;
 }
 .table-rows-section{
     background: #F1F2F6;
@@ -186,10 +187,11 @@ body{
 }
 
 .table-drop-message p{
-    width: 250px;
+    width: 400px;
     text-align: center;
     margin: auto;
     margin-top: 100px;
+    font-size: 18px;
 }
 .blue-color{
     color: #fe5c4a;
@@ -489,8 +491,8 @@ ul.column-list-selected li label{
     margin-top: 20px;
   }
   #barChartContainer, #areaChartContainer, #lineChartContainer, #pieChartContainer, #bubbleChartContainer{
-	width: 670px;
-	height:420px;
+	width: 400px;
+	height:450px;
 	padding:0.5em;
 	text-align:center;
     font-weight: bold;
@@ -499,7 +501,7 @@ ul.column-list-selected li label{
     margin: 10px 10px;
     border-radius: 2px;
     min-width: 400px;
-    min-height: 350px;
+    min-height: 450px;
     position: relative;
     background: #FFF;
     -webkit-box-shadow: 2px 2px 3px 3px rgba(0,0,0,0.1);
@@ -525,16 +527,18 @@ ul.column-list-selected li label{
         text-align: left;
         display: inline-block;
         width: 100%;
+        position: relative;
     }
     .discription {
         display: block;
         float: left;
-        width: 90%;    
+        width: calc(100% - 50px);    
     }
     .controls {
-        display: block;
-        width: 10%;
-        float: left;
+        display: inline-grid;
+        width: 50px;
+        float: right;
+        text-align: right;
     }
     .charts-details h6 {
         font-size: 14px;
@@ -736,7 +740,10 @@ ul.column-list-selected li label{
         width: 50px;
         float: right;
         text-align: right;
-        margin-top: -10px;
+        margin-top: -7px;
+    }
+    .controls .img-links {
+        padding-top: 7px;
     }
     .auto-panel .controls i{
         padding-top: 10px;
@@ -750,6 +757,7 @@ ul.column-list-selected li label{
 
     .graph-description{
         height: 350px;
+        position: relative;
     }
     .loader.ng-scope {
         position: absolute;
@@ -765,3 +773,54 @@ ul.column-list-selected li label{
         left: calc(50% - 50px);
         position: absolute;
     }
+    .chart-panel p.deep-p{
+        font-size: 15px;
+        line-height: 18px;
+    }
+    .chart-panel h4 {
+        display: block;
+        width: calc(100% - 100px);
+        float: left;
+    }
+    .chart-panel a.link-share{
+        display: block;
+        float: right;
+        margin-right: 20px;
+        cursor: pointer;
+    }
+    p.more {
+        margin-bottom: 0 !important;
+        text-align: left;
+        text-decoration: underline;
+        font-weight: 100;
+        position: absolute;
+        bottom: 0;
+        font-size: 14px;
+        color: #bac1c1;
+    }
+    .more-link{
+        color: #bac1c1;
+        cursor: pointer;
+    }
+    a.link-obj {
+        width: 40px;
+        height: 40px;
+        display: block;
+        position: relative;
+        border: 1px solid #fe5c4a;
+        border-radius: 4px;
+        float: left;
+        margin-left: 10px;
+        margin-top: -5px;
+        cursor: pointer;
+    }
+    a.link-obj:hover{
+        background: #212e3c;
+    }
+    a.link-obj img{
+        padding: 8px;
+        width: 38px;
+        padding-top: 8px;
+    }
+
+    

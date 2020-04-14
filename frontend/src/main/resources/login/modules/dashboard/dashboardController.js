@@ -29,8 +29,8 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     $scope.deepExplanationTab =false;
     $scope.deepExplanation = false;
     $scope.loading =  false;
-    $scope.rareEvent = 50;
-    $scope.riskRatio = 100;
+    $scope.rareEvent = 0.001
+    $scope.riskRatio = 1.5;
 
     $scope.minRareEvent =0.005;
     $scope.maxRareEvent =0.1;
@@ -48,11 +48,11 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     }
 
     $scope.showLoader = function(){
-       /*  $scope.loading = true; */
+        $scope.loading = true;
     }
 
     $scope.hideLoader = function(){
-       /*  $scope.loading = false; */
+        $scope.loading = false;
     }
     $scope.dragOptions = {
         /* start: function(e) {
@@ -177,6 +177,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
                     $scope.workSheetTables.splice(i,1);
                     if($scope.workSheetTables.length == 0){
                         $scope.schemaCols = {};
+                        $scope.isColumnSelected = false;
                     }
                 }
             }
@@ -298,15 +299,12 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
                     $scope.addBubbleChart();
                 }
             });
-            
             $scope.addAreaChart();
             $scope.addBarChart();
             $scope.addLineChart();
             $scope.addPieChart();
             $scope.addBubbleChart();
-           
         }else if(tabName == 'deepExplanation'){
-
             $('#deepExplanation').tab('show')
             $scope.influncerTab=false;
             $scope.worksheetTab=false;
@@ -314,7 +312,6 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
             $scope.deepExplanationTabLink=true;
             $('#myModal').modal('hide');
             $scope.getDeepExplaination();
-            
         }
         $scope.hideLoader();
 
@@ -322,29 +319,33 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     $scope.deepExplanationList = [];
     $scope.showLoader();
     $scope.getDeepExplaination = function(){
+        var startTime = new Date().getTime();
         ApiFactory.deepInsight.save({
             "workflowid": $scope.workflowid,
             "metric": $scope.metricCols[0],
-            "objective":$scope.objective,
+            "objective":$scope.objective == '' ? 'defult' :$scope.objective,
             "optionalConf":{
                 "attributes": $scope.selectedCols
             }
         }, function (response) {
+            $scope.respTime = (new Date().getTime() - startTime) / 1000;
+            console.log($scope.respTime);
             $scope.deepExplanationList = response.expl.nlgExplanation;
             $scope.hideLoader();
         })
     }
 
     $scope.runDeepExplaination = function(data, id){
+        $scope.showLoader();
        /*  $('.auto-panel').resizable(); */
         var graphId = 'graph' + id
         var scollable = '#scroll' + id;
-        var tem =  eval(data.graphs[0]);
-        var tem = tem.replace(/^"(.*)"$/, '$1');
+   /*      var tem =  eval(data.graphs[0]);
+        var tem = tem.replace(/^"(.*)"$/, '$1'); */
 
           
         /*   tem = JSON.parse(tem); */
-        $scope.addAreaChart(tem, graphId);
+       /*  $scope.addAreaChart(tem, graphId); */
         /* if(data.graphs[0].graphType == 'area'){
            
             $(scollable).resizable({
@@ -358,6 +359,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
         else{
             $scope.addBarChart(data, graphId);
         } */
+        $scope.hideLoader();
     }
 
     $scope.editPopup = function(val){
@@ -418,7 +420,15 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
                 angular.forEach(response.kpidata[0].anovafeatures, function(key, name) {
                     $scope.selectedCols.push(key.predictorname);
                 })
-        }
+            }
+            $scope.colsForSelection =[]
+            angular.forEach($scope.columnList, function(key) {
+                if($scope.colsForSelection.indexOf(key.name) == -1) {
+                    if($scope.selectedCols.indexOf(key.name) == -1) {
+                        $scope.colsForSelection.push(key.name);
+                    }
+                }
+            })
         //console.log(response.kpidata[0]);
              /* $scope.tables = response.results; */
              $scope.hideLoader();
