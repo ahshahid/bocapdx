@@ -1,4 +1,4 @@
-<div ng-controller="dashboardController as dashboard" ng-init="init()">
+<div ng-controller="dashboardController" ng-init="init()">
   <!-- Sidebar -->
   <div class="sidebar-menu toggle-others main-sidebar">
 			
@@ -489,5 +489,9 @@
       </div>
     </div>
     <!-- Risk Ratio edit pop end-->
+
+    <div class="loader" ng-if="loading">
+      <img src="../../assets/Loader-GIF.gif" width="100px">
+    </div>
 </div>
 

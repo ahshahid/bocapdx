@@ -751,3 +751,17 @@ ul.column-list-selected li label{
     .graph-description{
         height: 350px;
     }
+    .loader.ng-scope {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        top: 0;
+        left: 0;
+        background: rgba(0,0,0,0.9);
+        z-index: 9999;
+    }
+    .loader img {
+        top: 36%;
+        left: calc(50% - 50px);
+        position: absolute;
+    }
