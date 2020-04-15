@@ -347,7 +347,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
        /*  $('.auto-panel').resizable(); */
         var graphId = 'graph' + id
         var scollable = '#scroll' + id;
-        var tem = eval('(' + data.graphs[0] + ')');
+        var tem = eval(data.graphs[0]);
        // var tem = tem.replace(/^"(.*)"$/, '$1');
 
           
