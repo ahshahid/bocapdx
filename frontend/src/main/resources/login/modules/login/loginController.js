@@ -3,13 +3,13 @@ app.controller('loginController', ['$scope', '$rootScope', '$http', 'ApiFactory'
     $scope.username ="app"
     $scope.password = "app"
     $rootScope.isAuthenticated = false;
-    $scope.loading =  false;
+    $rootScope.loading =  false;
     /* Dummy data */
     /* $scope.ApiFactory = {
         login: {"results":["table1","table"]}
     } */
     $scope.login = function() {
-        $scope.loading = true;
+        $rootScope.loading = true;
     var data = {
       username: $scope.username,
       password: $scope.password
@@ -24,7 +24,7 @@ app.controller('loginController', ['$scope', '$rootScope', '$http', 'ApiFactory'
         password: data.password
     }, function (response) {
         $scope.tables = response.results;
-        $scope.loading = false;
+        $rootScope.loading = false;
         $state.go('dashboard', {table : $scope.tables});
         $rootScope.isAuthenticated= true;
     });

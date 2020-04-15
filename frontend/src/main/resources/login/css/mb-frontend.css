@@ -773,6 +773,13 @@ ul.column-list-selected li label{
         left: calc(50% - 50px);
         position: absolute;
     }
+    .loader p {
+        top: calc(36% + 100px);
+        left: calc(50% - 40px);
+        position: absolute;
+        color: #96a3a3;
+        font-size: 16px;
+    }
     .chart-panel p.deep-p{
         font-size: 15px;
         line-height: 18px;

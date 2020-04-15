@@ -1,4 +1,4 @@
-app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateParams', 'NgTableParams', function($scope, $http, ApiFactory, $stateParams, NgTableParams) {
+app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFactory', '$stateParams', 'NgTableParams', function($scope, $rootScope, $http, ApiFactory, $stateParams, NgTableParams) {
 
     /* $scope.ApiFactory = {
         schema: {"columns":[{"name":"aa"},{"type":"ass"}]}
@@ -28,7 +28,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     $scope.deepExplanationTabLink = false;
     $scope.deepExplanationTab =false;
     $scope.deepExplanation = false;
-    $scope.loading =  false;
+    $rootScope.loading =  false;
     $scope.rareEvent = 0.001
     $scope.riskRatio = 1.5;
 
@@ -48,11 +48,11 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     }
 
     $scope.showLoader = function(){
-        $scope.loading = true;
+        $rootScope.loading = true;
     }
 
     $scope.hideLoader = function(){
-        $scope.loading = false;
+        $rootScope.loading = false;
     }
     $scope.dragOptions = {
         /* start: function(e) {
@@ -77,7 +77,8 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     }
     
     $scope.getData = function(table,dragged) {
-        $scope.showLoader();
+           $scope.showLoader();
+           $rootScope.loading = true;
            $scope.tableName = table;
            $scope.clearColumnSelection();
            $scope.worksheet=true;
@@ -122,9 +123,13 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
                     $scope.isRowRes = true;
                     $scope.createWorkSheetTables(table);
                     $scope.hideLoader();
+                }, function(err){
+                    $scope.hideLoader();
                 });
+            }, function(err){
+                $scope.hideLoader();
             });
-            $scope.hideLoader();
+            
            
 
             
@@ -255,6 +260,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
             $scope.influncerTab=false;
             $scope.deepExplanationTab=false;
             $scope.worksheetTab=true;
+            $scope.hideLoader();
         }else if(tabName == 'influncer'){
             $('#influncer').tab('show')
             $scope.worksheetTab=false;
@@ -304,6 +310,7 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
             $scope.addLineChart();
             $scope.addPieChart();
             $scope.addBubbleChart();
+            $scope.hideLoader();
         }else if(tabName == 'deepExplanation'){
             $('#deepExplanation').tab('show')
             $scope.influncerTab=false;
@@ -312,13 +319,13 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
             $scope.deepExplanationTabLink=true;
             $('#myModal').modal('hide');
             $scope.getDeepExplaination();
+            $scope.hideLoader();
         }
-        $scope.hideLoader();
 
     }
     $scope.deepExplanationList = [];
-    $scope.showLoader();
     $scope.getDeepExplaination = function(){
+        $scope.showLoader();
         var startTime = new Date().getTime();
         ApiFactory.deepInsight.save({
             "workflowid": $scope.workflowid,
@@ -340,12 +347,12 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
        /*  $('.auto-panel').resizable(); */
         var graphId = 'graph' + id
         var scollable = '#scroll' + id;
-   /*      var tem =  eval(data.graphs[0]);
-        var tem = tem.replace(/^"(.*)"$/, '$1'); */
+        var tem = data.graphs[0];
+       // var tem = tem.replace(/^"(.*)"$/, '$1');
 
           
         /*   tem = JSON.parse(tem); */
-       /*  $scope.addAreaChart(tem, graphId); */
+        $scope.addAreaChart(tem, graphId);
         /* if(data.graphs[0].graphType == 'area'){
            
             $(scollable).resizable({
@@ -363,24 +370,30 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     }
 
     $scope.editPopup = function(val){
+        $scope.showLoader();
         $('#myModal').modal('show');
         if(val == 'deepExplanation'){
             $scope.deepExplanation = true;
         }else{
             $scope.deepExplanation = false;
         }
+        $scope.hideLoader();
     }
 
     $scope.applyRareEventRange = function(){
+        $scope.showLoader();
         $scope.minRareEvent =$scope.minRareEventEdit;
         $scope.maxRareEvent =$scope.maxRareEventEdit
         $('#rareEventModel').modal('hide');
+        $scope.hideLoader();
     }
 
     $scope.applyRiskRatioRange = function(){
+        $scope.showLoader();
         $scope.minRiskRatio =$scope.minRiskRatioEdit;
         $scope.maxRiskRatio =$scope.maxRiskRatioEdit
         $('#riskRationModel').modal('hide');
+        $scope.hideLoader();
     }
 
     $scope.updateColumnList = function(btn){
@@ -432,18 +445,22 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
         //console.log(response.kpidata[0]);
              /* $scope.tables = response.results; */
              $scope.hideLoader();
+        }, function(err){
+            $scope.hideLoader();
         })
         
-        $scope.hideLoader();
+        
 
     }
 
     
     $scope.addColumn = function(column){
+        $scope.showLoader();
         if($scope.selectedCols.indexOf(column) == -1) {
             $scope.selectedCols.push(column);
             var index = $scope.colsForSelection.indexOf(column);
-            $scope.colsForSelection.splice(index, 1);   
+            $scope.colsForSelection.splice(index, 1); 
+            $scope.hideLoader();  
         }
     }
 
@@ -452,10 +469,12 @@ app.controller('dashboardController', ['$scope', '$http', 'ApiFactory', '$stateP
     };
 
     $scope.removeColumn = function(column){
+        $scope.showLoader();
         if($scope.colsForSelection.indexOf(column) == -1) {
             $scope.colsForSelection.push(column);
             var index = $scope.selectedCols.indexOf(column);
             $scope.selectedCols.splice(index, 1);  
+            $scope.hideLoader();
         }
     }
     

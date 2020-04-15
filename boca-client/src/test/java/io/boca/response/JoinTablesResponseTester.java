@@ -214,11 +214,12 @@ public class JoinTablesResponseTester {
     JsonNode rootNode = objectMapper.readTree(deepResp);
     ArrayNode arr =  (ArrayNode)rootNode.get("expl").get("nlgExplanation");
     List<String> graphs = new ArrayList<>();
-    for( int i = 0; i < arr.size(); ++i) {
+    for( int i = 0; i < 1; ++i) {
       JsonNode eachExpl = arr.get(i);
       ArrayNode arrg = (ArrayNode) eachExpl.get("graphs");
-      for( int j = 0; j < arrg.size(); ++j) {
-        graphs.add(arrg.get(j).textValue());
+      for( int j = 0; j < 1; ++j) {
+        JsonNode node = arrg.get(j);
+        graphs.add(node.toString());
       }
     }
     String subst1 = graphs.stream().collect(Collectors.joining(","));
