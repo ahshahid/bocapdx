@@ -10,8 +10,8 @@ logging:
 
   # Logger-specific levels.
   loggers:
-    "macrobase": TRACE
-
+    "macrobase": TRACE 
+    "org.glassfish.jersey.logging.LoggingFeature": DEBUG
 server:
     applicationConnectors:
         - type: http

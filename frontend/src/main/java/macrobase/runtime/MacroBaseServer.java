@@ -13,8 +13,11 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.runtime.command.MacroBasePipelineCommand;
 import macrobase.runtime.resources.*;
 import org.eclipse.jetty.server.session.SessionHandler;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.logging.Level;
 
 public class MacroBaseServer extends Application<MacroBaseConf> {
     private static final Logger log = LoggerFactory.getLogger(MacroBaseServer.class);
@@ -60,7 +63,8 @@ public class MacroBaseServer extends Application<MacroBaseConf> {
             }
         });
         environment.jersey().setUrlPattern("/api/*");
-
+        environment.jersey().register(new LoggingFeature(java.util.logging.Logger.getLogger(LoggingFeature.DEFAULT_LOGGER_NAME), Level.SEVERE, LoggingFeature.Verbosity.PAYLOAD_ANY,
+                1000));
 
     }
 }

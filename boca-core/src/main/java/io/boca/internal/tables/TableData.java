@@ -625,10 +625,7 @@ public class TableData {
       }
       if (isFeatureNumeric || isMetricNumeric) {
         dataPoints = dataPoints.stream().sorted((tr1, tr2) -> {
-          if (isMetricNumeric) {
-            return ((NumberValue)tr1.getCell(1).getValue()).getValue() <
-                    ((NumberValue)tr2.getCell(1).getValue()).getValue() ? -1: 1;
-          } else {
+          if (isFeatureNumeric) {
             if (isFeatureRange) {
               return Double.parseDouble(tr1.getCell(0).getCustomProperty("featureLowerBound")) <
                       Double.parseDouble(tr2.getCell(0).getCustomProperty("featureLowerBound")) ? -1 : 1;
@@ -636,6 +633,9 @@ public class TableData {
               return Double.parseDouble(tr1.getCell(0).getFormattedValue()) <
                       Double.parseDouble(tr2.getCell(0).getFormattedValue()) ? -1: 1;
             }
+          } else {
+            return ((NumberValue)tr1.getCell(1).getValue()).getValue() <
+                    ((NumberValue)tr2.getCell(1).getValue()).getValue() ? -1: 1;
           }
         }).collect(Collectors.toList());
       }
@@ -651,9 +651,7 @@ public class TableData {
 
       dt.addRows(dataPoints);
       dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART);
-      return dt;//JsonRenderer.renderDataTable(dt, true, true);
-
-
+      return dt;
     } else if (!metricColCd.skip && metricColCd.ft.equals(FeatureType.categorical)) {
       String query = String.format(QUERY_DEEP_METRIC_CAT, featureCol, metricCol, tableName);
       ResultSet rs = ingester.executeQuery(query);
@@ -722,8 +720,18 @@ public class TableData {
       }
 
       dataPoints = dataPoints.stream().sorted((tr1, tr2) -> {
-            return ((NumberValue)tr1.getCell(1).getValue()).getValue() <
-          ((NumberValue)tr2.getCell(1).getValue()).getValue() ? -1: 1;
+        if (isFeatureNumeric) {
+          if (isFeatureRange) {
+            return Double.parseDouble(tr1.getCell(0).getCustomProperty("featureLowerBound")) <
+                    Double.parseDouble(tr2.getCell(0).getCustomProperty("featureLowerBound")) ? -1 : 1;
+          } else {
+            return Double.parseDouble(tr1.getCell(0).getFormattedValue()) <
+                    Double.parseDouble(tr2.getCell(0).getFormattedValue()) ? -1: 1;
+          }
+        } else {
+          return ((NumberValue) tr1.getCell(1).getValue()).getValue() <
+                  ((NumberValue) tr2.getCell(1).getValue()).getValue() ? -1 : 1;
+        }
         }).collect(Collectors.toList());
       final DataTable dt = new DataTable();
 
@@ -737,7 +745,7 @@ public class TableData {
 
       dt.addRows(dataPoints);
       dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART);
-      return dt;//JsonRenderer.renderDataTable(dt, true, true);
+      return dt;
     }
     return null;
   } catch (Exception sqle) {

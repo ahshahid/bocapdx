@@ -31,10 +31,11 @@ public class DataTableSerializer extends StdSerializer<DataTable> {
     }
     @Override
     public void serialize(DataTable dataTable, JsonGenerator jgen, SerializerProvider serializerProvider) throws IOException {
-        jgen.writeStartObject();
-       renderDataTable( jgen, dataTable, true, true);
+        jgen.writeString(JsonRenderer.renderDataTable(dataTable, true, true).toString());
+      /*  jgen.writeStartObject();
+        renderDataTable( jgen, dataTable, true, true);
 
-       jgen.writeEndObject();
+       jgen.writeEndObject(); */
     }
 
     private static void renderDataTable(JsonGenerator jgen, DataTable dataTable, boolean includeValues,
