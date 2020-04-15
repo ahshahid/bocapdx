@@ -2,7 +2,7 @@ app.factory('ApiFactory', ['$resource',
 	function ($resource) {
 
         /*for server */
-        const server = 'http://35.225.75.55:9090/';
+        const server = '';
 
         /*local server  */
         //const server = 'http://localhost:3000/';
