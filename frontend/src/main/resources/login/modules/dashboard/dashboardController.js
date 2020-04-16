@@ -29,9 +29,14 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     $scope.deepExplanationTab =false;
     $scope.deepExplanation = false;
     $rootScope.loading =  false;
-    $scope.rareEvent = 0.001
-    $scope.riskRatio = 1.5;
-
+    $scope.rareEvent = {
+        val: 0.01
+    }
+    $scope.riskRatio = {
+        val: 1.8
+    }
+    $scope.metricCols=[];
+    $scope.kpiData = [];
     $scope.minRareEvent =0.005;
     $scope.maxRareEvent =0.1;
     $scope.stepRareEvent =0.001;
@@ -44,25 +49,24 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
 
 
     $scope.init = function(){
-        $scope.hideLoader();
+        $scope.hideLoader(); 
     }
 
     $scope.showLoader = function(){
         $rootScope.loading = true;
+        $('body').addClass( "loadingScreen" );
     }
 
     $scope.hideLoader = function(){
         $rootScope.loading = false;
+        $('body').removeClass( "loadingScreen" );
     }
     $scope.dragOptions = {
         /* start: function(e) {
-            console.log("Start");
         },
         drag: function(e) {
-          console.log("DRAGGING");
         },
         stop: function(e) {
-          console.log("STOPPING");
         }, */
         container: 'worksheet'
     }
@@ -138,7 +142,6 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
 // Todo Implement the json logic
 
     $scope.applyOutlier = function(){
-        console.log($scope.outlierFilter)
         $('#outlierModel').modal('hide');
     }
 
@@ -228,21 +231,18 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                   $scope.temp.push(result);
             });
     }
-    $scope.metricCols=[];
+    
     $scope.toggleColumnSelection = function(columnName, index){
-        //console.log(index)
             if($scope.selectedCols.indexOf(columnName) == -1) {
                 $scope.selectedCols.push(columnName);
                 $scope.metricCols.push(columnName);
-                var sel = document.querySelectorAll('col#'+columnName)[0].className='active';
+                //var sel = document.querySelectorAll('col#'+columnName)[0].className='active';
               }else{
                 var index = $scope.selectedCols.indexOf(columnName);
                 $scope.selectedCols.splice(index, 1);
                 $scope.metricCols.splice(index, 1);
-                var sel = document.querySelectorAll('col#'+columnName)[0].classList.remove('active');
+                //var sel = document.querySelectorAll('col#'+columnName)[0].classList.remove('active');
               }
-        //console.log($scope.selectedCols);
-           // console.log(document.querySelectorAll('col#'+columnName));
            if($scope.selectedCols.length > 0){
                 $scope.isColumnSelected =true;
            }else{
@@ -332,11 +332,10 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             "metric": $scope.metricCols[0],
             "objective":$scope.objective == '' ? 'defult' :$scope.objective,
             "optionalConf":{
-                "attributes": $scope.selectedCols
+                "attributes": $scope.kpiData
             }
         }, function (response) {
             $scope.respTime = (new Date().getTime() - startTime) / 1000;
-            console.log($scope.respTime);
             $scope.deepExplanationList = response.expl.nlgExplanation;
             $scope.hideLoader();
         })
@@ -418,32 +417,30 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         }, function (response) {
             $('#myModal').modal('show')
            /*  $('#myModal').modal('toggle') */
-            $scope.selectedCols =[];
+            $scope.kpiData =[];
             if(response.kpidata[0].pearsonfeatures != undefined && response.kpidata[0].pearsonfeatures != null && response.kpidata[0].pearsonfeatures.length > 0){
                 angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {
-                    $scope.selectedCols.push(key.predictorname);
+                    $scope.kpiData.push(key.predictorname);
                 })
             }
             if(response.kpidata[0].chisquarefeatures != undefined && response.kpidata[0].chisquarefeatures != null && response.kpidata[0].chisquarefeatures.length > 0){
                 angular.forEach(response.kpidata[0].chisquarefeatures, function(key, name) {
-                    $scope.selectedCols.push(key.predictorname);
+                    $scope.kpiData.push(key.predictorname);
                 })
             }
             if(response.kpidata[0].anovafeatures != undefined && response.kpidata[0].anovafeatures != null && response.kpidata[0].anovafeatures.length > 0){
                 angular.forEach(response.kpidata[0].anovafeatures, function(key, name) {
-                    $scope.selectedCols.push(key.predictorname);
+                    $scope.kpiData.push(key.predictorname);
                 })
             }
             $scope.colsForSelection =[]
             angular.forEach($scope.columnList, function(key) {
                 if($scope.colsForSelection.indexOf(key.name) == -1) {
-                    if($scope.selectedCols.indexOf(key.name) == -1) {
+                    if($scope.selectedCols.indexOf(key.name) == -1 && $scope.kpiData.indexOf(key.name) == -1) {
                         $scope.colsForSelection.push(key.name);
                     }
                 }
             })
-        //console.log(response.kpidata[0]);
-             /* $scope.tables = response.results; */
              $scope.hideLoader();
         }, function(err){
             $scope.hideLoader();
@@ -548,7 +545,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         google.charts.setOnLoadCallback(drawChart);
   
         function drawChart() {
-            var data =new google.visualization.DataTable($scope.rawChartDate,0.6);
+            var data = new google.visualization.DataTable($scope.rawChartDate,0.6);
           /* var data = google.visualization.arrayToDataTable($scope.rawChartDate); */
   
           var options = {

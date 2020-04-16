@@ -90,6 +90,7 @@ body{
 [type="checkbox"]:checked {
   position: absolute;
   left: -999999px;
+  display: none;
 }
 [type="checkbox"]:not(:checked) + label,
 [type="checkbox"]:checked + label {  

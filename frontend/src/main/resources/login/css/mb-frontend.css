@@ -491,7 +491,7 @@ ul.column-list-selected li label{
     margin-top: 20px;
   }
   #barChartContainer, #areaChartContainer, #lineChartContainer, #pieChartContainer, #bubbleChartContainer{
-	width: 400px;
+	width: 47%;
 	height:450px;
 	padding:0.5em;
 	text-align:center;
@@ -500,7 +500,7 @@ ul.column-list-selected li label{
     display: block;
     margin: 10px 10px;
     border-radius: 2px;
-    min-width: 400px;
+    min-width: 310px;
     min-height: 450px;
     position: relative;
     background: #FFF;
@@ -829,5 +829,7 @@ ul.column-list-selected li label{
         width: 38px;
         padding-top: 8px;
     }
-
+.loadingScreen{
+    overflow: hidden !important;
+}
     
