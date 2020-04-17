@@ -13,14 +13,12 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import com.google.visualization.datasource.datatable.ColumnDescription;
 import com.google.visualization.datasource.datatable.DataTable;
 import com.google.visualization.datasource.datatable.TableCell;
 import com.google.visualization.datasource.datatable.TableRow;
-import com.google.visualization.datasource.datatable.value.NumberValue;
-import com.google.visualization.datasource.datatable.value.TextValue;
-import com.google.visualization.datasource.datatable.value.Value;
-import com.google.visualization.datasource.datatable.value.ValueType;
+import com.google.visualization.datasource.datatable.value.*;
 import com.google.visualization.datasource.render.JsonRenderer;
 import macrobase.MacroBase;
 import macrobase.conf.MacroBaseDefaults;
@@ -621,8 +619,8 @@ public class TableData {
         tr.addCell(tc);
         tr.addCell(avg);
         dataPoints.add(tr);
-        ++numRows;
       }
+      numRows = dataPoints.size();
       if (isFeatureNumeric || isMetricNumeric) {
         dataPoints = dataPoints.stream().sorted((tr1, tr2) -> {
           if (isFeatureNumeric) {
@@ -655,9 +653,10 @@ public class TableData {
     } else if (!metricColCd.skip && metricColCd.ft.equals(FeatureType.categorical)) {
       String query = String.format(QUERY_DEEP_METRIC_CAT, featureCol, metricCol, tableName);
       ResultSet rs = ingester.executeQuery(query);
-      int featureColType = rs.getMetaData().getColumnType(2);
+      final int featureColType = rs.getMetaData().getColumnType(2);
       int metricColType = rs.getMetaData().getColumnType(3);
-      List<TableRow> dataPoints = new LinkedList<>();
+      Map<String, TableRow> keyToRow = new HashMap<>();
+      final Map<String, Integer > kpiValueToIndex = new HashMap<>();
       final boolean isMetricNumeric;
       final boolean isFeatureNumeric;
       final boolean isFeatureRange;
@@ -680,46 +679,58 @@ public class TableData {
       } else {
         isMetricNumeric = true;
       }
-
       while (rs.next()) {
         long count = rs.getLong(1);
-        String key = null;
-        String lb = null;
-        String ub = null;
+        final String key ;
+        final String lb ;
+        final String ub;
 
         if (featureColType == Types.VARCHAR) {
           key = rs.getString(2);
           if (isFeatureNumeric && isFeatureRange) {
             lb = key.substring(0, key.indexOf(" - ")).trim();
             ub = key.substring(key.indexOf(" - ")).trim();
+          } else {
+            ub = null;
+            lb = null;
           }
         } else {
           key = rs.getObject(2).toString();
+          ub = null;
+          lb = null;
         }
 
         String kpi = rs.getObject(3).toString();
-        TableRow tr = new TableRow();
+        TableRow tr = keyToRow.computeIfAbsent(key, k -> {
+          Value v = null;
+          if (featureColType == Types.VARCHAR) {
+            v = new TextValue(k);
+          } else {
+            v = new NumberValue(Double.parseDouble(k));
+          }
+          TableCell tc = new TableCell(v, k);
+          //tc.setCustomProperty("numElements", String.valueOf(count));
+          tc.setCustomProperty("featureLowerBound", lb);
+          tc.setCustomProperty("featureUpperBound", ub);
+          TableRow trr = new TableRow();
+          trr.addCell(tc);
+          return trr;
+        });
+        //add nulls if needed
+        int indexInRow = kpiValueToIndex.computeIfAbsent(kpi, k -> {
+          return kpiValueToIndex.size() + 1;
+        });
+        int len = tr.getCells().size();
+        for(int i = 0; i < indexInRow - len + 1; ++i) {
+          tr.addCell(new MutableWrapperTableCell());
+        }
         TableCell metricCell = new TableCell(new NumberValue(count));
         metricCell.setCustomProperty("metricValue", kpi);
-
-
-        Value v = null;
-        if (featureColType == Types.VARCHAR) {
-          v = new TextValue(key);
-        } else {
-          v = new NumberValue(Double.parseDouble(key));
-        }
-        TableCell tc = new TableCell(v, key);
-        tc.setCustomProperty("numElements", String.valueOf(count));
-        tc.setCustomProperty("featureLowerBound", lb);
-        tc.setCustomProperty("featureUpperBound", ub);
-        tr.addCell(tc);
-        tr.addCell(metricCell);
-        dataPoints.add(tr);
-        ++numRows;
+        MutableWrapperTableCell mwtc = (MutableWrapperTableCell) tr.getCell(indexInRow);
+        mwtc.setMutableCell(metricCell);
       }
-
-      dataPoints = dataPoints.stream().sorted((tr1, tr2) -> {
+      numRows = keyToRow.size();
+      List<TableRow> dataPoints = keyToRow.values().stream().sorted((tr1, tr2) -> {
         if (isFeatureNumeric) {
           if (isFeatureRange) {
             return Double.parseDouble(tr1.getCell(0).getCustomProperty("featureLowerBound")) <
@@ -742,7 +753,6 @@ public class TableData {
       featureDesc.setCustomProperty("isFeatureRange", Boolean.toString(isFeatureRange));
       dt.addColumn(featureDesc);
       dt.addColumn(metricDesc);
-
       dt.addRows(dataPoints);
       dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART);
       return dt;
@@ -1211,6 +1221,76 @@ public class TableData {
 
     public boolean isPossiblePrimaryKey() {
       return this.possiblePrimaryKey;
+    }
+  }
+
+  private static class MutableWrapperTableCell extends TableCell {
+    volatile  private TableCell mutableCell;
+    MutableWrapperTableCell() {
+      super(new NumberValue(0));
+      mutableCell = null;
+    }
+
+    @Override
+    public String getFormattedValue() {
+      return mutableCell != null ? mutableCell.getFormattedValue(): super.getFormattedValue();
+    }
+
+    @Override
+    public void setFormattedValue(String formattedValue) {
+      if (mutableCell != null) {
+        mutableCell.setFormattedValue(formattedValue);
+      } else {
+        super.setFormattedValue(formattedValue);
+      }
+    }
+
+    @Override
+    public Value getValue() {
+      return mutableCell != null ? mutableCell.getValue(): super.getValue();
+    }
+
+    @Override
+    public ValueType getType() {
+      return mutableCell != null ? mutableCell.getType(): super.getType();
+    }
+
+    @Override
+    public boolean isNull() {
+      return mutableCell != null ? mutableCell.isNull(): super.isNull();
+    }
+
+    @Override
+    public String toString() {
+      return mutableCell != null ? mutableCell.toString(): super.toString();
+    }
+
+    @Override
+    public String getCustomProperty(String key) {
+      return mutableCell != null ? mutableCell.getCustomProperty(key): super.getCustomProperty(key);
+    }
+
+    @Override
+    public void setCustomProperty(String propertyKey, String propertyValue) {
+      if (mutableCell != null) {
+        mutableCell.setCustomProperty(propertyKey, propertyValue);
+      } else {
+        super.setCustomProperty(propertyKey, propertyValue);
+      }
+    }
+
+    @Override
+    public Map<String, String> getCustomProperties() {
+      return mutableCell != null ? mutableCell.getCustomProperties(): super.getCustomProperties();
+    }
+
+    @Override
+    public TableCell clone() {
+      return mutableCell != null ? mutableCell.clone(): super.clone();
+    }
+
+    void setMutableCell(TableCell cell) {
+      this.mutableCell = cell;
     }
   }
 
