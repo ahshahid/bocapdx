@@ -323,11 +323,11 @@
                 <p class="more"><a class="more-link">Explain Further</a></p>
             </div>
           </div>
-          <div class="auto-panel" id="scroll{{$index}}" ng-init="runDeepExplaination(deepEx, $index)">
+          <div class="auto-panel" id="scroll{{$index}}">
             <div class="charts-details">
               <div class="discription graph-description">
               <!-- <p>{{deepEx.graphs}}</p> -->
-              <div id="graph{{$index}}" style="width: 100%; height: calc(100% - 75px);"></div>
+              <div ng-repeat="graph in deepEx.graphs"  ng-init="runDeepExplaination(graph, $parent.$index, $index)" id="graph{{$parent.$index}}{{$index}}" style="width: 100%; min-height: 350px;"></div>
               <p class="more"><a class="more-link">Explain Further</a></p>
               </div>
                 <div class="controls">
@@ -412,7 +412,7 @@
               </div>
             </div>
             <button type="button" class="btn popup-btn red-bg pull-left" ng-if="!deepExplanation" ng-click="goToTab('influncer')">Submit</button>
-            <button type="button" class="btn popup-btn red-bg pull-left" ng-if="deepExplanation" ng-click="goToTab('deepExplanation')">Run</button>
+            <button type="button" class="btn popup-btn red-bg pull-left" ng-if="deepExplanation" ng-click="goToTab('deepExplanation')">Get Facts</button>
           </div>
           </div>
         </div>

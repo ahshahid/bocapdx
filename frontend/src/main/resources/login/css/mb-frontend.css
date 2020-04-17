@@ -100,7 +100,7 @@ body{
 }
 #worksheet{
     width : 100%;
-    height: 380px;
+    height: 200px;
     /* min-height: 260px; */
    /*  padding: 0;
     border-bottom: 1px solid #c4dff5; */
@@ -756,7 +756,7 @@ ul.column-list-selected li label{
     }
 
     .graph-description{
-        height: 350px;
+        min-height: 350px;
         position: relative;
     }
     .loader.ng-scope {
