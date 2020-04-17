@@ -77,7 +77,8 @@ public class FastInsightResource extends BaseResource {
       TableData currentTd = tdOrig;
 
       response.kpidata = new ArrayList<>(fir.kpicols.size());
-      for(String kpiCol: fir.kpicols) {
+      for(String kpiColx: fir.kpicols) {
+        String kpiCol = kpiColx.toLowerCase();
         TableData.ColumnData kpiColData = tdOrig.getColumnData(kpiCol);
         if (!kpiColData.skip && kpiColData.ft.equals(FeatureType.categorical)) {
           currentTd = tdOrig.getTableDataForFastInsights();

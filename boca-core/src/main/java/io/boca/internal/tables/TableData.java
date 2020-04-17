@@ -457,7 +457,7 @@ public class TableData {
     if (kpiCol.ft.equals(FeatureType.continuous)) {
       // identify which are continuous or categorical cols which can use pearson corr directly
       List<ColumnData> pearsonAmenable = columnMappings.values().stream().filter(cd ->
-         !cd.name.equalsIgnoreCase(kpi) && !cd.skip && (cd.ft.equals(FeatureType.continuous) ||
+        !cd.possiblePrimaryKey  && !cd.name.equalsIgnoreCase(kpi) && !cd.skip && (cd.ft.equals(FeatureType.continuous) ||
              (cd.ft.equals(FeatureType.categorical) && cd.numDistinctValues == 2 && (cd.sqlType == Types.SMALLINT ||
                  cd.sqlType == Types.INTEGER || cd.sqlType == Types.BIGINT || cd.sqlType == Types.DOUBLE
           || cd.sqlType == Types.FLOAT)))
@@ -470,7 +470,7 @@ public class TableData {
       }
 
       List<ColumnData> annovaAmenable = columnMappings.values().stream().filter(cd ->
-          !cd.name.equalsIgnoreCase(kpi) && !cd.skip && cd.ft.equals(FeatureType.categorical) &&
+          !cd.possiblePrimaryKey && !cd.name.equalsIgnoreCase(kpi) && !cd.skip && cd.ft.equals(FeatureType.categorical) &&
               cd.numDistinctValues != 2 ).collect(Collectors.toList());
       if (!annovaAmenable.isEmpty()) {
         for(ColumnData cd: annovaAmenable) {
@@ -480,7 +480,7 @@ public class TableData {
       }
 
       List<ColumnData> biserialAmenable = columnMappings.values().stream().filter(cd ->
-          !cd.name.equalsIgnoreCase(kpi) && !cd.skip &&
+          !cd.possiblePrimaryKey && !cd.name.equalsIgnoreCase(kpi) && !cd.skip &&
               cd.ft.equals(FeatureType.categorical) && cd.numDistinctValues == 2 && !(cd.sqlType == Types.SMALLINT ||
                   cd.sqlType == Types.INTEGER || cd.sqlType == Types.BIGINT || cd.sqlType == Types.DOUBLE
                   || cd.sqlType == Types.FLOAT)
@@ -495,14 +495,14 @@ public class TableData {
     } else if (kpiCol.ft.equals(FeatureType.categorical)) {
       // get all the categorical cols
       List<ColumnData> deps = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
-          && !ele.skip && ele.ft.equals(FeatureType.categorical)).collect(Collectors.toList());
+         && !ele.possiblePrimaryKey && !ele.skip && ele.ft.equals(FeatureType.categorical)).collect(Collectors.toList());
       Map<String, Double> corrData = categoricalToCategorical.apply(kpiCol, deps);
       for(Map.Entry<String, Double> entry: corrData.entrySet()) {
         dd.addToChiSqCorrelation(entry.getKey(), entry.getValue());
       }
       // get all the continous cols
       List<ColumnData> contiCols = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
-          && !ele.skip && ele.ft.equals(FeatureType.continuous)).collect(Collectors.toList());
+          && !ele.possiblePrimaryKey && !ele.skip && ele.ft.equals(FeatureType.continuous)).collect(Collectors.toList());
       if (!contiCols.isEmpty()) {
         if (kpiCol.numDistinctValues == 2) {
           if (kpiCol.sqlType == Types.SMALLINT ||
@@ -754,10 +754,10 @@ public class TableData {
   }
 
   TableData(String tableOrQuery, SQLIngester ingester, int workFlowId, boolean isQuery, Set<String> joinCols) throws SQLException, IOException {
-    this(tableOrQuery, ingester, workFlowId, isQuery,false, joinCols);
+    this(tableOrQuery, ingester, workFlowId, isQuery,false, joinCols, Collections.EMPTY_SET);
   }
   TableData(String tableOrQuery, SQLIngester ingester, int workFlowId, boolean isQuery,
-      boolean isShadowTable, Set<String> joinCols)
+      boolean isShadowTable, Set<String> joinCols, Set<String> possiblePrimaryKeys)
       throws SQLException, IOException {
     this.isShadowTable = isShadowTable;
     this.joinCols = joinCols;
@@ -795,6 +795,11 @@ public class TableData {
     for(Map.Entry<Integer, List<Schema.SchemaColumn>> entry : groups.entrySet()) {
        ColumnData[] cds = determineColumnData(entry.getKey(), entry.getValue(),
            ingester);
+      if (!possiblePrimaryKeys.isEmpty()) {
+        for(ColumnData cd: cds) {
+          cd.possiblePrimaryKey = possiblePrimaryKeys.contains(cd.name);
+        }
+      }
       sqlTypeToColumnMappings.put(entry.getKey(), cds);
       for(ColumnData cd: cds) {
         columnMappings.put(cd.name.toLowerCase(), cd);
@@ -894,7 +899,10 @@ public class TableData {
         ingester.executeSQL("drop table if exists " + shadowTableName);
         ingester.executeQuery(createDiscretizedTable);
         return new TableData(shadowTableName, ingester, -1, false,
-            true, TableData.this.joinCols);
+            true, TableData.this.joinCols,
+                TableData.this.columnMappings.entrySet().stream().
+                        filter(entry -> entry.getValue().possiblePrimaryKey).
+                        map(entry -> entry.getKey()).collect(Collectors.toSet()));
 
       }
     } ;

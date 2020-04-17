@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,6 +43,7 @@ public class JoinTablesResponseTester {
   public void testResponse() throws Exception {
     HttpPost httpPost = null;
     HttpGet httpGet = null;
+    final String kpiCol = "Churn";//"telecom_churn_billing_churn";
     try {
       CookieStore cookieStore = new BasicCookieStore();
       HttpContext httpContext = new BasicHttpContext();
@@ -72,7 +74,9 @@ public class JoinTablesResponseTester {
       String schemaUrl = "http://" + host + ":9090/api/schema";
       httpPost = new HttpPost(schemaUrl);
       httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-      data = new StringEntity("{\"table\":{\"name\":\"" +  table1 + "\", \"joinlist\":[{\"table\":{\"name\":\"" + table2 +"\"}}]}}");
+     // data = new StringEntity("{\"table\":{\"name\":\"" +  table1 + "\", \"joinlist\":[{\"table\":{\"name\":\"" + table2 +"\"}}]}}");
+      data = new StringEntity("{\"table\":{\"name\":\"" +  table1 + "\"}}");
+
       httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
       httpPost.setEntity(data);
@@ -123,23 +127,11 @@ public class JoinTablesResponseTester {
       System.out.println("\n\n");
 
 
-      // dependency fetch
-      String fastInsightUrl = "http://" + host + ":9090/api/fastInsight";
-      httpPost = new HttpPost(fastInsightUrl);
-      httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-      data = new StringEntity("{\"workflowid\":" + workflowid +", \"kpicols\":[\"avgrev\"]}");
-      httpPost.addHeader("User-Agent", "Apache HTTPClient");
 
-      httpPost.setEntity(data);
-      response = client.execute(httpPost, httpContext);
 
-      entity = response.getEntity();
-      content = EntityUtils.toString(entity);
-      System.out.println("\n\n");
-      System.out.println(content);
-      System.out.println("\n\n");
+      String [] dependentCols = fastInsightFetch(workflowid, client, httpContext, kpiCol);
 
-      deepInsightFetch(workflowid, client, httpContext);
+      deepInsightFetch(workflowid, client, httpContext, kpiCol, dependentCols);
      // graphFetch(workflowid, client, httpContext, "avgrev", "avgmou", 0);
 
 
@@ -153,6 +145,55 @@ public class JoinTablesResponseTester {
     }
   }
 
+  private String[] fastInsightFetch(int workflowid, HttpClient client, HttpContext httpContext, String kpiCol)
+          throws Exception {
+    // dependency fetch
+    String fastInsightUrl = "http://" + host + ":9090/api/fastInsight";
+    HttpPost httpPost = new HttpPost(fastInsightUrl);
+    httpPost.addHeader("content-type", "application/json;charset=UTF-8");
+    StringEntity data = new StringEntity("{\"workflowid\":" + workflowid +", \"kpicols\":[\""+ kpiCol +"\"]}");
+    httpPost.addHeader("User-Agent", "Apache HTTPClient");
+
+    httpPost.setEntity(data);
+    HttpResponse response = client.execute(httpPost, httpContext);
+
+    HttpEntity entity = response.getEntity();
+    String content = EntityUtils.toString(entity);
+    System.out.println("\n\n");
+    System.out.println(content);
+    System.out.println("\n\n");
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    JsonNode rootNode = objectMapper.readTree(content);
+    JsonNode elem =  ((ArrayNode)rootNode.get("kpidata")).get(0);
+    List<String> dependentCols = new ArrayList<>();
+    JsonNode nod = elem.get("pearsonfeatures");
+    if (!nod.isNull()) {
+      ArrayNode arr = (ArrayNode)nod;
+      for( int i = 0; i < arr.size(); ++i) {
+        JsonNode each = arr.get(i);
+        dependentCols.add(each.get("predictorname").textValue());
+      }
+    }
+    nod = elem.get("chisquarefeatures");
+    if (!nod.isNull()) {
+      ArrayNode arr = (ArrayNode)nod;
+      for( int i = 0; i < arr.size(); ++i) {
+        JsonNode each = arr.get(i);
+        dependentCols.add(each.get("predictorname").textValue());
+      }
+    }
+    nod = elem.get("anovafeatures");
+    if (!nod.isNull()) {
+      ArrayNode arr = (ArrayNode)nod;
+      for( int i = 0; i < arr.size(); ++i) {
+        JsonNode each = arr.get(i);
+        dependentCols.add(each.get("predictorname").textValue());
+      }
+    }
+    return dependentCols.toArray(new String[dependentCols.size()]);
+
+  }
   private void graphFetch(int workflowid, HttpClient client, HttpContext httpContext, String metric, String feature, int graphFor) throws Exception {
     //
     String graphUrl = "http://" + host + ":9090/api/graph";
@@ -173,15 +214,18 @@ public class JoinTablesResponseTester {
     System.out.println("\n\n");
   }
 
-  private void deepInsightFetch(int workflowid, HttpClient client, HttpContext httpContext) throws Exception {
+  private void deepInsightFetch(int workflowid, HttpClient client,
+                                HttpContext httpContext, String kpiCol, String[] dependents) throws Exception {
     // deep insifgt fetch
+    String attribs = Arrays.stream(dependents).map(str -> "\"" + str + "\"").
+            collect(Collectors.joining(","));
     String deepInsightUrl = "http://" + host + ":9090/api/deepInsight";
     HttpPost httpPost = new HttpPost(deepInsightUrl);
     httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-    StringEntity data = new StringEntity("{\"workflowid\":" + workflowid +", \"metric\":\"avgrev\", \"objective\":\"xxx\"," +
+    StringEntity data = new StringEntity("{\"workflowid\":" + workflowid +", \"metric\":\"" + kpiCol +"\", \"objective\":\"xxx\"," +
         "\"optionalConf\":" +
         "{" +
-             "\"attributes\":[\"avgmou\", \"avgqty\", \"adjrev\", \"totrev\"]" +
+             "\"attributes\":["+attribs +"]" +
        // "\"predicate\":\"telecom_churn_networkq_churn = 0\"," +
        // "\"minSupport\": 0.0001" +
         "}" +
@@ -219,7 +263,10 @@ public class JoinTablesResponseTester {
       ArrayNode arrg = (ArrayNode) eachExpl.get("graphs");
       for( int j = 0; j < 1; ++j) {
         JsonNode node = arrg.get(j);
-        graphs.add(node.toString());
+        String temp = node.toString();
+        temp = temp.substring(1);
+        temp = temp.substring(0, temp.length() -1);
+        graphs.add(temp);
       }
     }
     String subst1 = graphs.stream().collect(Collectors.joining(","));
