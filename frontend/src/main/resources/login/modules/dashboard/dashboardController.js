@@ -1,13 +1,9 @@
 app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFactory', '$stateParams', 'NgTableParams', function($scope, $rootScope, $http, ApiFactory, $stateParams, NgTableParams) {
-
-    /* $scope.ApiFactory = {
-        schema: {"columns":[{"name":"aa"},{"type":"ass"}]}
-    } */
-    
+  
     $scope.myTable = {
         selected:{}
     };
-    $scope.temp= [];
+    $scope.temp = [];
     $scope.schemaCols = {};
     $scope.selectedCols = [];
     $scope.workSheetTables = [];
@@ -18,51 +14,55 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     $scope.isColumnRes = false;
     $scope.isRowRes = false;
     $scope.workflowid;
-    $scope.isColumnSelected =false;
+    $scope.isColumnSelected = false;
     $scope.tableList = [];
-    $scope.influncerTab=false;
-    $scope.influncer=false;
-    $scope.worksheetTab=true;
-    $scope.resize= false;
-    $scope.colsForSelection =[];
+    $scope.influncerTab = false;
+    $scope.influncer = false;
+    $scope.worksheetTab = true;
+    $scope.resize = false;
+    $scope.colsForSelection = [];
     $scope.deepExplanationTabLink = false;
-    $scope.deepExplanationTab =false;
+    $scope.deepExplanationTab = false;
     $scope.deepExplanation = false;
     $rootScope.loading =  false;
-    $scope.rareEvent = 0.001
-    $scope.riskRatio = 1.5;
+    $scope.rareEvent = {
+        val: 0.01
+    }
+    $scope.riskRatio = {
+        val: 1.8
+    }
+    $scope.metricCols = [];
+    $scope.kpiData = [];
+    $scope.minRareEvent = 0.005;
+    $scope.maxRareEvent = 0.1;
+    $scope.stepRareEvent = 0.001;
 
-    $scope.minRareEvent =0.005;
-    $scope.maxRareEvent =0.1;
-    $scope.stepRareEvent =0.001;
+    $scope.minRiskRatio = 1.5;
+    $scope.maxRiskRatio = 10;
+    $scope.stepRiskRatio = 0.1;
 
-    $scope.minRiskRatio =1.5;
-    $scope.maxRiskRatio =10;
-    $scope.stepRiskRatio =0.1;
-
-    $scope.outlierFilter='';
-
+    $scope.outlierFilter = '';
+    $scope.objective = '';
 
     $scope.init = function(){
-        $scope.hideLoader();
+        $scope.hideLoader(); 
     }
 
     $scope.showLoader = function(){
         $rootScope.loading = true;
+        $('body').addClass( "loadingScreen" );
     }
 
     $scope.hideLoader = function(){
         $rootScope.loading = false;
+        $('body').removeClass( "loadingScreen" );
     }
     $scope.dragOptions = {
         /* start: function(e) {
-            console.log("Start");
         },
         drag: function(e) {
-          console.log("DRAGGING");
         },
         stop: function(e) {
-          console.log("STOPPING");
         }, */
         container: 'worksheet'
     }
@@ -138,7 +138,6 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
 // Todo Implement the json logic
 
     $scope.applyOutlier = function(){
-        console.log($scope.outlierFilter)
         $('#outlierModel').modal('hide');
     }
 
@@ -150,7 +149,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             var index = $scope.tableList.indexOf(tableName);
             $scope.tableList.splice(index, 1);
           }
-        var tables= $scope.tableList;
+        var tables = $scope.tableList;
        
         //tables = ['test1', 'test2', 'test3', 'test4'];
         var currentTable = null;
@@ -228,21 +227,18 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                   $scope.temp.push(result);
             });
     }
-    $scope.metricCols=[];
+    
     $scope.toggleColumnSelection = function(columnName, index){
-        //console.log(index)
             if($scope.selectedCols.indexOf(columnName) == -1) {
                 $scope.selectedCols.push(columnName);
                 $scope.metricCols.push(columnName);
-                var sel = document.querySelectorAll('col#'+columnName)[0].className='active';
+                //var sel = document.querySelectorAll('col#'+columnName)[0].className='active';
               }else{
                 var index = $scope.selectedCols.indexOf(columnName);
                 $scope.selectedCols.splice(index, 1);
                 $scope.metricCols.splice(index, 1);
-                var sel = document.querySelectorAll('col#'+columnName)[0].classList.remove('active');
+                //var sel = document.querySelectorAll('col#'+columnName)[0].classList.remove('active');
               }
-        //console.log($scope.selectedCols);
-           // console.log(document.querySelectorAll('col#'+columnName));
            if($scope.selectedCols.length > 0){
                 $scope.isColumnSelected =true;
            }else{
@@ -332,40 +328,38 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             "metric": $scope.metricCols[0],
             "objective":$scope.objective == '' ? 'defult' :$scope.objective,
             "optionalConf":{
-                "attributes": $scope.selectedCols
+                "attributes": $scope.kpiData,
+                "predicate":$scope.outlierFilter == '' ? undefined : $scope.outlierFilter,
+                "minSupport":$scope.rareEvent.val,
+                "minRatioMetric": $scope.riskRatio.val
             }
         }, function (response) {
             $scope.respTime = (new Date().getTime() - startTime) / 1000;
-            console.log($scope.respTime);
             $scope.deepExplanationList = response.expl.nlgExplanation;
             $scope.hideLoader();
         })
     }
 
-    $scope.runDeepExplaination = function(data, id){
+    $scope.runDeepExplaination = function(data, id, cid){
         $scope.showLoader();
-       /*  $('.auto-panel').resizable(); */
-        var graphId = 'graph' + id
-        var scollable = '#scroll' + id;
-        var tem = eval(data.graphs[0]);
-       // var tem = tem.replace(/^"(.*)"$/, '$1');
-
-          
-        /*   tem = JSON.parse(tem); */
-        $scope.addAreaChart(tem, graphId);
-        /* if(data.graphs[0].graphType == 'area'){
-           
-            $(scollable).resizable({
+        var graphId = 'graph' + id + cid;
+       /*  var scollable = '#scroll' + id + cid; */
+        var data = eval(data);
+        if(data.p.graphType == 'area'){
+           /*  $(scollable).resizable({
                 stop: function( event, ui ) { 
                     $scope.resize= true;
                     $scope.addAreaChart(data, graphId);
                 }
-            });
+            }); */
             $scope.addAreaChart(data, graphId);
         }
-        else{
+        else if(data.p.graphType == 'bar'){
             $scope.addBarChart(data, graphId);
-        } */
+        } 
+        else if(data.p.graphType == 'line'){
+            $scope.addLineChart(data, graphId);
+        }
         $scope.hideLoader();
     }
 
@@ -418,46 +412,41 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         }, function (response) {
             $('#myModal').modal('show')
            /*  $('#myModal').modal('toggle') */
-            $scope.selectedCols =[];
+            $scope.kpiData =[];
             if(response.kpidata[0].pearsonfeatures != undefined && response.kpidata[0].pearsonfeatures != null && response.kpidata[0].pearsonfeatures.length > 0){
                 angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {
-                    $scope.selectedCols.push(key.predictorname);
+                    $scope.kpiData.push(key.predictorname);
                 })
             }
             if(response.kpidata[0].chisquarefeatures != undefined && response.kpidata[0].chisquarefeatures != null && response.kpidata[0].chisquarefeatures.length > 0){
                 angular.forEach(response.kpidata[0].chisquarefeatures, function(key, name) {
-                    $scope.selectedCols.push(key.predictorname);
+                    $scope.kpiData.push(key.predictorname);
                 })
             }
             if(response.kpidata[0].anovafeatures != undefined && response.kpidata[0].anovafeatures != null && response.kpidata[0].anovafeatures.length > 0){
                 angular.forEach(response.kpidata[0].anovafeatures, function(key, name) {
-                    $scope.selectedCols.push(key.predictorname);
+                    $scope.kpiData.push(key.predictorname);
                 })
             }
             $scope.colsForSelection =[]
             angular.forEach($scope.columnList, function(key) {
                 if($scope.colsForSelection.indexOf(key.name) == -1) {
-                    if($scope.selectedCols.indexOf(key.name) == -1) {
+                    if($scope.selectedCols.indexOf(key.name) == -1 && $scope.kpiData.indexOf(key.name) == -1) {
                         $scope.colsForSelection.push(key.name);
                     }
                 }
             })
-        //console.log(response.kpidata[0]);
-             /* $scope.tables = response.results; */
              $scope.hideLoader();
         }, function(err){
             $scope.hideLoader();
         })
-        
-        
-
     }
 
     
     $scope.addColumn = function(column){
         $scope.showLoader();
-        if($scope.selectedCols.indexOf(column) == -1) {
-            $scope.selectedCols.push(column);
+        if($scope.kpiData.indexOf(column) == -1) {
+            $scope.kpiData.push(column);
             var index = $scope.colsForSelection.indexOf(column);
             $scope.colsForSelection.splice(index, 1); 
             $scope.hideLoader();  
@@ -472,8 +461,8 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         $scope.showLoader();
         if($scope.colsForSelection.indexOf(column) == -1) {
             $scope.colsForSelection.push(column);
-            var index = $scope.selectedCols.indexOf(column);
-            $scope.selectedCols.splice(index, 1);  
+            var index = $scope.kpiData.indexOf(column);
+            $scope.kpiData.splice(index, 1);  
             $scope.hideLoader();
         }
     }
@@ -494,15 +483,14 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
       ['2025', 180, 450, 350],
       ['2026', 150, 580, 312]
     ]
+    /* we may not use
     $scope.compileChartData = function(data){
         $scope.compiledData = [];
         $scope.compiledData.push([data.features[0], $scope.metricCols[0]]);
-        
         angular.forEach(data.graphs[0].dataPoints, function(key,value) {
                 $scope.compiledData.push([key.feature, parseFloat(key.metric)]);
         });
-
-    }
+    } */
 
     $scope.addBarChart = function(deepData,id){
         if($scope.resize){
@@ -523,7 +511,13 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             var options = {
             colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
             bars: 'horizontal',
-            legend: { position: 'bottom' }
+            legend: { position: 'bottom' },
+            chartArea: {
+                left: '8%',
+                top: '10',
+                bottom: '80',
+                right: '0'
+            }
             };
             if(deepData){
                 var chart = new google.charts.Bar(document.getElementById(id));
@@ -548,7 +542,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         google.charts.setOnLoadCallback(drawChart);
   
         function drawChart() {
-            var data =new google.visualization.DataTable($scope.rawChartDate,0.6);
+            var data = new google.visualization.DataTable($scope.rawChartDate,0.6);
           /* var data = google.visualization.arrayToDataTable($scope.rawChartDate); */
   
           var options = {
@@ -560,6 +554,12 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             selectionMode: 'multiple',
             pointsVisible : false,
             legend: { position: 'bottom' },
+            chartArea: {
+                left: '8%',
+                top: '10',
+                bottom: '80',
+                right: '0'
+            }
           };
           if(deepData){
             var chart = new google.visualization.AreaChart(document.getElementById(id));
@@ -572,14 +572,17 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         }
     }
 
-    $scope.addPieChart = function(){
+    $scope.addPieChart = function(deepData, id){
         if($scope.resize){
             drawChart();
             $scope.resize = false;
         }
         google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(drawChart);
-  
+        if(deepData){
+            //$scope.compileChartData(deepData);
+            $scope.rawChartDate = deepData;
+        }
         function drawChart() {
   
           var data = google.visualization.arrayToDataTable([
@@ -594,11 +597,22 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
           var options = {
            /*  title: 'My Daily Activities', */
             colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
-            legend: { position: 'bottom' }
+            legend: { position: 'bottom' },
+            chartArea: {
+                left: '8%',
+                top: '10',
+                bottom: '80',
+                right: '0'
+            }
           };
-  
+          if(deepData){
+            var chart = new google.visualization.PieChart(document.getElementById(id));
+            chart.draw(data, options);
+        }else{
+            var chart = new google.visualization.PieChart(document.getElementById('pieChart'));
+          chart.draw(data, options);
+        }
           var chart = new google.visualization.PieChart(document.getElementById('pieChart'));
-  
           chart.draw(data, options);
         }
     }
@@ -618,7 +632,13 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         /*   title: 'Company Performance', */
           curveType: 'function',
           colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
-          legend: { position: 'bottom' }
+          legend: { position: 'bottom' },
+          chartArea: {
+            left: '8%',
+            top: '10',
+            bottom: '80',
+            right: '0'
+        }
         };
 
         var chart = new google.visualization.LineChart(document.getElementById('lineChart'));
@@ -658,6 +678,12 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
           vAxis: {title: 'Fertility Rate'},
           bubble: {textStyle: {fontSize: 10}},
           colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
+          chartArea: {
+            left: '8%',
+            top: '10',
+            bottom: '80',
+            right: '0'
+        }
         };
   
         var chart = new google.visualization.BubbleChart(document.getElementById('bubbleChart'));

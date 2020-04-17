@@ -100,7 +100,7 @@ body{
 }
 #worksheet{
     width : 100%;
-    height: 380px;
+    height: 200px;
     /* min-height: 260px; */
    /*  padding: 0;
     border-bottom: 1px solid #c4dff5; */
@@ -491,7 +491,7 @@ ul.column-list-selected li label{
     margin-top: 20px;
   }
   #barChartContainer, #areaChartContainer, #lineChartContainer, #pieChartContainer, #bubbleChartContainer{
-	width: 400px;
+	width: 47%;
 	height:450px;
 	padding:0.5em;
 	text-align:center;
@@ -500,7 +500,7 @@ ul.column-list-selected li label{
     display: block;
     margin: 10px 10px;
     border-radius: 2px;
-    min-width: 400px;
+    min-width: 310px;
     min-height: 450px;
     position: relative;
     background: #FFF;
@@ -756,7 +756,7 @@ ul.column-list-selected li label{
     }
 
     .graph-description{
-        height: 350px;
+        min-height: 350px;
         position: relative;
     }
     .loader.ng-scope {
@@ -829,5 +829,7 @@ ul.column-list-selected li label{
         width: 38px;
         padding-top: 8px;
     }
-
+.loadingScreen{
+    overflow: hidden !important;
+}
     
