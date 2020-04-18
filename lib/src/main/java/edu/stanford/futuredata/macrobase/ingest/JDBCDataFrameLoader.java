@@ -155,7 +155,7 @@ public class JDBCDataFrameLoader implements DataFrameLoader {
         }
 
         rs.close();
-        df.prettyPrint();
+        //df.prettyPrint();
         System.out.println("===> SCHEMA ======\n" + df.getSchema() );
         return df;
     }

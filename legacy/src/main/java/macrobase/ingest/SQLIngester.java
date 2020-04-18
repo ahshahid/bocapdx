@@ -19,11 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -211,6 +207,27 @@ public abstract class SQLIngester extends DataIngester {
 
     private void initializeConnection() throws SQLException {
         if (connection == null) {
+            // TODO Skip using DropWizard JDBC util as it keeps doing health checks on the connection ..
+            // .. causing too many SQL queries on Spark
+            try {
+                Class.forName("io.snappydata.jdbc.ClientDriver"); // fix later
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
+
+            Properties p = new Properties();
+            if (dbUser != null) {
+                p.setProperty("user", this.dbUser);
+            }
+            if (dbPassword != null) {
+                p.setProperty("password", dbPassword);
+            }
+
+
+            this.connection = DriverManager.getConnection(String.format("%s//%s/%s", getJDBCUrlPrefix(), dbUrl, dbName), p);
+
+            /******
             DataSourceFactory factory = new DataSourceFactory();
 
             factory.setDriverClass(getDriverClass());
@@ -226,6 +243,7 @@ public abstract class SQLIngester extends DataIngester {
 
             source = factory.build(MacroBase.metrics, dbName);
             this.connection = source.getConnection();
+             ******/
         }
     }
 
