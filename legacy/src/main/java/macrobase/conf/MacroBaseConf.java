@@ -84,9 +84,10 @@ public class MacroBaseConf extends Configuration {
     public static final String CLASSIFIER_KEY = "classifier";
     public static final String CUT_OFF_KEY = "cutoff";
     public static final String ATTRIBUTES_KEY = "attributes";
+    public static final String MAX_ORDER = "maxOrder";
     public static final String[] optionalParams = {"inputURI", EXTRA_PRED_KEY, CLASSIFIER_KEY,
         CUT_OFF_KEY, "includeHi", "includeLo", PRED_KEY, ATTRIBUTES_KEY, "ratioMetric",  "minRatioMetric",
-        "minSupport", "maxOrder"};
+        "minSupport", MAX_ORDER};
     public static final String CLASSIFIER_PERCENTILE = "percentile";
     public static final String CLASSIFIER_PRED = "predicate";
     public static final String CLASSIFIER_CMS = "countmeanshift";

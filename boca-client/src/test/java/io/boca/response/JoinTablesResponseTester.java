@@ -219,7 +219,7 @@ public class JoinTablesResponseTester {
                                 HttpContext httpContext, String kpiCol, String[] dependents,
                                 String predicate) throws Exception {
     // deep insifgt fetch
-    String attribs = Arrays.stream(dependents).map(str -> "\"" + str + "\"").limit(20).
+    String attribs = Arrays.stream(dependents).map(str -> "\"" + str + "\"").
             collect(Collectors.joining(","));
     String deepInsightUrl = "http://" + host + ":9090/api/deepInsight";
     HttpPost httpPost = new HttpPost(deepInsightUrl);
@@ -233,7 +233,7 @@ public class JoinTablesResponseTester {
         "{" +
              "\"attributes\":["+attribs +"]" +
         predStr +
-        ",\"minSupport\": 0.0005" +
+        ",\"minSupport\": 0.01, \"minRatioMetric\":1.5, \"maxOrder\":2" +
         "}" +
         "}"
     );
@@ -264,7 +264,7 @@ public class JoinTablesResponseTester {
     JsonNode rootNode = objectMapper.readTree(deepResp);
     ArrayNode arr =  (ArrayNode)rootNode.get("expl").get("nlgExplanation");
     List<String> graphs = new ArrayList<>();
-    for( int i = 0; i < graphs.size(); ++i) {
+    for( int i = 0; i < arr.size(); ++i) {
       JsonNode eachExpl = arr.get(i);
       ArrayNode arrg = (ArrayNode) eachExpl.get("graphs");
       for( int j = 0; j < 1; ++j) {

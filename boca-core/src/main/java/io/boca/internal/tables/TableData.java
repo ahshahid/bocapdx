@@ -625,15 +625,31 @@ public class TableData {
         dataPoints = dataPoints.stream().sorted((tr1, tr2) -> {
           if (isFeatureNumeric) {
             if (isFeatureRange) {
-              return Double.parseDouble(tr1.getCell(0).getCustomProperty("featureLowerBound")) <
-                      Double.parseDouble(tr2.getCell(0).getCustomProperty("featureLowerBound")) ? -1 : 1;
+              double db1 =  Double.parseDouble(tr1.getCell(0).getCustomProperty("featureLowerBound"));
+              double db2 = Double.parseDouble(tr2.getCell(0).getCustomProperty("featureLowerBound"));
+              if (db1 == db2) {
+                return 0;
+              } else {
+                return  db1 < db2 ? -1: 1;
+              }
             } else {
-              return Double.parseDouble(tr1.getCell(0).getFormattedValue()) <
-                      Double.parseDouble(tr2.getCell(0).getFormattedValue()) ? -1: 1;
+              double db1 =  Double.parseDouble(tr1.getCell(0).getFormattedValue());
+              double db2 = Double.parseDouble(tr2.getCell(0).getFormattedValue());
+              if (db1 == db2) {
+                return 0;
+              } else {
+                return  db1 < db2 ? -1: 1;
+              }
+
             }
           } else {
-            return ((NumberValue)tr1.getCell(1).getValue()).getValue() <
-                    ((NumberValue)tr2.getCell(1).getValue()).getValue() ? -1: 1;
+            double db1 =  ((NumberValue)tr1.getCell(1).getValue()).getValue();
+            double db2 = ((NumberValue)tr2.getCell(1).getValue()).getValue();
+            if (db1 == db2) {
+              return 0;
+            } else {
+              return  db1 < db2 ? -1: 1;
+            }
           }
         }).collect(Collectors.toList());
       }
@@ -710,8 +726,12 @@ public class TableData {
           }
           TableCell tc = new TableCell(v, k);
           //tc.setCustomProperty("numElements", String.valueOf(count));
-          tc.setCustomProperty("featureLowerBound", lb);
-          tc.setCustomProperty("featureUpperBound", ub);
+          if (lb != null) {
+            tc.setCustomProperty("featureLowerBound", lb);
+          }
+          if (ub != null) {
+            tc.setCustomProperty("featureUpperBound", ub);
+          }
           TableRow trr = new TableRow();
           trr.addCell(tc);
           return trr;
@@ -733,26 +753,48 @@ public class TableData {
       List<TableRow> dataPoints = keyToRow.values().stream().sorted((tr1, tr2) -> {
         if (isFeatureNumeric) {
           if (isFeatureRange) {
-            return Double.parseDouble(tr1.getCell(0).getCustomProperty("featureLowerBound")) <
-                    Double.parseDouble(tr2.getCell(0).getCustomProperty("featureLowerBound")) ? -1 : 1;
+            double db1 = Double.parseDouble(tr1.getCell(0).getCustomProperty("featureLowerBound"));
+            double db2 = Double.parseDouble(tr2.getCell(0).getCustomProperty("featureLowerBound")) ;
+            if (db1 == db2) {
+              return 0;
+            } else {
+              return  db1 < db2 ? -1: 1;
+            }
+
           } else {
-            return Double.parseDouble(tr1.getCell(0).getFormattedValue()) <
-                    Double.parseDouble(tr2.getCell(0).getFormattedValue()) ? -1: 1;
+            double db1 = Double.parseDouble(tr1.getCell(0).getFormattedValue());
+            double db2 = Double.parseDouble(tr2.getCell(0).getFormattedValue());
+            if (db1 == db2) {
+              return 0;
+            } else {
+              return  db1 < db2 ? -1: 1;
+            }
           }
         } else {
-          return ((NumberValue) tr1.getCell(1).getValue()).getValue() <
-                  ((NumberValue) tr2.getCell(1).getValue()).getValue() ? -1 : 1;
+          double db1 = ((NumberValue) tr1.getCell(1).getValue()).getValue();
+          double db2 = ((NumberValue) tr2.getCell(1).getValue()).getValue();
+          if (db1 == db2) {
+            return 0;
+          } else {
+            return  db1 < db2 ? -1: 1;
+          }
         }
         }).collect(Collectors.toList());
       final DataTable dt = new DataTable();
 
-      ColumnDescription metricDesc = new ColumnDescription("metric",
-              ValueType.NUMBER, metricCol);
+
       ColumnDescription featureDesc = new ColumnDescription("feature",
               (isFeatureNumeric && !isFeatureRange) ? ValueType.NUMBER : ValueType.TEXT, featureCol);
       featureDesc.setCustomProperty("isFeatureRange", Boolean.toString(isFeatureRange));
       dt.addColumn(featureDesc);
-      dt.addColumn(metricDesc);
+      List<String> yCols = kpiValueToIndex.entrySet().stream().sorted((e1, e2) -> e1.getValue().compareTo(e2.getValue())).
+              map(e -> e.getKey()).collect(Collectors.toList());
+      yCols.forEach(kname -> {
+        ColumnDescription metricDesc = new ColumnDescription(kname,
+                ValueType.NUMBER, kname);
+        dt.addColumn(metricDesc);
+      });
+
       dt.addRows(dataPoints);
       dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART);
       return dt;

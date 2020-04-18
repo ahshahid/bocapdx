@@ -97,7 +97,7 @@ public class DeepInsightResource extends BaseResource {
           filter(sc -> sc.getName().
               equalsIgnoreCase(MacroBaseDefaults.BOCA_SHADOW_TABLE_UNBINNED_COL_PREFIX + dir.metric)).
           collect(Collectors.toList());
-      String metricCol = dir.metric;
+      String metricCol = dir.metric.toLowerCase();
       boolean metricColShadowExists = !actualCols.isEmpty();
       if (metricColShadowExists) {
         metricCol = actualCols.get(0).getName();
@@ -182,6 +182,9 @@ public class DeepInsightResource extends BaseResource {
         assert metricColCd.sqlType == Types.DOUBLE;
         optionalConf.put(MacroBaseConf.CLASSIFIER_KEY, MacroBaseConf.CLASSIFIER_PERCENTILE);
       }
+      if (!optionalConf.containsKey(MacroBaseConf.MAX_ORDER)) {
+        optionalConf.put(MacroBaseConf.MAX_ORDER, 2);
+      }
       List<String> attributes = (List<String>)optionalConf.getOrDefault(
           MacroBaseConf.ATTRIBUTES_KEY, Collections.emptyList());
       if (attributes.isEmpty()) {
@@ -196,7 +199,7 @@ public class DeepInsightResource extends BaseResource {
       optionalConf.put(MacroBaseConf.PROVIDED_CONN_KEY, ingester.getConnection());
       optionalConf.put(MacroBaseConf.SUMMARIZER_KEY, "apriori");
       optionalConf.put(MacroBaseConf.WORKFLOWID_KEY, dir.workflowid);
-      optionalConf.put(MacroBaseConf.ORIGINAL_METRIC_COL_KEY, dir.metric);
+      optionalConf.put(MacroBaseConf.ORIGINAL_METRIC_COL_KEY, dir.metric.toLowerCase());
       /*
       if (optionalConf.containsKey(MacroBaseConf.EXTRA_PRED_KEY)) {
         String extraPred = (String)optionalConf.get(MacroBaseConf.EXTRA_PRED_KEY);
