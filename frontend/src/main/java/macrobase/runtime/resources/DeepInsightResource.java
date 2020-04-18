@@ -285,7 +285,7 @@ public class DeepInsightResource extends BaseResource {
       }
 
       public void visit(Column column) {
-        results[0] = column.getColumnName();
+        results[0] = column.getColumnName().toLowerCase();
       }
 
       public void visit(IsNullExpression expr) {
