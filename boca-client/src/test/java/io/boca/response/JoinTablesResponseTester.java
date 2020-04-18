@@ -44,6 +44,7 @@ public class JoinTablesResponseTester {
     HttpPost httpPost = null;
     HttpGet httpGet = null;
     final String kpiCol = "Churn";//"telecom_churn_billing_churn";
+    final String pred = "churn = 1";
     try {
       CookieStore cookieStore = new BasicCookieStore();
       HttpContext httpContext = new BasicHttpContext();
@@ -131,7 +132,7 @@ public class JoinTablesResponseTester {
 
       String [] dependentCols = fastInsightFetch(workflowid, client, httpContext, kpiCol);
 
-      deepInsightFetch(workflowid, client, httpContext, kpiCol, dependentCols);
+      deepInsightFetch(workflowid, client, httpContext, kpiCol, dependentCols, pred);
      // graphFetch(workflowid, client, httpContext, "avgrev", "avgmou", 0);
 
 
@@ -215,19 +216,24 @@ public class JoinTablesResponseTester {
   }
 
   private void deepInsightFetch(int workflowid, HttpClient client,
-                                HttpContext httpContext, String kpiCol, String[] dependents) throws Exception {
+                                HttpContext httpContext, String kpiCol, String[] dependents,
+                                String predicate) throws Exception {
     // deep insifgt fetch
-    String attribs = Arrays.stream(dependents).map(str -> "\"" + str + "\"").
+    String attribs = Arrays.stream(dependents).map(str -> "\"" + str + "\"").limit(20).
             collect(Collectors.joining(","));
     String deepInsightUrl = "http://" + host + ":9090/api/deepInsight";
     HttpPost httpPost = new HttpPost(deepInsightUrl);
     httpPost.addHeader("content-type", "application/json;charset=UTF-8");
+    String predStr = "";
+    if (predicate != null) {
+      predStr = ",\"predicate\":\""+predicate +"\"" ;
+    }
     StringEntity data = new StringEntity("{\"workflowid\":" + workflowid +", \"metric\":\"" + kpiCol +"\", \"objective\":\"xxx\"," +
         "\"optionalConf\":" +
         "{" +
              "\"attributes\":["+attribs +"]" +
-       // "\"predicate\":\"telecom_churn_networkq_churn = 0\"," +
-       // "\"minSupport\": 0.0001" +
+        predStr +
+        ",\"minSupport\": 0.0005" +
         "}" +
         "}"
     );
@@ -258,7 +264,7 @@ public class JoinTablesResponseTester {
     JsonNode rootNode = objectMapper.readTree(deepResp);
     ArrayNode arr =  (ArrayNode)rootNode.get("expl").get("nlgExplanation");
     List<String> graphs = new ArrayList<>();
-    for( int i = 0; i < 1; ++i) {
+    for( int i = 0; i < graphs.size(); ++i) {
       JsonNode eachExpl = arr.get(i);
       ArrayNode arrg = (ArrayNode) eachExpl.get("graphs");
       for( int j = 0; j < 1; ++j) {
