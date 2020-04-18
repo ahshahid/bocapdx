@@ -31,11 +31,13 @@ public class MacroBaseApplication extends Application<MacroBaseConf> {
     public void run(MacroBaseConf configuration,
                     Environment environment) throws Exception {
         configuration.loadSystemProperties();
-        environment.healthChecks().register("basic", new HealthCheck() {
+        //TODO ... disabling health checks as Spark SQL DB is bombarded with 'Select 1' queries .. Fix later.
+/***        environment.healthChecks().register("basic", new HealthCheck() {
             @Override
             protected Result check() throws Exception {
                 return null;
             }
         });
+ ****/
     }
 }

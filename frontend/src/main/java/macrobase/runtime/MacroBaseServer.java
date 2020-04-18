@@ -56,12 +56,14 @@ public class MacroBaseServer extends Application<MacroBaseConf> {
         environment.jersey().register(new FastInsightResource(configuration));
         environment.jersey().register(new DeepInsightResource(configuration));
         environment.jersey().register(new GraphResource(configuration));
-        environment.healthChecks().register("basic", new HealthCheck() {
+        //TODO ... disabling health checks as Spark SQL DB is bombarded with 'Select 1' queries .. Fix later.
+/****        environment.healthChecks().register("basic", new HealthCheck() {
             @Override
             protected Result check() throws Exception {
                 return null;
             }
         });
+ ****/
         environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(new LoggingFeature(java.util.logging.Logger.getLogger(LoggingFeature.DEFAULT_LOGGER_NAME), Level.SEVERE, LoggingFeature.Verbosity.PAYLOAD_ANY,
                 1000));
