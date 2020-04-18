@@ -79,7 +79,7 @@ public class BasicBatchPipeline implements Pipeline {
         }
 
         pctileHigh = conf.get("includeHi",true);
-        pctileLow = conf.get("includeLo", true);
+        pctileLow = conf.get("includeLo", false);
         predicateStr = conf.get("predicate", "==").trim();
 
         summarizerType = conf.get("summarizer", "apriori");
