@@ -664,7 +664,7 @@ public class TableData {
       dt.addColumn(metricDesc);
 
       dt.addRows(dataPoints);
-      dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART);
+      dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART :  BAR_CHART/* isFeatureRange ? HISTOGRAM : BAR_CHART*/);
       return dt;
     } else if (!metricColCd.skip && metricColCd.ft.equals(FeatureType.categorical)) {
       String query = String.format(QUERY_DEEP_METRIC_CAT, featureCol, metricCol, tableName);
@@ -796,7 +796,7 @@ public class TableData {
       });
 
       dt.addRows(dataPoints);
-      dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART : isFeatureRange ? HISTOGRAM : BAR_CHART);
+      dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART :  BAR_CHART/*isFeatureRange ? HISTOGRAM : BAR_CHART*/);
       return dt;
     }
     return null;
