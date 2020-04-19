@@ -510,7 +510,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
 
             var options = {
             colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
-            bars: 'horizontal',
+            bars: 'vertical',
             legend: { position: 'bottom' },
             chartArea: {
                 left: '8%',

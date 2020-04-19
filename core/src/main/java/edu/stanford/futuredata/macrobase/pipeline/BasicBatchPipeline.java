@@ -238,7 +238,7 @@ public class BasicBatchPipeline implements Pipeline {
                 getExplanationAsDataFrame(output), true);
             SimpleExplanationNLG e = new SimpleExplanationNLG(conf, (APLExplanation)output, outputTable,
                 metric, this.getConnection(), workflowid, this.originalMetricCol);
-            System.out.println(e.prettyPrint());
+            //System.out.println(e.prettyPrint());
             return e;
         } else {
             return output;

@@ -62,6 +62,7 @@ public class SimpleExplanationNLG implements Explanation {
         try {
             return this.explainAsHeader(false);
         } catch (Exception e) {
+            e.printStackTrace();
             return "Error in getting NLG text";
         }
     }
