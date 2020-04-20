@@ -192,6 +192,9 @@ public class DeepInsightResource extends BaseResource {
             filter(sc -> !sc.getName().equalsIgnoreCase(dir.metric)).map(sc -> sc.getName()).
             collect(Collectors.toList());
        optionalConf.put(MacroBaseConf.ATTRIBUTES_KEY, allProj);
+      } else {
+        optionalConf.put(MacroBaseConf.ATTRIBUTES_KEY,attributes.stream().
+                map(x -> x.toLowerCase()).collect(Collectors.toList()));
       }
 
       optionalConf.put(MacroBaseConf.BASE_TABLE_KEY, tableName);
