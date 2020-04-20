@@ -323,11 +323,11 @@
                 <p class="more"><a class="more-link">Explain Further</a></p>
             </div>
           </div>
+
           <div class="auto-panel" id="scroll{{$index}}">
             <div class="charts-details">
               <div class="discription graph-description">
-              <!-- <p>{{deepEx.graphs}}</p> -->
-              <div ng-repeat="graph in deepEx.graphs"  ng-init="runDeepExplaination(graph, $parent.$index, $index)" id="graph{{$parent.$index}}{{$index}}" style="width: 100%; min-height: 350px;"></div>
+              <div ng-repeat="graph in deepEx.graphs"  ng-init="runDeepExplaination(graph, $parent.$index, $index)" id="graph{{$parent.$index}}_{{$index}}" style="width: 100%; min-height: 350px;"></div>
               <p class="more"><a class="more-link">Explain Further</a></p>
               </div>
                 <div class="controls">
