@@ -133,7 +133,8 @@ public abstract class SQLIngester extends DataIngester {
                 tables.add(tableOrView);
             }
         }
-        return tables;
+        tables.sort((t1, t2) -> t1.compareTo(t2));
+        return  tables;
     }
 
     public String getRowsSql(String baseQuery,
