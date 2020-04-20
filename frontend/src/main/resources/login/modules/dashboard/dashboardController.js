@@ -342,7 +342,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
 
     $scope.runDeepExplaination = function(data, id, cid){
         $scope.showLoader();
-        var graphId = 'graph' + id + cid;
+        var graphId = 'graph' + id + '_' + cid;
        /*  var scollable = '#scroll' + id + cid; */
         var data = eval(data);
         if(data.p.graphType == 'area'){
@@ -502,10 +502,13 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             $scope.rawChartDate = deepData;
         }
         google.charts.load('current', {'packages':['bar']});
-        google.charts.setOnLoadCallback(drawChart);
+        //google.charts.setOnLoadCallback(drawChart);
+        google.setOnLoadCallback(function() { drawChart(deepData); });
 
-        function drawChart() {
-            var data = new google.visualization.DataTable($scope.rawChartDate,0.6);
+        //function drawChart() {
+        function drawChart(datum) {
+            //var data = new google.visualization.DataTable($scope.rawChartDate,0.6);
+            var data = new google.visualization.DataTable(datum,0.6);
             /* var data = google.visualization.arrayToDataTable($scope.rawChartDate); */
 
             var options = {
@@ -539,12 +542,15 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             $scope.rawChartDate = deepData;
         }
         google.charts.load('current', {'packages':['corechart']});
-        google.charts.setOnLoadCallback(drawChart);
-  
-        function drawChart() {
-            var data = new google.visualization.DataTable($scope.rawChartDate,0.6);
-          /* var data = google.visualization.arrayToDataTable($scope.rawChartDate); */
-  
+        //google.charts.setOnLoadCallback(drawChart);
+        google.setOnLoadCallback(function() { drawChart(deepData); });
+
+        //function drawChart() {
+        function drawChart(datum) {
+            //var data = new google.visualization.DataTable($scope.rawChartDate,0.6);
+            var data = new google.visualization.DataTable(datum,0.6);
+            /* var data = google.visualization.arrayToDataTable($scope.rawChartDate); */
+
           var options = {
            /*  title: 'Company Performance', */
            /*  hAxis: {title: 'Year',  titleTextStyle: {color: '#333'}},
@@ -568,7 +574,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             var chart = new google.visualization.AreaChart(document.getElementById('areaChart'));
             chart.draw(data, options);
         }
-          
+
         }
     }
 
