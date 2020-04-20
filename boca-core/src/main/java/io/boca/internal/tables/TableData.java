@@ -648,8 +648,12 @@ public class TableData {
         }
         TableCell tc = new TableCell(v, key);
         tc.setCustomProperty("numElements", String.valueOf(count));
-        tc.setCustomProperty("featureLowerBound", lb);
-        tc.setCustomProperty("featureUpperBound", ub);
+        if (lb != null) {
+          tc.setCustomProperty("featureLowerBound", lb);
+        }
+        if (ub != null) {
+          tc.setCustomProperty("featureUpperBound", ub);
+        }
         tr.addCell(tc);
         tr.addCell(avg);
         dataPoints.add(tr);
