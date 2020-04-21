@@ -100,11 +100,10 @@ public class TableData {
       "     val part2 = Array.ofDim[Any](colsToModifyIndexes.length);" +
       "     val newSeq = Seq.tabulate[Any](schema.length)(i => if (j < sortedColsToModifyIndexes.length " +
       "                             && i == sortedColsToModifyIndexes(j)) {" +
-      "           val binValue = row.getDouble(schema.length + j); " +
-      "           val splits = bucketizers(j).getSplits; " +
-      "           part2(j) = row(i); " +
-      "         /* val doubl = splits(binValue.toInt);" +
-      "           (doubl * 10000).round / 10000.toDouble; */  " +
+      "           if (!row.isNullAt(schema.length + j)) {" +
+      "             val binValue = row.getDouble(schema.length + j); " +
+      "             val splits = bucketizers(j).getSplits; " +
+      "             part2(j) = row(i); " +
       "             val lb = if (binValue.toInt == 0) {" +
       "                   minMaxRow.getDouble(j*2); " +
       "                } else {" +
@@ -118,14 +117,11 @@ public class TableData {
       "                      if (binValue.toInt == splits.length-1) {" +
       "                        throw new RuntimeException(\"unexpected bin count\");" +
       "                       };" +
-      "           /*   if (lb.isNegInfinity) {" +
-      "                  lb = minMaxRow.getDouble(2*j);" +
-      "               }; " +
-      "              if (ub.isPosInfinity) {" +
-      "                  ub = minMaxRow.getDouble(2*j + 1);" +
-      "               }; */" +
       "              j += 1;" +
       "              s\"$lb - $ub\";" +
+      "            } else {" +
+                      "\"null\";" +
+      "            }" +
       "        } else {" +
       "          row(i);" +
       "        }" +
@@ -627,17 +623,28 @@ public class TableData {
         long count = rs.getLong(1);
         double avg = rs.getDouble(2);
         String key = null;
-        String lb = null;
-        String ub = null;
+        final String lb ;
+        final String ub ;
 
         if (featureColType == Types.VARCHAR) {
           key = rs.getString(3);
           if (isFeatureNumeric && isFeatureRange) {
-            lb = key.substring(0, key.indexOf(" - ")).trim();
-            ub = key.substring(key.indexOf(" - ")).trim();
+            int indx = key.indexOf(" - ");
+            if (indx != -1) {
+              lb = key.substring(0, indx).trim();
+              ub = key.substring(indx).trim();
+            } else {
+              lb = null;
+              ub = null;
+            }
+          } else {
+            lb = null;
+            ub = null;
           }
         } else {
           key = rs.getObject(3).toString();
+          lb = null;
+          ub = null;
         }
         TableRow tr = new TableRow();
 
@@ -664,30 +671,66 @@ public class TableData {
         dataPoints = dataPoints.stream().sorted((tr1, tr2) -> {
           if (isFeatureNumeric) {
             if (isFeatureRange) {
-              double db1 =  Double.parseDouble(tr1.getCell(0).getCustomProperty("featureLowerBound"));
-              double db2 = Double.parseDouble(tr2.getCell(0).getCustomProperty("featureLowerBound"));
-              if (db1 == db2) {
-                return 0;
+              String lb1 = tr1.getCell(0).getCustomProperty("featureLowerBound");
+              String lb2 = tr2.getCell(0).getCustomProperty("featureLowerBound");
+              if (lb1 != null && lb2 != null) {
+                double db1 = Double.parseDouble(lb1);
+                double db2 = Double.parseDouble(lb2);
+                if (db1 == db2) {
+                  return 0;
+                } else {
+                  return db1 < db2 ? -1 : 1;
+                }
               } else {
-                return  db1 < db2 ? -1: 1;
+                if (lb1 == lb2) {
+                  return 0;
+                } else if (lb1 == null) {
+                  return 1;
+                } else {
+                  return  -1;
+                }
               }
             } else {
-              double db1 =  Double.parseDouble(tr1.getCell(0).getFormattedValue());
-              double db2 = Double.parseDouble(tr2.getCell(0).getFormattedValue());
-              if (db1 == db2) {
-                return 0;
+              String k1 = tr1.getCell(0).getFormattedValue();
+              String k2 = tr2.getCell(0).getFormattedValue();
+              if (!(k1.equals("null") || k2.equals("null"))) {
+                double db1 = Double.parseDouble(k1);
+                double db2 = Double.parseDouble(k2);
+                if (db1 == db2) {
+                  return 0;
+                } else {
+                  return db1 < db2 ? -1 : 1;
+                }
               } else {
-                return  db1 < db2 ? -1: 1;
+                if (k1.equals(k2)) {
+                  return 0;
+                } else if (k1.equals("null")) {
+                  return 1;
+                } else {
+                  return  -1;
+                }
               }
 
             }
           } else {
-            double db1 =  ((NumberValue)tr1.getCell(1).getValue()).getValue();
-            double db2 = ((NumberValue)tr2.getCell(1).getValue()).getValue();
-            if (db1 == db2) {
-              return 0;
+            NumberValue k1 = (NumberValue)tr1.getCell(1).getValue();
+            NumberValue k2 = (NumberValue)tr2.getCell(1).getValue();
+            if (!(k1.isNull() || k2.isNull())) {
+              double db1 = k1.getValue();
+              double db2 = k2.getValue();
+              if (db1 == db2) {
+                return 0;
+              } else {
+                return db1 < db2 ? -1 : 1;
+              }
             } else {
-              return  db1 < db2 ? -1: 1;
+              if (k1.isNull() && k2.isNull()) {
+                return 0;
+              } else if (k1.isNull()) {
+                return 1;
+              } else {
+                return  -1;
+              }
             }
           }
         }).collect(Collectors.toList());
@@ -743,8 +786,14 @@ public class TableData {
         if (featureColType == Types.VARCHAR) {
           key = rs.getString(2);
           if (isFeatureNumeric && isFeatureRange) {
-            lb = key.substring(0, key.indexOf(" - ")).trim();
-            ub = key.substring(key.indexOf(" - ")).trim();
+            int indx = key.indexOf(" - ");
+            if (indx != -1) {
+              lb = key.substring(0, indx).trim();
+              ub = key.substring(indx).trim();
+            } else {
+              ub = null;
+              lb = null;
+            }
           } else {
             ub = null;
             lb = null;
@@ -792,31 +841,66 @@ public class TableData {
       List<TableRow> dataPoints = keyToRow.values().stream().sorted((tr1, tr2) -> {
         if (isFeatureNumeric) {
           if (isFeatureRange) {
-            double db1 = Double.parseDouble(tr1.getCell(0).getCustomProperty("featureLowerBound"));
-            double db2 = Double.parseDouble(tr2.getCell(0).getCustomProperty("featureLowerBound")) ;
-            if (db1 == db2) {
-              return 0;
+            String lb1 = tr1.getCell(0).getCustomProperty("featureLowerBound");
+            String lb2 = tr2.getCell(0).getCustomProperty("featureLowerBound");
+            if (lb1 != null && lb2 != null) {
+              double db1 = Double.parseDouble(lb1);
+              double db2 = Double.parseDouble(lb2);
+              if (db1 == db2) {
+                return 0;
+              } else {
+                return db1 < db2 ? -1 : 1;
+              }
             } else {
-              return  db1 < db2 ? -1: 1;
+              if (lb1 == lb2) {
+                return 0;
+              } else if (lb1 == null) {
+                return 1;
+              } else {
+                return  -1;
+              }
             }
-
           } else {
-            double db1 = Double.parseDouble(tr1.getCell(0).getFormattedValue());
-            double db2 = Double.parseDouble(tr2.getCell(0).getFormattedValue());
-            if (db1 == db2) {
-              return 0;
+            String k1 = tr1.getCell(0).getFormattedValue();
+            String k2 = tr2.getCell(0).getFormattedValue();
+            if (!(k1.equals("null") || k2.equals("null"))) {
+              double db1 = Double.parseDouble(k1);
+              double db2 = Double.parseDouble(k2);
+              if (db1 == db2) {
+                return 0;
+              } else {
+                return db1 < db2 ? -1 : 1;
+              }
             } else {
-              return  db1 < db2 ? -1: 1;
+              if (k1.equals(k2)) {
+                return 0;
+              } else if (k1.equals("null")) {
+                return 1;
+              } else {
+                return  -1;
+              }
             }
           }
         } else {
-          double db1 = ((NumberValue) tr1.getCell(1).getValue()).getValue();
-          double db2 = ((NumberValue) tr2.getCell(1).getValue()).getValue();
-          if (db1 == db2) {
-            return 0;
+          NumberValue k1 = (NumberValue)tr1.getCell(1).getValue();
+          NumberValue k2 = (NumberValue)tr2.getCell(1).getValue();
+          if (!(k1.isNull() || k2.isNull())) {
+            double db1 = k1.getValue();
+            double db2 = k2.getValue();
+            if (db1 == db2) {
+              return 0;
+            } else {
+              return db1 < db2 ? -1 : 1;
+            }
           } else {
-            return  db1 < db2 ? -1: 1;
-          }
+            if (k1.isNull() && k2.isNull()) {
+              return 0;
+            } else if (k1.isNull()) {
+              return 1;
+            } else {
+              return  -1;
+            }
+          }          
         }
         }).collect(Collectors.toList());
       final DataTable dt = new DataTable();
