@@ -307,13 +307,13 @@
         </div>
         <!-- Charts Section start-->
         <div class="chart-panel ">
-          <h4 style="margin-left: 10px;">We looked into {{rowCount}} rows of data in {{respTime}} secs to find out results on 8 factors affecting the most.</h4>
+          <h4 style="margin-left: 10px;">{{deepExplanationHeader}}</h4>
           <a class="link-share"><img src="../../assets/Icon 3_Left Nav_Metabase.png" width="30px"> </a>
           <div ng-repeat="deepEx in deepExplanationList track by $index">
-          <div class="auto-panel">
+          <!-- <div class="auto-panel">
             <div class="charts-details">
               <div class="discription">
-              <p class="deep-p">{{deepEx.explanationStr}}</p>
+                <p class="deep-p">{{deepEx.explanationStr}}</p>
               </div>
                 <div class="controls">
                   <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
@@ -322,11 +322,12 @@
                 </div>
                 <p class="more"><a class="more-link">Explain Further</a></p>
             </div>
-          </div>
+          </div> -->
 
           <div class="auto-panel" id="scroll{{$index}}">
             <div class="charts-details">
               <div class="discription graph-description">
+                <p class="deep-p">{{deepEx.explanationStr}}</p>
               <div ng-repeat="graph in deepEx.graphs"  ng-init="runDeepExplaination(graph, $parent.$index, $index)" id="graph{{$parent.$index}}_{{$index}}" style="width: 100%; min-height: 350px;"></div>
               <p class="more"><a class="more-link">Explain Further</a></p>
               </div>
@@ -359,12 +360,13 @@
             <h4 ng-if="deepExplanation" class="modal-title" id="myModalLabel">Deep Explanations based on</h4>
           </div>
           <div class="modal-body">
-            <div class="column">
+            <p class="pop-head">We selected the following columns based on correlations to the desired outcome ...</p>
+            <!-- <div class="column">
               <h3>Available Columns</h3>
               </div>
               <div class="column mar-left-4">
                 <h3>Selected Columns</h3>
-                </div>
+                </div> -->
             <!-- <input type="text" style="margin-top: 0; margin-bottom: 15px;" placeholder="Search Columns" class="theme-style"> -->
            <div class="column">
              <ul class="column-list">

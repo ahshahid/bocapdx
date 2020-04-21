@@ -786,8 +786,10 @@ ul.column-list-selected li label{
     }
     .chart-panel h4 {
         display: block;
-        width: calc(100% - 100px);
+        width: calc(100% - 70px);
         float: left;
+        font-size: 15px;
+        text-align: justify;
     }
     .chart-panel a.link-share{
         display: block;
@@ -832,4 +834,8 @@ ul.column-list-selected li label{
 .loadingScreen{
     overflow: hidden !important;
 }
-    
+.pop-head{
+    font-size: 16px;
+    font-weight: 100;
+    margin-top: 20px;
+}
