@@ -233,7 +233,7 @@ public class BasicBatchPipeline implements Pipeline {
         //TODO : Hack ... this savetoDB needs to be somewhere else ...
         Connection conn = getConnection();
         if (conn != null){
-            String outputTable = baseTable + "_Explained";
+            String outputTable = baseTable + "_explained";
             saveDataFrameToJDBC(conn, outputTable,
                 getExplanationAsDataFrame(output), true);
             SimpleExplanationNLG e = new SimpleExplanationNLG(conf, (APLExplanation)output, outputTable,

@@ -91,6 +91,7 @@ public class TableData {
       "foldLeft[(DataFrame, Seq[Bucketizer])](dfToOp -> Seq.empty[Bucketizer])((tup, elem) => {" +
       "        val bc =  new QuantileDiscretizer().setInputCol(dfToOpSchema(elem).name)." +
       "   setOutputCol(dfToOpSchema(elem).name + \"_binnum\").setNumBuckets(modColIndexToBuckets.get(elem).get).fit(tup._1);" +
+      "   bc.setHandleInvalid(\"keep\");" +
       "   val newDf = bc.transform(tup._1);" +
       "   newDf -> (tup._2 :+ (bc));" +
       "});" +
