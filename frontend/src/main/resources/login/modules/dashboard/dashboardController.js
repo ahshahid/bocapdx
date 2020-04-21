@@ -82,8 +82,9 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
            $scope.tableName = table;
            $scope.clearColumnSelection();
            $scope.worksheet=true;
-          var temp =[];
+   
           $scope.createJsonForSchema(table);
+          if($scope.tableList.length > 0){
             ApiFactory.schema.save({
                 table: $scope.jsonSchema
             }, function (response) {
@@ -129,6 +130,10 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             }, function(err){
                 $scope.hideLoader();
             });
+        }else{
+            $scope.toggleTableSelection(table);
+            $scope.hideLoader();
+        }
             
            
 
@@ -182,6 +187,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                     if($scope.workSheetTables.length == 0){
                         $scope.schemaCols = {};
                         $scope.isColumnSelected = false;
+                        $scope.tableList =[];
                     }
                 }
             }
@@ -320,6 +326,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
 
     }
     $scope.deepExplanationList = [];
+    $scope.deepExplanationHeader ='';
     $scope.getDeepExplaination = function(){
         $scope.showLoader();
         var startTime = new Date().getTime();
@@ -336,6 +343,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         }, function (response) {
             $scope.respTime = (new Date().getTime() - startTime) / 1000;
             $scope.deepExplanationList = response.expl.nlgExplanation;
+            $scope.deepExplanationHeader = response.expl.header;
             $scope.hideLoader();
         })
     }
