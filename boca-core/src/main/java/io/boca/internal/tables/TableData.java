@@ -900,7 +900,7 @@ public class TableData {
             } else {
               return  -1;
             }
-          }          
+          }
         }
         }).collect(Collectors.toList());
       final DataTable dt = new DataTable();
@@ -1058,7 +1058,7 @@ public class TableData {
           if (numBuckets > 1000000) {
             numBuckets = 1000;
           }
-          //numBuckets = 50;
+          numBuckets = 50;
          /* long criteria = (TableData.this.totalRows * (numCatCriteria- 1)) / 100;
           // range exceeds the max distinct criteria by
           long excess = range - criteria;*/
