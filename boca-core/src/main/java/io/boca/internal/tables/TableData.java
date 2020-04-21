@@ -105,12 +105,20 @@ public class TableData {
       "             val splits = bucketizers(j).getSplits; " +
       "             part2(j) = row(i); " +
       "             val lb = if (binValue.toInt == 0) {" +
-      "                   minMaxRow.getDouble(j*2); " +
+      "                   if (!minMaxRow.isNullAt(j*2)) {" +
+      "                     minMaxRow.getDouble(j*2); " +
+      "                   } else { " +
+      "                      null;" +
+      "                   }" +
       "                } else {" +
       "                   splits(binValue.toInt);" +
       "                };" +
       "              var ub = if (binValue.toInt == splits.length - 2) {" +
-      "                          minMaxRow.getDouble(2*j + 1);  " +
+      "                          if (!minMaxRow.isNullAt(j*2 + 1)) {" +
+      "                             minMaxRow.getDouble(2*j + 1);  " +
+      "                          } else {" +
+      "                            null;" +
+      "                           }" +
       "                       } else {" +
       "                          splits(binValue.toInt + 1);" +
       "                        };" +
@@ -118,11 +126,15 @@ public class TableData {
       "                        throw new RuntimeException(\"unexpected bin count\");" +
       "                       };" +
       "              j += 1;" +
-      "              s\"$lb - $ub\";" +
+      "               if (lb != null && ub != null) {" +
+      "                  s\"$lb - $ub\";" +
+      "               } else {" +
+      "                   \"null\";" +
+      "               }" +
       "            } else {" +
       "               part2(j) = row(i);" +
       "                j += 1;" +
-                      "\"null\";" +
+      "                \"null\";" +
       "            }" +
       "        } else {" +
       "          row(i);" +
