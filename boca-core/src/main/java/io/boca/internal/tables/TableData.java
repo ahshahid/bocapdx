@@ -120,7 +120,7 @@ public class TableData {
       "              j += 1;" +
       "              s\"$lb - $ub\";" +
       "            } else {" +
-      "               part2(j) = row(i); \"" +
+      "               part2(j) = row(i);" +
       "                j += 1;" +
                       "\"null\";" +
       "            }" +
