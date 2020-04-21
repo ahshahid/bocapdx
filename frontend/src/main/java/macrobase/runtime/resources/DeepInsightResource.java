@@ -137,28 +137,8 @@ public class DeepInsightResource extends BaseResource {
         if (metricColShadowExists) {
           // this means that actual metric column in prepped table is of data type double, irrespective of type in
           // actual table
-
-          // actual data type in base table
-          if (cutoff != null && cutoff instanceof  String) {
-            if (metricColCd.sqlType == Types.INTEGER) {
-              newCutOff = Double.valueOf(Integer.parseInt((String)cutoff));
-            } else if (metricColCd.sqlType == Types.BIGINT) {
-              newCutOff = Double.valueOf(Long.parseLong((String)cutoff));
-            }
-            else if (metricColCd.sqlType == Types.FLOAT || metricColCd.sqlType == Types.REAL) {
-              newCutOff = Double.valueOf(Float.parseFloat((String)cutoff));
-            } else if (metricColCd.sqlType == Types.DOUBLE) {
-              newCutOff = Double.parseDouble((String)cutoff);
-            }
-          } else if (cutoff != null) {
-            if (cutoff instanceof  Integer) {
-              newCutOff = ((Integer)cutoff).doubleValue();
-            } else if (cutoff instanceof  Long) {
-              newCutOff = ((Long)cutoff).doubleValue();
-            }
-            else if (cutoff instanceof  Float) {
-              newCutOff = ((Float)cutoff).doubleValue();
-            }
+          if (cutoff != null) {
+            newCutOff = convertToDouble(cutoff);
           }
         } else {
           // cateoriocal column, all to be treated as string
@@ -182,9 +162,23 @@ public class DeepInsightResource extends BaseResource {
         assert metricColCd.sqlType == Types.DOUBLE;
         optionalConf.put(MacroBaseConf.CLASSIFIER_KEY, MacroBaseConf.CLASSIFIER_PERCENTILE);
       }
-      if (!optionalConf.containsKey(MacroBaseConf.MAX_ORDER)) {
-        optionalConf.put(MacroBaseConf.MAX_ORDER, 2);
+      if (!optionalConf.containsKey(MacroBaseConf.MAX_ORDER_KEY)) {
+        optionalConf.put(MacroBaseConf.MAX_ORDER_KEY, 2);
       }
+      if (optionalConf.containsKey(MacroBaseConf.MIN_SUPPORT_KEY)) {
+        Object val = optionalConf.get(MacroBaseConf.MIN_SUPPORT_KEY);
+        val = val != null ?convertToDouble(val) : val;
+        optionalConf.put(MacroBaseConf.MIN_SUPPORT_KEY, val);
+        optionalConf.put(MacroBaseConf.MIN_SUPPORT, val);
+      }
+
+      if (optionalConf.containsKey(MacroBaseConf.MIN_RATIO_KEY)) {
+        Object val = optionalConf.get(MacroBaseConf.MIN_RATIO_KEY);
+        val = val != null ?convertToDouble(val) : val;
+        optionalConf.put(MacroBaseConf.MIN_RATIO_KEY, val);
+        optionalConf.put(MacroBaseConf.MIN_OI_RATIO, val);
+      }
+
       List<String> attributes = (List<String>)optionalConf.getOrDefault(
           MacroBaseConf.ATTRIBUTES_KEY, Collections.emptyList());
       if (attributes.isEmpty()) {
@@ -301,6 +295,44 @@ public class DeepInsightResource extends BaseResource {
 
     return results;
 
+  }
+
+  private static double convertToDouble(Object val) {
+    if (val instanceof  String) {
+      try {
+        return  Double.valueOf(Integer.parseInt((String)val));
+      } catch (Exception e){
+        //ignore
+      }
+      try {
+        return  Double.valueOf(Long.parseLong((String)val));
+      } catch (Exception e){
+        //ignore
+      }
+      try {
+        return  Double.valueOf(Float.parseFloat((String)val));
+      } catch (Exception e){
+        //ignore
+      }
+      try {
+        return  Double.parseDouble((String)val);
+      } catch (Exception e){
+        //ignore
+      }
+      throw new RuntimeException("unable to convert " + val +" to double");
+    } else  {
+      if (val instanceof  Integer) {
+        return  ((Integer)val).doubleValue();
+      } else if (val instanceof  Long) {
+        return ((Long)val).doubleValue();
+      }
+      else if (val instanceof  Float) {
+       return ((Float)val).doubleValue();
+      } else if (val instanceof  Double) {
+        return ((Double)val).doubleValue();
+      }
+      throw new RuntimeException("unable to convert " + val +" to double");
+    }
   }
 }
 
