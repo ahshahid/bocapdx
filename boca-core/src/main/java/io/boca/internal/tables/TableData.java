@@ -120,6 +120,8 @@ public class TableData {
       "              j += 1;" +
       "              s\"$lb - $ub\";" +
       "            } else {" +
+      "               part2(j) = row(i); \"" +
+      "                j += 1;" +
                       "\"null\";" +
       "            }" +
       "        } else {" +
@@ -1058,7 +1060,7 @@ public class TableData {
           if (numBuckets > 1000000) {
             numBuckets = 1000;
           }
-          numBuckets = 50;
+          //numBuckets = 50;
          /* long criteria = (TableData.this.totalRows * (numCatCriteria- 1)) / 100;
           // range exceeds the max distinct criteria by
           long excess = range - criteria;*/
@@ -1182,7 +1184,7 @@ public class TableData {
           FeatureType ft = FeatureType.unknown;
           int percent = totalRows > 0 ?(int)((100 * distinctValues) / totalRows): -1;
           if (percent != -1) {
-            if (percent > 80) {
+            if (percent > 80 || distinctValues > 14900) {
               //skip = true;
               skip = false;
               ft =  this.isShadowTable ? FeatureType.categorical : FeatureType.continuous;
@@ -1255,7 +1257,7 @@ public class TableData {
           FeatureType ft = FeatureType.unknown;
           int percent = totalRows > 0 ?(int)((100 * distinctValues) / totalRows): -1;
           if (percent != -1) {
-            if (percent > 80) {
+            if (percent > 80 || distinctValues > 14900) {
               //skip = true;
               skip = false;
               ft =  this.isShadowTable ? FeatureType.categorical : FeatureType.continuous;
