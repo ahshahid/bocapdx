@@ -211,7 +211,8 @@ public class SimpleExplanationNLG implements Explanation {
 
     private Map<String,String> getColDescriptions(Connection conn) throws Exception{
         String table = BasicBatchPipeline.removeSuffix(outputTable, "_prepped_Explained").toLowerCase();
-        String sql = "Select columnname, description from columnDescriptions where tablename = '" + table + "'";
+       // String sql = "Select columnname, description from columnDescriptions where tablename = '" + table + "'";
+        String sql = "Select columnname, description from columnDescriptions" ;
         RowSet rs = getRows(sql, conn);
         Map<String, String> m = new HashMap<>();
         for (RowSet.Row r: rs.getRows()) {
