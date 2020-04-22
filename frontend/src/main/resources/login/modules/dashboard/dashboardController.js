@@ -256,27 +256,44 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         $scope.selectedCols =[];
     }
 
+    $scope.closeTab = function (tabName){
+        $scope.showLoader();
+        if(tabName == 'influncer'){
+            $scope.influncerTab = false;
+            $scope.influncer = false;
+            $scope.worksheetTab = true;
+            $('#tabId li.active').removeClass('active');
+            $('.worksheetClass').addClass('active');
+            $scope.hideLoader();
+        }
+        else{
+            $scope.deepExplanationTab = false;
+            $scope.deepExplanationTabLink = false;
+            $scope.worksheetTab = true;
+            $('#tabId li.active').removeClass('active');
+            $('.worksheetClass').addClass('active');
+            $scope.hideLoader();
+        }
+    }
+
     $scope.goToTab = function(tabName){
         $scope.showLoader();
         if(tabName == 'worksheet'){
             $scope.influncerTab=false;
             $scope.deepExplanationTab=false;
             $scope.worksheetTab=true;
+            $('#tabId li.active').removeClass('active');
+            $('.worksheetClass').addClass('active');
             $scope.hideLoader();
         }else if(tabName == 'influncer'){
-            $('#influncer').tab('show')
+            $('#tabId li.active').removeClass('active');
+            $('.influcerClass').addClass('active');
             $scope.worksheetTab=false;
             $scope.deepExplanationTab=false;
             $scope.influncerTab=true;
-            $scope.influncer=true;
-            
+            $scope.influncer=true;      
             $('#myModal').modal('hide');
-           /*  $('.auto-panel').resizable({
-                stop: function( event, ui ) { 
-                    $scope.resize= true;
-                    $scope.addBarChart();
-                }
-            }); */
+           
             $('#barChartContainer').resizable({
                 stop: function( event, ui ) { 
                     $scope.resize= true;
@@ -314,13 +331,14 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             $scope.addBubbleChart();
             $scope.hideLoader();
         }else if(tabName == 'deepExplanation'){
-            $('#deepExplanation').tab('show')
             $scope.influncerTab=false;
             $scope.worksheetTab=false;
             $scope.deepExplanationTab =true;
             $scope.deepExplanationTabLink=true;
             $('#myModal').modal('hide');
             $scope.getDeepExplaination();
+            $('#tabId li.active').removeClass('active');
+            $('.deepClass').addClass('active');
             $scope.hideLoader();
         }
 
@@ -640,7 +658,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
       google.charts.setOnLoadCallback(drawChart);
 
       function drawChart() {
-        var data = google.visualization.arrayToDataTable($scope.rawChartDate);
+        var data = new google.visualization.DataTable($scope.rawChartDate);
 
         var options = {
         /*   title: 'Company Performance', */
@@ -671,7 +689,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
   
       function drawSeriesChart() {
   
-        var data = google.visualization.arrayToDataTable([
+        var data = new google.visualization.DataTable([
           ['ID', 'Life Expectancy', 'Fertility Rate', 'Region',     'Population'],
           ['CAN',    80.66,              1.67,      'North America',  33739900],
           ['DEU',    79.84,              1.36,      'Europe',         81902307],

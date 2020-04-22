@@ -53,28 +53,35 @@ body{
     padding-right: 0;
 }
 .login-panel{
-  width: 30%;
   margin: auto;
   display: block;
-  text-align: center;
 }
 .login-panel input {
   height: 40px;
-  margin: 5px;
+  margin: 15px 0px;
   padding-left: 15px;
-  border: 1px solid #fe5c4a;
+  width: 70%;
+  display: block;
+  font-size: 16px;
 }
 .btn-light{
   background: #fe5c4a;
-  margin-top: 30px;
-  padding: 10px 45px;
+  margin-top: 15px;
+  padding: 5px 26px;
+  display: block;
+  color: #fff;
+  font-size: 16px;
 }
 .login-panel-heading{
-  text-align: center;
-    font-size: 30px;
-    margin-bottom: 0px;
-    margin-top: 50px;
-    font-weight: 700;
+  font-size: 22px;
+  margin-top: 150px;
+  font-weight: 700;
+  color: #fff;
+}
+.login-panel-heading h5 {
+  font-size: 21px;
+  font-weight: 100;
+  margin-bottom: 5px;
 }
 .no-padding-top{
   padding-top: 0 !important;
@@ -254,4 +261,9 @@ body{
 }
 .navbar-right {
   margin-top: 19px;
+}
+img.login-img {
+  padding-top: 50px;
+  margin: auto;
+  display: block;
 }

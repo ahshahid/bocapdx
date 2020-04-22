@@ -839,3 +839,19 @@ ul.column-list-selected li label{
     font-weight: 100;
     margin-top: 20px;
 }
+
+#tabId li{
+    position: relative;
+}
+
+#tabId li .close {
+    position: absolute;
+    right: 7px;
+    top: 7px;
+    font-size: 16px;
+}
+
+#tabId li.active .close span {
+    color: #212e3c;
+    text-shadow: 0 1px 0 #212e3c;
+}

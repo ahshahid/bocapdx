@@ -105,15 +105,21 @@
 
     <div class="tab-container">
       <!-- Tab headers Start -->
-      <ul class="nav nav-tabs"  role="tablist">
-        <li role="presentation" class="active">
+      <ul class="nav nav-tabs" id="tabId"  role="tablist">
+        <li role="presentation" class="worksheetClass active" >
           <a  aria-controls="worksheetTab" role="tab" data-toggle="tab" data-target="#worksheetTab" ng-click="goToTab('worksheet')">My Worksheet</a>
         </li>
-        <li role="presentation" ng-if="influncer">
+        <li role="presentation" class="influcerClass" ng-hide="!influncer">
           <a aria-controls="influncer" role="tab" data-target="#influncer" data-toggle="tab" ng-click="goToTab('influncer')">Influencer Insights</a>
+          <button type="button" class="close"  ng-click="closeTab('influncer')">
+            <span>&times;</span>
+          </button>
         </li>
-        <li role="presentation" ng-if="deepExplanationTabLink">
+        <li role="presentation" class="deepClass" ng-hide="!deepExplanationTabLink">
           <a aria-controls="deepExplanation" role="tab" data-target="#deepExplanation" data-toggle="tab" ng-click="goToTab('deepExplanation')">Deep Explanations</a>
+          <button type="button" class="close"  ng-click="closeTab('deepExplanationTabLink')">
+            <span>&times;</span>
+          </button>
         </li>
       </ul>
       <!-- Tab headers End -->
