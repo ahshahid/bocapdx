@@ -647,7 +647,11 @@ public class TableData {
         final String ub ;
 
         if (featureColType == Types.VARCHAR) {
+
           key = rs.getString(3);
+          if (key == null) {
+            key = "null";
+          }
           if (isFeatureNumeric && isFeatureRange) {
             int indx = key.indexOf(" - ");
             if (indx != -1) {
@@ -662,7 +666,12 @@ public class TableData {
             ub = null;
           }
         } else {
-          key = rs.getObject(3).toString();
+          Object temp  = rs.getObject(3);
+          if (temp != null) {
+            key = temp.toString();
+          } else {
+            key = "null";
+          }
           lb = null;
           ub = null;
         }
@@ -824,10 +833,15 @@ public class TableData {
             lb = null;
           }
         } else {
-          key = rs.getObject(2).toString();
+          Object temp = rs.getObject(2);
+          if (temp != null) {
+            key = temp.toString();
+          } else {
+            key = "null";
+          }
           ub = null;
           lb = null;
-        }
+        } 
 
         String kpi = rs.getObject(3).toString();
         TableRow tr = keyToRow.computeIfAbsent(key, k -> {
