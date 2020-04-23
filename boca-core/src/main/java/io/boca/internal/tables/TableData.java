@@ -1078,6 +1078,11 @@ public class TableData {
           if (numBuckets > 1000000) {
             numBuckets = 1000;
           }
+          /*******
+           ** Todo : Jags: Asif, I am changing this to always use a certain bucket count... the above logic
+           * doesn't account for decimal values where the (max-min) could be small but there are many
+           */
+          numBuckets = 50;
           //numBuckets = 50;
          /* long criteria = (TableData.this.totalRows * (numCatCriteria- 1)) / 100;
           // range exceeds the max distinct criteria by
