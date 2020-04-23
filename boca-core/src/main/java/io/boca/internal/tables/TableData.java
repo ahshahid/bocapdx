@@ -876,7 +876,7 @@ public class TableData {
         MutableWrapperTableCell mwtc = (MutableWrapperTableCell) tr.getCell(indexInRow);
         mwtc.setMutableCell(metricCell);
         MutableWrapperTableCell toolTipMwtc = (MutableWrapperTableCell) tr.getCell(indexInRow + 1);
-        TableCell tooltipCell = new TableCell(new TextValue(featureCol + " = " + key + "\n " + metricCol + " = " + kpi + ", count = " + count));
+        TableCell tooltipCell = new TableCell(new TextValue(featureCol + " = " + key + "\n " + metricCol + " = " + kpi + " with count = " + count));
         toolTipMwtc.setMutableCell(tooltipCell);
       }
       numRows = keyToRow.size();

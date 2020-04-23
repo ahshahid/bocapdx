@@ -527,7 +527,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
            // $scope.compileChartData(deepData);
             $scope.rawChartDate = deepData;
         }
-        google.charts.load('current', {'packages':['bar']});
+        google.charts.load('current', {'packages':['corechart']});
         //google.charts.setOnLoadCallback(drawChart);
         google.setOnLoadCallback(function() { drawChart(deepData); });
 
@@ -549,10 +549,10 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             }
             };
             if(deepData){
-                var chart = new google.charts.Bar(document.getElementById(id));
+                var chart = new google.visualization.ColumnChart(document.getElementById(id));
                 chart.draw(data, options);
             }else{
-                var chart = new google.charts.Bar(document.getElementById('barChart'));
+                var chart = new google.visualization.ColumnChart(document.getElementById('barChart'));
                 chart.draw(data, google.charts.Bar.convertOptions(options));
             }
         }
