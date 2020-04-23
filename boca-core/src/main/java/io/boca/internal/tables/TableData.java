@@ -684,6 +684,7 @@ public class TableData {
         }
         tr.addCell(tc);
         tr.addCell(avg);
+        tr.addCell(featureCol + ":" + key + "\n" + metricCol + " avg :" + avg);
         dataPoints.add(tr);
       }
       numRows = dataPoints.size();
@@ -761,10 +762,14 @@ public class TableData {
               isMetricNumeric ? ValueType.NUMBER : ValueType.TEXT, metricCol);
       ColumnDescription featureDesc = new ColumnDescription("feature",
               (isFeatureNumeric && !isFeatureRange) ? ValueType.NUMBER : ValueType.TEXT, featureCol);
+      ColumnDescription tooltipDesc = new ColumnDescription("tooltip",
+               ValueType.TEXT, "tooltip");
+      tooltipDesc.setCustomProperty("role", "tooltip");
+
       featureDesc.setCustomProperty("isFeatureRange", Boolean.toString(isFeatureRange));
       dt.addColumn(featureDesc);
       dt.addColumn(metricDesc);
-
+      dt.addColumn(tooltipDesc);
       dt.addRows(dataPoints);
       dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART :  BAR_CHART/* isFeatureRange ? HISTOGRAM : BAR_CHART*/);
       return dt;
@@ -846,16 +851,19 @@ public class TableData {
         });
         //add nulls if needed
         int indexInRow = kpiValueToIndex.computeIfAbsent(kpi, k -> {
-          return kpiValueToIndex.size() + 1;
+          return 2*kpiValueToIndex.size() + 1;
         });
         int len = tr.getCells().size();
-        for(int i = 0; i < indexInRow - len + 1; ++i) {
-          tr.addCell(new MutableWrapperTableCell());
+        for(int i = 0; i < indexInRow - len + 2; ++i) {
+          tr.addCell(i % 2 == 0? new MutableWrapperTableCell() : new MutableWrapperTableCell(true));
         }
         TableCell metricCell = new TableCell(new NumberValue(count));
         metricCell.setCustomProperty("metricValue", kpi);
         MutableWrapperTableCell mwtc = (MutableWrapperTableCell) tr.getCell(indexInRow);
         mwtc.setMutableCell(metricCell);
+        MutableWrapperTableCell toolTipMwtc = (MutableWrapperTableCell) tr.getCell(indexInRow + 1);
+        TableCell tooltipCell = new TableCell(new TextValue(featureCol + ":" + key + "\n " + metricCol + " as " + kpi + " the count : " + count));
+        toolTipMwtc.setMutableCell(tooltipCell);
       }
       numRows = keyToRow.size();
       List<TableRow> dataPoints = keyToRow.values().stream().sorted((tr1, tr2) -> {
@@ -936,6 +944,9 @@ public class TableData {
         ColumnDescription metricDesc = new ColumnDescription(kname,
                 ValueType.NUMBER, kname);
         dt.addColumn(metricDesc);
+        ColumnDescription toolTipDesc = new ColumnDescription("tooltip_" + kname, ValueType.TEXT, "tooltip");
+        toolTipDesc.setCustomProperty("role", "tooltip");
+        dt.addColumn(toolTipDesc);
       });
 
       dt.addRows(dataPoints);
@@ -1413,6 +1424,11 @@ public class TableData {
     volatile  private TableCell mutableCell;
     MutableWrapperTableCell() {
       super(new NumberValue(0));
+      mutableCell = null;
+    }
+
+    MutableWrapperTableCell(boolean overload) {
+      super(new TextValue(""));
       mutableCell = null;
     }
 
