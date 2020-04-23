@@ -965,7 +965,7 @@ public class TableData {
         dt.addColumn(toolTipDesc);
       });
       dt.setCustomProperty("hAxis_title", featureCol);
-      dt.setCustomProperty("vAxis_title", "Count of " + metricCol );
+      dt.setCustomProperty("vAxis_title", metricCol + " Count");
       dt.addRows(dataPoints);
       dt.setCustomProperty("graphType", numRows > 30 ? AREA_CHART :  BAR_CHART/*isFeatureRange ? HISTOGRAM : BAR_CHART*/);
       return dt;
