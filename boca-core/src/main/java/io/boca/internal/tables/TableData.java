@@ -681,7 +681,7 @@ public class TableData {
         if (featureColType == Types.VARCHAR) {
           v = new TextValue(key.toString());
         } else {
-          v = new NumberValue(Double.parseDouble(key));
+          v = new NumberValue(key .equals("null") ? Double.NaN : Double.parseDouble(key));
         }
         TableCell tc = new TableCell(v, key);
         tc.setCustomProperty("numElements", String.valueOf(count));
@@ -851,7 +851,7 @@ public class TableData {
           if (featureColType == Types.VARCHAR) {
             v = new TextValue(k);
           } else {
-            v = new NumberValue(Double.parseDouble(k));
+            v = new NumberValue(k.equals("null") ? Double.NaN : Double.parseDouble(k));
           }
           TableCell tc = new TableCell(v, k);
           //tc.setCustomProperty("numElements", String.valueOf(count));
