@@ -562,8 +562,12 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             //var data = new google.visualization.DataTable($scope.rawChartDate,0.6);
             var data = new google.visualization.DataTable(datum,0.6);
             /* var data = google.visualization.arrayToDataTable($scope.rawChartDate); */
-
+            var hAxisTtl= datum.p.hAxis_title;
+            var vAxisTtl= datum.p.vAxis_title;
             var options = {
+            hAxis: {title: hAxisTtl},
+            vAxis: {title: vAxisTtl},
+
             colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
             bars: 'vertical',
             legend: { position: 'bottom' },
@@ -603,10 +607,11 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             var data = new google.visualization.DataTable(datum,0.6);
             /* var data = google.visualization.arrayToDataTable($scope.rawChartDate); */
 
+          var hAxisTtl= datum.p.hAxis_title;
+          var vAxisTtl= datum.p.vAxis_title;
           var options = {
-           /*  title: 'Company Performance', */
-           /*  hAxis: {title: 'Year',  titleTextStyle: {color: '#333'}},
-            vAxis: {minValue: 0}, */
+            hAxis: {title:  hAxisTtl },
+            vAxis: {title: vAxisTtl},
             colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
             pointShape: 'circle',
             selectionMode: 'multiple',

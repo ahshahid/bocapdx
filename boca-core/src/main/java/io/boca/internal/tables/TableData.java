@@ -780,6 +780,8 @@ public class TableData {
       dt.addColumn(metricDesc);
       dt.addColumn(tooltipDesc);
       dt.addRows(dataPoints);
+      dt.setCustomProperty("hAxis_title", featureCol);
+      dt.setCustomProperty("vAxis_title", "average value of " + metricCol);
       dt.setCustomProperty("graphType", numRows > 30 ? AREA_CHART :  BAR_CHART/* isFeatureRange ? HISTOGRAM : BAR_CHART*/);
       return dt;
     } else if (!metricColCd.skip && metricColCd.ft.equals(FeatureType.categorical)) {
@@ -962,7 +964,8 @@ public class TableData {
         toolTipDesc.setCustomProperty("role", "tooltip");
         dt.addColumn(toolTipDesc);
       });
-
+      dt.setCustomProperty("hAxis_title", featureCol);
+      dt.setCustomProperty("vAxis_title", "Count of " + metricCol );
       dt.addRows(dataPoints);
       dt.setCustomProperty("graphType", numRows > 30 ? AREA_CHART :  BAR_CHART/*isFeatureRange ? HISTOGRAM : BAR_CHART*/);
       return dt;
