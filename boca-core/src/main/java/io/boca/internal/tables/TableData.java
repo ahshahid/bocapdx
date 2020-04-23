@@ -693,7 +693,7 @@ public class TableData {
         }
         tr.addCell(tc);
         tr.addCell(avg);
-        tr.addCell(featureCol + ":" + key + "\n" + metricCol + " avg :" + avg);
+        tr.addCell(featureCol + " = " + key + "\n" + metricCol + " average =" + avg);
         dataPoints.add(tr);
       }
       numRows = dataPoints.size();
@@ -841,7 +841,7 @@ public class TableData {
           }
           ub = null;
           lb = null;
-        } 
+        }
 
         String kpi = rs.getObject(3).toString();
         TableRow tr = keyToRow.computeIfAbsent(key, k -> {
@@ -876,7 +876,7 @@ public class TableData {
         MutableWrapperTableCell mwtc = (MutableWrapperTableCell) tr.getCell(indexInRow);
         mwtc.setMutableCell(metricCell);
         MutableWrapperTableCell toolTipMwtc = (MutableWrapperTableCell) tr.getCell(indexInRow + 1);
-        TableCell tooltipCell = new TableCell(new TextValue(featureCol + ":" + key + "\n " + metricCol + " as " + kpi + " the count : " + count));
+        TableCell tooltipCell = new TableCell(new TextValue(featureCol + " = " + key + "\n " + metricCol + " = " + kpi + ", count = " + count));
         toolTipMwtc.setMutableCell(tooltipCell);
       }
       numRows = keyToRow.size();
