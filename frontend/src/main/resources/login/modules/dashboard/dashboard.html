@@ -290,11 +290,11 @@
             <!-- <input type="range" min="1" max="100" ng-disabled="true" ng-model="rareEvent" value="{{rareEvent}}"  class="slider" id="rareEvents" tooltip-placement="top" uib-tooltip="{{rareEvent}}"> -->
             <div class="range pull-left">
               <span>{{minRareEvent}}</span>
-              <span class="lable">Very Common</span>
+              <span class="label">Very Rare</span>
             </div>
             <div class="range pull-right">
               <span>{{maxRareEvent}}</span>
-              <span class="lable">Very Rare</span>
+              <span class="label">Very Common</span>
             </div>
           </div>
           <div class="slider-container pad-15">
@@ -303,11 +303,11 @@
             <!-- <input type="range" min="100" max="500" ng-disabled="true" ng-model="riskRatio" class="slider" id="riskRatios" tooltip-placement="top" uib-tooltip="{{riskRatio}}" > -->
             <div class="range pull-left">
               <span>{{minRiskRatio}}</span>
-              <span class="lable">Low</span>
+              <span class="label">Low</span>
             </div>
             <div class="range pull-right">
               <span>{{maxRiskRatio}}</span>
-              <span class="lable">Very High</span>
+              <span class="label">Very High</span>
             </div>
           </div>
         </div>
@@ -387,11 +387,11 @@
                 <input type="range" min="{{minRareEvent}}" max="{{maxRareEvent}}" step="{{stepRareEvent}}" ng-model="rareEvent.val" class="slider" id="rareEvent" tooltip-placement="top" uib-tooltip="{{rareEvent.val}}">
                 <div class="range pull-left">
                   <span>{{minRareEvent}}</span>
-                  <span class="lable">Very Common</span>
+                  <span class="label">Very Rare</span>
                 </div>
                 <div class="range pull-right">
                   <span>{{maxRareEvent}}</span>
-                  <span class="lable">Very Rare</span>
+                  <span class="label">Very Common</span>
                 </div>
               </div>
               <button type="button" class="btn popup-btn pull-right" data-dismiss="modal">Cancel</button>
@@ -412,11 +412,11 @@
               <input type="range" min="{{minRiskRatio}}" max="{{maxRiskRatio}}" step="{{stepRiskRatio}}" ng-model="riskRatio.val" class="slider" id="riskRatio" tooltip-placement="top" uib-tooltip="{{riskRatio.val}}" >
               <div class="range pull-left">
                 <span>{{minRiskRatio}}</span>
-                <span class="lable">Low</span>
+                <span class="label">Low</span>
               </div>
               <div class="range pull-right">
                 <span>{{maxRiskRatio}}</span>
-                <span class="lable">Very High</span>
+                <span class="label">Very High</span>
               </div>
             </div>
             <button type="button" class="btn popup-btn red-bg pull-left" ng-if="!deepExplanation" ng-click="goToTab('influncer')">Submit</button>
