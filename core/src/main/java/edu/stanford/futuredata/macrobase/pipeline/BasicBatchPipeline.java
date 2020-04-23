@@ -107,6 +107,27 @@ public class BasicBatchPipeline implements Pipeline {
         }
         meanColumn = Optional.ofNullable(conf.get("meanColumn"));
         meanShiftRatio = conf.get("meanShiftRatio", 1.0);
+        System.out.println(getConfigAsString());
+    }
+
+    public String getConfigAsString() {
+        return "======= PipelineConfig ======= \n" + "- InputURI: " + inputURI +
+                ":: BaseTable: " + baseTable +
+                ":: extraPredicate: " + extraPredicate +
+                ":: classifierType: " + classifierType +
+                ":: metric: " + metric +
+                ":: cutoff: " + cutoff +
+                ":: strCutoff: " + strCutoff +
+                ":: meanColumn: " + meanColumn +
+                ":: isStrPredicate: " + isStrPredicate +
+                ":: pctileHigh: " + pctileHigh +
+                ":: pctileLow: " + pctileLow +
+                ":: meanColumn: " + meanColumn +
+                ":: predicateStr: " + predicateStr +
+                ":: minSupport: " + minSupport +
+                ":: minRiskRatio: " + minRiskRatio +
+                ":: maxOrder: " + maxOrder +
+                "\n======= PipelineConfig ======= \n";
     }
 
     public Classifier getClassifier() throws MacroBaseException {
