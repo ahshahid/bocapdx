@@ -255,6 +255,20 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     $scope.clearColumnSelection = function(){
         $scope.selectedCols =[];
     }
+    
+    $scope.change = function(val, className){
+        if(className == 'risk-class'){
+            const min = $scope.minRiskRatio ? $scope.minRiskRatio : 0;
+            const max = $scope.maxRiskRatio ? $scope.maxRiskRatio : 100;
+            const newVal = Number(((val - min) * 100) / (max - min));
+            $('.risk-class').css("left", `calc(${newVal}% + (${-3 - newVal * 0.15}px))`);  
+        }else if(className == 'rare-class'){
+            const min1 = $scope.minRareEvent ? $scope.minRareEvent : 0;
+            const max1 = $scope.maxRareEvent ? $scope.maxRareEvent : 100;
+            const newVal1 = Number(((val - min1) * 100) / (max1 - min1));
+            $('.rare-class').css("left", `calc(${newVal1}% + (${-3 - newVal1 * 0.15}px))`);  
+        }  
+    }
 
     $scope.closeTab = function (tabName){
         $scope.showLoader();
@@ -276,7 +290,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         }
     }
 
-    $scope.goToTab = function(tabName){
+    $scope.goToTab = function(tabName, link){
         $scope.showLoader();
         if(tabName == 'worksheet'){
             $scope.influncerTab=false;
@@ -331,15 +345,27 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             $scope.addBubbleChart();
             $scope.hideLoader();
         }else if(tabName == 'deepExplanation'){
-            $scope.influncerTab=false;
-            $scope.worksheetTab=false;
-            $scope.deepExplanationTab =true;
-            $scope.deepExplanationTabLink=true;
-            $('#myModal').modal('hide');
-            $scope.getDeepExplaination();
-            $('#tabId li.active').removeClass('active');
-            $('.deepClass').addClass('active');
-            $scope.hideLoader();
+            if(link == 'link'){
+                $scope.influncerTab=false;
+                $scope.worksheetTab=false;
+                $scope.deepExplanationTab =true;
+                $scope.deepExplanationTabLink=true;
+                $('#myModal').modal('hide');
+                $('#tabId li.active').removeClass('active');
+                $('.deepClass').addClass('active');
+                $scope.hideLoader();
+            }else{
+                $scope.influncerTab=false;
+                $scope.worksheetTab=false;
+                $scope.deepExplanationTab =true;
+                $scope.deepExplanationTabLink=true;
+                $('#myModal').modal('hide');
+                $('#tabId li.active').removeClass('active');
+                $('.deepClass').addClass('active');
+                $scope.hideLoader();
+                $scope.getDeepExplaination();
+            }
+            
         }
 
     }
