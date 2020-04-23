@@ -771,7 +771,7 @@ public class TableData {
       dt.addColumn(metricDesc);
       dt.addColumn(tooltipDesc);
       dt.addRows(dataPoints);
-      dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART :  BAR_CHART/* isFeatureRange ? HISTOGRAM : BAR_CHART*/);
+      dt.setCustomProperty("graphType", numRows > 30 ? AREA_CHART :  BAR_CHART/* isFeatureRange ? HISTOGRAM : BAR_CHART*/);
       return dt;
     } else if (!metricColCd.skip && metricColCd.ft.equals(FeatureType.categorical)) {
       String query = String.format(QUERY_DEEP_METRIC_CAT, featureCol, metricCol, tableName);
@@ -950,7 +950,7 @@ public class TableData {
       });
 
       dt.addRows(dataPoints);
-      dt.setCustomProperty("graphType", numRows > 50 ? AREA_CHART :  BAR_CHART/*isFeatureRange ? HISTOGRAM : BAR_CHART*/);
+      dt.setCustomProperty("graphType", numRows > 30 ? AREA_CHART :  BAR_CHART/*isFeatureRange ? HISTOGRAM : BAR_CHART*/);
       return dt;
     }
     return null;
@@ -1089,6 +1089,11 @@ public class TableData {
           if (numBuckets > 1000000) {
             numBuckets = 1000;
           }
+          /*******
+           ** Todo : Jags: Asif, I am changing this to always use a certain bucket count... the above logic
+           * doesn't account for decimal values where the (max-min) could be small but there are many
+           */
+          numBuckets = 50;
           //numBuckets = 50;
          /* long criteria = (TableData.this.totalRows * (numCatCriteria- 1)) / 100;
           // range exceeds the max distinct criteria by

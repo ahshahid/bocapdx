@@ -77,6 +77,7 @@ public class SimpleExplanationNLG implements Explanation {
       try {
           return rawExplainTable();
       } catch (Exception e) {
+          e.printStackTrace();
          return Collections.singletonList(new EachExplanation("Error in getting NLG text", Collections.EMPTY_LIST,
                  Collections.emptyList()));
       }
