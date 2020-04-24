@@ -177,7 +177,7 @@ public class SimpleExplanationNLG implements Explanation {
             if (value == null || value.equalsIgnoreCase("NULL")) continue;
             String actualColumn = l.get(i).getColumn();
             features.add(actualColumn);
-            temp += (getDescription(actualColumn) + " is " + value);
+            temp += (getDescription(actualColumn) + " (" + actualColumn + ")" +" is " + value);
             if (i < (l.size() -1) ) temp += " and ";
         }
         if (temp.endsWith("and ")) outputText.append(temp.substring(0, temp.lastIndexOf("and"))) ;
