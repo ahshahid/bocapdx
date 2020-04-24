@@ -1235,7 +1235,7 @@ public class TableData {
           FeatureType ft = FeatureType.unknown;
           int percent = totalRows > 0 ?(int)((100 * distinctValues) / totalRows): -1;
           if (percent != -1) {
-            if (percent > 80 || distinctValues > 14900) {
+            if (percent > 80 || distinctValues > 9999) {
               //skip = true;
               skip = false;
               ft =  this.isShadowTable ? FeatureType.categorical : FeatureType.continuous;
@@ -1308,7 +1308,7 @@ public class TableData {
           FeatureType ft = FeatureType.unknown;
           int percent = totalRows > 0 ?(int)((100 * distinctValues) / totalRows): -1;
           if (percent != -1) {
-            if (percent > 80 || distinctValues > 14900) {
+            if (percent > 80 || distinctValues > 9999) {
               //skip = true;
               skip = false;
               ft =  this.isShadowTable ? FeatureType.categorical : FeatureType.continuous;
