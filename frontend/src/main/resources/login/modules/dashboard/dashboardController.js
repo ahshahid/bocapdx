@@ -85,6 +85,8 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
    
           $scope.createJsonForSchema(table);
           if($scope.tableList.length > 0){
+            $scope.schemaCols = [];
+            $scope.temp = [];
             ApiFactory.schema.save({
                 table: $scope.jsonSchema
             }, function (response) {
@@ -451,9 +453,9 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         }
         $scope.colsForSelection =[]
         angular.forEach($scope.columnList, function(key) {
-            if($scope.colsForSelection.indexOf(key.name) == -1) {
-                if($scope.selectedCols.indexOf(key.name) == -1) {
-                    $scope.colsForSelection.push(key.name);
+            if($scope.colsForSelection.indexOf(key.name.toLowerCase()) == -1) {
+                if($scope.selectedCols.indexOf(key.name.toLowerCase()) == -1) {
+                    $scope.colsForSelection.push(key.name.toLowerCase());
                 }
             }
         })
@@ -467,24 +469,24 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             $scope.kpiData =[];
             if(response.kpidata[0].pearsonfeatures != undefined && response.kpidata[0].pearsonfeatures != null && response.kpidata[0].pearsonfeatures.length > 0){
                 angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {
-                    $scope.kpiData.push(key.predictorname);
+                    $scope.kpiData.push(key.predictorname.toLowerCase());
                 })
             }
             if(response.kpidata[0].chisquarefeatures != undefined && response.kpidata[0].chisquarefeatures != null && response.kpidata[0].chisquarefeatures.length > 0){
                 angular.forEach(response.kpidata[0].chisquarefeatures, function(key, name) {
-                    $scope.kpiData.push(key.predictorname);
+                    $scope.kpiData.push(key.predictorname.toLowerCase());
                 })
             }
             if(response.kpidata[0].anovafeatures != undefined && response.kpidata[0].anovafeatures != null && response.kpidata[0].anovafeatures.length > 0){
                 angular.forEach(response.kpidata[0].anovafeatures, function(key, name) {
-                    $scope.kpiData.push(key.predictorname);
+                    $scope.kpiData.push(key.predictorname.toLowerCase());
                 })
             }
             $scope.colsForSelection =[]
             angular.forEach($scope.columnList, function(key) {
-                if($scope.colsForSelection.indexOf(key.name) == -1) {
-                    if($scope.selectedCols.indexOf(key.name) == -1 && $scope.kpiData.indexOf(key.name) == -1) {
-                        $scope.colsForSelection.push(key.name);
+                if($scope.colsForSelection.indexOf(key.name.toLowerCase()) == -1) {
+                    if($scope.selectedCols.indexOf(key.name.toLowerCase()) == -1 && $scope.kpiData.indexOf(key.name.toLowerCase()) == -1) {
+                        $scope.colsForSelection.push(key.name.toLowerCase());
                     }
                 }
             })
