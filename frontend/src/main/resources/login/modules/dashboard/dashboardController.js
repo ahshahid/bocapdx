@@ -377,7 +377,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         ApiFactory.deepInsight.save({
             "workflowid": $scope.workflowid,
             "metric": $scope.metricCols[0],
-            "objective":$scope.objective == '' ? 'defult' :$scope.objective,
+            "objective":$scope.objective == '' ? 'Not Specified' :$scope.objective,
             "optionalConf":{
                 "attributes": $scope.kpiData,
                 "predicate":$scope.outlierFilter == '' ? undefined : $scope.outlierFilter,
