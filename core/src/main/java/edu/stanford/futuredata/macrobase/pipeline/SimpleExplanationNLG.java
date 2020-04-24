@@ -252,7 +252,9 @@ public class SimpleExplanationNLG implements Explanation {
     private String getNewSupportString(String v) {
         //return " metric by x% "
         long i  = Math.round(Double.parseDouble(v) * 100);
-        return metric + " by " + i + " percent.";
+        long absoluteNumber = Math.round((this.explainObj.numOutliers() * Double.parseDouble(v)));
+        return metric + " by " + i + " percent (" + absoluteNumber + " records out of " +
+                Math.round(this.explainObj.numOutliers()) + ").";
     }
 
     private String getPredicateString() throws Exception{

@@ -267,3 +267,14 @@ img.login-img {
   margin: auto;
   display: block;
 }
+/* Needed icon images
+.username {
+  background: url('../../assets/Icon 5_Left Nav_Help.png') no-repeat scroll 10px 10px !important;
+  padding-left: 40px !important;
+  background-size: 18px !important;
+}
+.password {
+  background: url('../../assets/Icon 5_Left Nav_Help.png') no-repeat scroll 10px 10px !important;
+  padding-left: 40px !important;
+  background-size: 18px !important;
+} */
