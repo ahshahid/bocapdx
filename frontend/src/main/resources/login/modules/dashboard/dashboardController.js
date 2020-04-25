@@ -57,6 +57,27 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         $rootScope.loading = false;
         $('body').removeClass( "loadingScreen" );
     }
+
+    $scope.showBusy1 = function(){
+        $rootScope.correlating = true;
+        $('body').addClass( "loadingScreen" );
+    }
+
+    $scope.hideBusy1 = function(){
+        $rootScope.correlating = false;
+        $('body').removeClass( "loadingScreen" );
+    }
+
+    $scope.showBusy2 = function(){
+        $rootScope.findFacts = true;
+        $('body').addClass( "loadingScreen" );
+    }
+
+    $scope.hideBusy2 = function(){
+        $rootScope.findFacts = false;
+        $('body').removeClass( "loadingScreen" );
+    }
+
     $scope.dragOptions = {
         /* start: function(e) {
         },
@@ -293,8 +314,8 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     }
 
     $scope.goToTab = function(tabName, link){
-        $scope.showLoader();
         if(tabName == 'worksheet'){
+            $scope.showLoader();
             $scope.influncerTab=false;
             $scope.deepExplanationTab=false;
             $scope.worksheetTab=true;
@@ -302,6 +323,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             $('.worksheetClass').addClass('active');
             $scope.hideLoader();
         }else if(tabName == 'influncer'){
+            $scope.showBusy1();
             $('#tabId li.active').removeClass('active');
             $('.influcerClass').addClass('active');
             $scope.worksheetTab=false;
@@ -345,9 +367,10 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             $scope.addLineChart();
             $scope.addPieChart();
             $scope.addBubbleChart();
-            $scope.hideLoader();
+            $scope.hideBusy1();
         }else if(tabName == 'deepExplanation'){
             if(link == 'link'){
+                $scope.showBusy2();
                 $scope.influncerTab=false;
                 $scope.worksheetTab=false;
                 $scope.deepExplanationTab =true;
@@ -355,8 +378,9 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                 $('#myModal').modal('hide');
                 $('#tabId li.active').removeClass('active');
                 $('.deepClass').addClass('active');
-                $scope.hideLoader();
+                $scope.hideBusy2();
             }else{
+                $scope.showBusy2();
                 $scope.influncerTab=false;
                 $scope.worksheetTab=false;
                 $scope.deepExplanationTab =true;
@@ -364,7 +388,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                 $('#myModal').modal('hide');
                 $('#tabId li.active').removeClass('active');
                 $('.deepClass').addClass('active');
-                $scope.hideLoader();
+                $scope.hideBusy2();
                 $scope.getDeepExplaination();
             }
             
@@ -374,7 +398,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     $scope.deepExplanationList = [];
     $scope.deepExplanationHeader ='';
     $scope.getDeepExplaination = function(){
-        $scope.showLoader();
+        $scope.showBusy2();
         var startTime = new Date().getTime();
         ApiFactory.deepInsight.save({
             "workflowid": $scope.workflowid,
@@ -390,12 +414,12 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             $scope.respTime = (new Date().getTime() - startTime) / 1000;
             $scope.deepExplanationList = response.expl.nlgExplanation;
             $scope.deepExplanationHeader = response.expl.header;
-            $scope.hideLoader();
+            $scope.hideBusy2();
         })
     }
 
     $scope.runDeepExplaination = function(data, id, cid){
-        $scope.showLoader();
+        $scope.showBusy2();
         var graphId = 'graph' + id + '_' + cid;
        /*  var scollable = '#scroll' + id + cid; */
         var data = eval(data);
@@ -414,7 +438,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         else if(data.p.graphType == 'line'){
             $scope.addLineChart(data, graphId);
         }
-        $scope.hideLoader();
+        $scope.hideBusy2();
     }
 
     $scope.editPopup = function(val){
@@ -445,7 +469,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     }
 
     $scope.updateColumnList = function(btn){
-        $scope.showLoader();
+        $scope.showBusy1();
         if(btn == 'deepExplanation'){
             $scope.deepExplanation = true;
         }else{
@@ -490,9 +514,9 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                     }
                 }
             })
-             $scope.hideLoader();
+             $scope.hideBusy1();
         }, function(err){
-            $scope.hideLoader();
+            $scope.hideBusy1();
         })
     }
 

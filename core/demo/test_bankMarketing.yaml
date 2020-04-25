@@ -2,7 +2,7 @@ pipeline: "BasicBatchPipeline"
 
 objective: "Increase Bank telemarketing conversion rate"
 
-inputURI: "jdbc:snappydata://10.80.141.102:1527"
+inputURI: "jdbc:snappydata://34.70.196.110:1527"
 
 baseTable: "bank_marketing_ext"
 
