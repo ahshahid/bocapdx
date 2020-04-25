@@ -35,7 +35,7 @@
 
 
 <head>
-    <link rel="icon" href="assets/Fast Insights Logo_Only Symbol.png" type="image/gif" sizes="16x16">
+    <link rel="icon" href="assets/Fast Insights Logo_Only Symbol.png" type="image/gif" sizes="16x16 32x32">
     <title>FastInsights</title>
 </head>
 
@@ -56,6 +56,15 @@
         <img src="../../assets/Loader-GIF.gif" width="100px">
         <p>Loading...</p>
       </div>
+
+    <div class="loader" ng-if="correlating">
+        <img src="../../assets/Loader-GIF.gif" width="100px">
+        <p>Finding correlations...</p>
+    </div>
+    <div class="loader" ng-if="findFacts">
+        <img src="../../assets/Loader-GIF.gif" width="100px">
+        <p>Finding most relevant facts...</p>
+    </div>
 
 </body>
 </html>

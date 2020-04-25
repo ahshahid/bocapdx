@@ -57,6 +57,27 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         $rootScope.loading = false;
         $('body').removeClass( "loadingScreen" );
     }
+
+    $scope.showBusy1 = function(){
+        $rootScope.correlating = true;
+        $('body').addClass( "loadingScreen" );
+    }
+
+    $scope.hideBusy1 = function(){
+        $rootScope.correlating = false;
+        $('body').removeClass( "loadingScreen" );
+    }
+
+    $scope.showBusy2 = function(){
+        $rootScope.findFacts = true;
+        $('body').addClass( "loadingScreen" );
+    }
+
+    $scope.hideBusy2 = function(){
+        $rootScope.findFacts = false;
+        $('body').removeClass( "loadingScreen" );
+    }
+
     $scope.dragOptions = {
         /* start: function(e) {
         },
@@ -85,6 +106,8 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
    
           $scope.createJsonForSchema(table);
           if($scope.tableList.length > 0){
+            $scope.schemaCols = [];
+            $scope.temp = [];
             ApiFactory.schema.save({
                 table: $scope.jsonSchema
             }, function (response) {
@@ -291,8 +314,8 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     }
 
     $scope.goToTab = function(tabName, link){
-        $scope.showLoader();
         if(tabName == 'worksheet'){
+            $scope.showLoader();
             $scope.influncerTab=false;
             $scope.deepExplanationTab=false;
             $scope.worksheetTab=true;
@@ -300,6 +323,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             $('.worksheetClass').addClass('active');
             $scope.hideLoader();
         }else if(tabName == 'influncer'){
+            $scope.showBusy1();
             $('#tabId li.active').removeClass('active');
             $('.influcerClass').addClass('active');
             $scope.worksheetTab=false;
@@ -343,9 +367,10 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             $scope.addLineChart();
             $scope.addPieChart();
             $scope.addBubbleChart();
-            $scope.hideLoader();
+            $scope.hideBusy1();
         }else if(tabName == 'deepExplanation'){
             if(link == 'link'){
+                $scope.showBusy2();
                 $scope.influncerTab=false;
                 $scope.worksheetTab=false;
                 $scope.deepExplanationTab =true;
@@ -353,8 +378,9 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                 $('#myModal').modal('hide');
                 $('#tabId li.active').removeClass('active');
                 $('.deepClass').addClass('active');
-                $scope.hideLoader();
+                $scope.hideBusy2();
             }else{
+                $scope.showBusy2();
                 $scope.influncerTab=false;
                 $scope.worksheetTab=false;
                 $scope.deepExplanationTab =true;
@@ -362,7 +388,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                 $('#myModal').modal('hide');
                 $('#tabId li.active').removeClass('active');
                 $('.deepClass').addClass('active');
-                $scope.hideLoader();
+                $scope.hideBusy2();
                 $scope.getDeepExplaination();
             }
             
@@ -372,12 +398,12 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     $scope.deepExplanationList = [];
     $scope.deepExplanationHeader ='';
     $scope.getDeepExplaination = function(){
-        $scope.showLoader();
+        $scope.showBusy2();
         var startTime = new Date().getTime();
         ApiFactory.deepInsight.save({
             "workflowid": $scope.workflowid,
             "metric": $scope.metricCols[0],
-            "objective":$scope.objective == '' ? 'defult' :$scope.objective,
+            "objective":$scope.objective == '' ? 'Not Specified' :$scope.objective,
             "optionalConf":{
                 "attributes": $scope.kpiData,
                 "predicate":$scope.outlierFilter == '' ? undefined : $scope.outlierFilter,
@@ -388,12 +414,12 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             $scope.respTime = (new Date().getTime() - startTime) / 1000;
             $scope.deepExplanationList = response.expl.nlgExplanation;
             $scope.deepExplanationHeader = response.expl.header;
-            $scope.hideLoader();
+            $scope.hideBusy2();
         })
     }
 
     $scope.runDeepExplaination = function(data, id, cid){
-        $scope.showLoader();
+        $scope.showBusy2();
         var graphId = 'graph' + id + '_' + cid;
        /*  var scollable = '#scroll' + id + cid; */
         var data = eval(data);
@@ -412,7 +438,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         else if(data.p.graphType == 'line'){
             $scope.addLineChart(data, graphId);
         }
-        $scope.hideLoader();
+        $scope.hideBusy2();
     }
 
     $scope.editPopup = function(val){
@@ -443,7 +469,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     }
 
     $scope.updateColumnList = function(btn){
-        $scope.showLoader();
+        $scope.showBusy1();
         if(btn == 'deepExplanation'){
             $scope.deepExplanation = true;
         }else{
@@ -451,9 +477,9 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         }
         $scope.colsForSelection =[]
         angular.forEach($scope.columnList, function(key) {
-            if($scope.colsForSelection.indexOf(key.name) == -1) {
-                if($scope.selectedCols.indexOf(key.name) == -1) {
-                    $scope.colsForSelection.push(key.name);
+            if($scope.colsForSelection.indexOf(key.name.toLowerCase()) == -1) {
+                if($scope.selectedCols.indexOf(key.name.toLowerCase()) == -1) {
+                    $scope.colsForSelection.push(key.name.toLowerCase());
                 }
             }
         })
@@ -467,30 +493,30 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             $scope.kpiData =[];
             if(response.kpidata[0].pearsonfeatures != undefined && response.kpidata[0].pearsonfeatures != null && response.kpidata[0].pearsonfeatures.length > 0){
                 angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {
-                    $scope.kpiData.push(key.predictorname);
+                    $scope.kpiData.push(key.predictorname.toLowerCase());
                 })
             }
             if(response.kpidata[0].chisquarefeatures != undefined && response.kpidata[0].chisquarefeatures != null && response.kpidata[0].chisquarefeatures.length > 0){
                 angular.forEach(response.kpidata[0].chisquarefeatures, function(key, name) {
-                    $scope.kpiData.push(key.predictorname);
+                    $scope.kpiData.push(key.predictorname.toLowerCase());
                 })
             }
             if(response.kpidata[0].anovafeatures != undefined && response.kpidata[0].anovafeatures != null && response.kpidata[0].anovafeatures.length > 0){
                 angular.forEach(response.kpidata[0].anovafeatures, function(key, name) {
-                    $scope.kpiData.push(key.predictorname);
+                    $scope.kpiData.push(key.predictorname.toLowerCase());
                 })
             }
             $scope.colsForSelection =[]
             angular.forEach($scope.columnList, function(key) {
-                if($scope.colsForSelection.indexOf(key.name) == -1) {
-                    if($scope.selectedCols.indexOf(key.name) == -1 && $scope.kpiData.indexOf(key.name) == -1) {
-                        $scope.colsForSelection.push(key.name);
+                if($scope.colsForSelection.indexOf(key.name.toLowerCase()) == -1) {
+                    if($scope.selectedCols.indexOf(key.name.toLowerCase()) == -1 && $scope.kpiData.indexOf(key.name.toLowerCase()) == -1) {
+                        $scope.colsForSelection.push(key.name.toLowerCase());
                     }
                 }
             })
-             $scope.hideLoader();
+             $scope.hideBusy1();
         }, function(err){
-            $scope.hideLoader();
+            $scope.hideBusy1();
         })
     }
 

@@ -32,13 +32,14 @@ attributes:
   - "eqpdays_d_bin"
 #  - "mou_mean_d_bin"
 #  - "ovrrev_mean_d_bin"
-  #
+#
 #  - "totcalls_d_bin"
 #  - "totmrc_mean_d_bin"
 #  - "avg3mou"
 #  - "avg3qty"
 #  - "avg6mou"
 #  - "avg6qty"
+#  - "totrev_bin"
   - "datovr_mean"
   - "datovr_range"
   - "mou_range"
