@@ -1363,7 +1363,7 @@ public class TableData {
           FeatureType ft = FeatureType.unknown;
           int percent = totalRows > 0 ?(int)((100 * distinctCount) / totalRows): -1;
           if (percent != -1) {
-            if (percent > 80) {
+            if (percent > 80 || distinctCount > 9000) {
               skip = true;
             } else {
               ft = FeatureType.categorical;
