@@ -129,7 +129,7 @@ public abstract class SQLIngester extends DataIngester {
         List<String> tables = new ArrayList<>();
         while(rs.next()) {
             String tableOrView = rs.getString(3).toLowerCase();
-            if (!tableOrView.startsWith(MacroBaseDefaults.BOCA_VIEWS_PREFIX)) {
+            if (!tableOrView.startsWith(MacroBaseDefaults.BOCA_PREFIX)) {
                 tables.add(tableOrView);
             }
         }
