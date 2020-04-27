@@ -263,9 +263,10 @@ body{
   margin-top: 19px;
 }
 img.login-img {
-  padding-top: 50px;
+  padding-top: 80px;
   margin: auto;
   display: block;
+  width: 60%;
 }
 /* Needed icon images
 .username {

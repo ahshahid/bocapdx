@@ -738,13 +738,16 @@ ul.column-list-selected li label{
 
     .auto-panel .controls {
         display: grid;
-        width: 50px;
+        width: 20px;
         float: right;
         text-align: right;
         margin-top: -7px;
     }
     .controls .img-links {
         padding-top: 7px;
+        cursor: pointer;
+        width: 20px;
+        float: right;
     }
     .auto-panel .controls i{
         padding-top: 10px;
@@ -832,45 +835,46 @@ ul.column-list-selected li label{
         width: 38px;
         padding-top: 8px;
     }
-.loadingScreen{
-    overflow: hidden !important;
-}
-.pop-head{
-    font-size: 16px;
-    font-weight: 100;
-    margin-top: 20px;
-}
+    .loadingScreen{
+        overflow: hidden !important;
+    }
+    .pop-head{
+        font-size: 16px;
+        font-weight: 100;
+        margin-top: 20px;
+        margin-bottom: 0;
+    }
 
-#tabId li{
-    position: relative;
-}
+    #tabId li{
+        position: relative;
+    }
 
-#tabId li .close {
-    position: absolute;
-    right: 7px;
-    top: 7px;
-    font-size: 16px;
-}
+    #tabId li .close {
+        position: absolute;
+        right: 7px;
+        top: 7px;
+        font-size: 16px;
+    }
 
-#tabId li.active .close span {
-    color: #212e3c;
-    text-shadow: 0 1px 0 #212e3c;
-}
-.left-text{
-    text-align: left;
-    padding-left: 0;
-}
-.right-text{
-    text-align: right;
-    padding-right: 0;
-}
-.range-wrap{
-    display: block;
-    position: relative;
-    clear: both;
-}
-.bubble{
-    position: absolute;
-    top: -4px;
-    color: #364657;
-}
+    #tabId li.active .close span {
+        color: #212e3c;
+        text-shadow: 0 1px 0 #212e3c;
+    }
+    .left-text{
+        text-align: left;
+        padding-left: 0;
+    }
+    .right-text{
+        text-align: right;
+        padding-right: 0;
+    }
+    .range-wrap{
+        display: block;
+        position: relative;
+        clear: both;
+    }
+    .bubble{
+        position: absolute;
+        top: -4px;
+        color: #364657;
+    }

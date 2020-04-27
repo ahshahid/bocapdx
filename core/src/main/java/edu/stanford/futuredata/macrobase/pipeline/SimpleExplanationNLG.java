@@ -264,6 +264,7 @@ public class SimpleExplanationNLG implements Explanation {
             String relation = conf.get("predicate", "unknown").trim();
             switch (relation) {
                 case "==":
+                case "=":
                     s += " is "; break;
                 case ">":
                     s += " is greater than "; break;

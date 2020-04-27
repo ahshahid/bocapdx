@@ -103,7 +103,8 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
            $scope.tableName = table;
            $scope.clearColumnSelection();
            $scope.worksheet=true;
-   
+           $scope.outlierFilter = '';
+           $scope.isColumnSelected = false;
           $scope.createJsonForSchema(table);
           if($scope.tableList.length > 0){
             $scope.schemaCols = [];

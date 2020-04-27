@@ -17,10 +17,11 @@ public class MacroBaseDefaults {
 
     public static final Boolean USE_PERCENTILE = true;
     public static final Boolean USE_ZSCORE = false;
-    public static final String BOCA_VIEWS_PREFIX = "fastinsights_view_";
-    public static final String BOCA_ALIAS_PREFIX = "fastinsights_tbl_";
-    public static final String BOCA_SHADOW_TABLE_PREFIX = "fastinsights_prepped_";
-    public static final String BOCA_SHADOW_TABLE_UNBINNED_COL_PREFIX = "fastinsights_unprepped_";
+    public static final String BOCA_PREFIX = "fastinsights";
+    public static final String BOCA_VIEWS_PREFIX = BOCA_PREFIX + "_view_";
+    public static final String BOCA_ALIAS_PREFIX = BOCA_PREFIX + "_tbl_";
+    public static final String BOCA_SHADOW_TABLE_PREFIX = BOCA_PREFIX + "_prepped_";
+    public static final String BOCA_SHADOW_TABLE_UNBINNED_COL_PREFIX = BOCA_PREFIX + "_unprepped_";
     // streaming defaults
     public static final Integer WARMUP_COUNT = 10000;
     public static final Integer TUPLE_BATCH_SIZE = 10000;
