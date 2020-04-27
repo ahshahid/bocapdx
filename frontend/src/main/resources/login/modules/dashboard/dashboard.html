@@ -25,7 +25,7 @@
                 </a>
             </li>
             <li>
-                <a ng-href="/#!/dashboard">
+                <a target="_blank" href="http://localhost:3000/">
                   <img src="../../assets/Icon 3_Left Nav_Metabase.png">
                   <span class="title">Explore with Metabase</span>
                 </a>
@@ -285,7 +285,7 @@
             </li>
           </ul>
           <div class="slider-container pad-15">
-            <label>Explain Rare Events</label>
+            <label>Rare Patterns</label>
             <div class="range-wrap"> <span class="bubble rare-class">{{rareEvent.val}}</span>
               <input type="range" min="{{minRareEvent}}" ng-disabled="true" max="{{maxRareEvent}}" step="{{stepRareEvent}}" ng-init="change(rareEvent.val,'rare-class')" ng-model="rareEvent.val" class="slider" id="rareEvent">
             </div>
@@ -301,7 +301,7 @@
             </div>
           </div>
           <div class="slider-container pad-15">
-            <label>Explain Risk Ratio</label>
+            <label>Risk / Chance Ratio</label>
             <div class="range-wrap"> <span class="bubble risk-class">{{riskRatio.val}}</span>
               <input type="range" min="{{minRiskRatio}}" max="{{maxRiskRatio}}" ng-disabled="true" step="{{stepRiskRatio}}" ng-init="change(riskRatio.val,'risk-class')" ng-model="riskRatio.val" class="slider" id="riskRatio" >
             </div>
@@ -373,12 +373,12 @@
           </div>
           <div class="modal-body">
             <p class="pop-head">We selected the following columns based on correlations to the desired outcome ...</p>
-            <!-- <div class="column">
+            <div class="column">
               <h3>Available Columns</h3>
               </div>
               <div class="column mar-left-4">
-                <h3>Selected Columns</h3>
-                </div> -->
+                <h3>Chosen Columns</h3>
+                </div>
             <!-- <input type="text" style="margin-top: 0; margin-bottom: 15px;" placeholder="Search Columns" class="theme-style"> -->
            <div class="column">
              <ul class="column-list">
@@ -388,7 +388,7 @@
               </li>
             </ul>
               <div class="slider-container" ng-if="deepExplanation">
-                <label>Explain Rare Events</label>
+                <label>Rare Patterns</label>
                 <span class="editLink"><a class="link" data-toggle="modal" data-target="#rareEventModel">Edit Range</a></span>
                 <div class="range-wrap"> <span class="bubble rare-class">{{rareEvent.val}}</span>
                   <input type="range" min="{{minRareEvent}}" max="{{maxRareEvent}}" step="{{stepRareEvent}}" ng-change="change(rareEvent.val,'rare-class')" ng-model="rareEvent.val" class="slider" id="rareEvent">
@@ -416,7 +416,7 @@
               </li>
             </ul>
             <div class="slider-container" ng-if="deepExplanation">
-              <label>Explain Risk Ratio</label>
+              <label>Risk / Chance Ratio</label>
               <span class="editLink"><a class="link" data-toggle="modal" data-target="#riskRationModel">Edit Range</a></span>
               <div class="range-wrap"> <span class="bubble risk-class">{{riskRatio.val}}</span>
                 <input type="range" min="{{minRiskRatio}}" max="{{maxRiskRatio}}" step="{{stepRiskRatio}}" ng-change="change(riskRatio.val,'risk-class')" ng-model="riskRatio.val" class="slider" id="riskRatio" >
@@ -467,7 +467,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="myModalLabel">Rare Events Range</h4>
+            <h4 class="modal-title" id="myModalLabel">Rare Pattern Range</h4>
           </div>
           <div class="modal-body">
             <div class="column">
@@ -497,7 +497,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="myModalLabel">Risk Ratio Range</h4>
+            <h4 class="modal-title" id="myModalLabel">Risk / Chance Ratio Range</h4>
           </div>
           <div class="modal-body">
             <div class="column">
