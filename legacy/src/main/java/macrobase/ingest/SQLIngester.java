@@ -111,7 +111,7 @@ public abstract class SQLIngester extends DataIngester {
         List<Schema.SchemaColumn> columns = Lists.newArrayList();
 
         for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
-            columns.add(new Schema.SchemaColumn(rs.getMetaData().getColumnName(i),
+            columns.add(new Schema.SchemaColumn(rs.getMetaData().getColumnName(i).toLowerCase(),
                 rs.getMetaData().getColumnTypeName(i),
                 rs.getMetaData().getColumnType(i)));
         }
