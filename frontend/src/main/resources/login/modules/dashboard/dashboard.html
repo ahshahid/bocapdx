@@ -340,7 +340,12 @@
             <div class="charts-details">
               <div class="discription graph-description">
                 <p class="deep-p">{{deepEx.explanationStr}}</p>
-              <div ng-repeat="graph in deepEx.graphs"  ng-init="runDeepExplaination(graph, $parent.$index, $index)" id="graph{{$parent.$index}}_{{$index}}" style="width: 100%; min-height: 350px;"></div>
+              <div ng-repeat="graph in deepEx.graphs"  ng-init="runDeepExplaination(graph, $parent.$index, $index)" id="graph{{$parent.$index}}_{{$index}}" style="width: 100%; min-height: 350px;position: relative;">
+              <div class="loader">
+                <img src="../../assets/Loader-GIF.gif" width="100px">
+                <p>Loading graph...</p>
+              </div>
+              </div>
               <p class="more"><a class="more-link">Explain Further</a></p>
               </div>
                 <div class="controls">

@@ -1,4 +1,4 @@
-app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFactory', '$stateParams', 'NgTableParams', function($scope, $rootScope, $http, ApiFactory, $stateParams, NgTableParams) {
+app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFactory', '$stateParams', 'NgTableParams', '$parse', function($scope, $rootScope, $http, ApiFactory, $stateParams, NgTableParams, $parse) {
   
     $scope.myTable = {
         selected:{}
@@ -425,6 +425,10 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
        /*  var scollable = '#scroll' + id + cid; */
         var data = eval(data);
         if(data.p.graphType == 'area'){
+            // Get the model
+            var model = $parse(graphId);
+            // Assigns a value to it
+            model.assign($scope, true);
            /*  $(scollable).resizable({
                 stop: function( event, ui ) { 
                     $scope.resize= true;
