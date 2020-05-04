@@ -2,7 +2,7 @@
 pipeline: "BasicBatchPipeline"
 objective: "reduce churn"
 
-inputURI: "jdbc:snappydata://10.80.141.102:1527"
+inputURI: "jdbc:snappydata://34.70.196.110:1527"
 
 baseTable: "telecom_churn_billing_prepped"
 
@@ -12,6 +12,9 @@ predicate: "=="
 cutoff: "1"
 
 #extraPredicate: "where age1 > 0 and age2 > 0 and  hnd_webcap != 'NA' and mailresp !='NA' "
+#extraPredicate: "where mou_mean < 4.0 "
+extraPredicate: "where eqpdays > 320 and eqpdays < 340 "
+
 
 summarizer: "aplinear"
 #summarizer: "fpgrowth"
