@@ -299,11 +299,11 @@ public class BasicBatchPipeline implements Pipeline {
         List<String> cols = df.getSchema().getColumnNames();
         List<String> l = new ArrayList<String>();
         for (int i = 0; i < cols.size(); i++) {
-            l.add(stripSuffix(cols.get(i)) + " " + df.getSchema().getColumnTypeByName(cols.get(i))) ;
+            l.add(stripSuffix("\"" + cols.get(i)) + "\" " + df.getSchema().getColumnTypeByName(cols.get(i))) ;
         }
         System.out.println("=========\n Explanation results stored in --> " + tableName);
         s.execute("Drop table if exists " + tableName); // Avoid this later ... lot more expensive in Gem layer
-        String createTableSt = "create table " + tableName + " (" + String.join(",", l) +") using column ";
+        String createTableSt = "create table " + tableName + " (" + String.join(", ", l) +") using column ";
         System.out.println("CREATING TABLE --> " + createTableSt);
         s.execute(createTableSt);
         if (replace)  // required later when we avoid the drop table.
