@@ -261,12 +261,14 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     $scope.toggleColumnSelection = function(columnName, index){
             if($scope.selectedCols.indexOf(columnName) == -1) {
                 $scope.selectedCols.push(columnName);
-                $scope.metricCols.push(columnName);
+                //taking it from fastInsight response so no need to manipulate here
+                //$scope.metricCols.push(columnName);
                 //var sel = document.querySelectorAll('col#'+columnName)[0].className='active';
               }else{
                 var index = $scope.selectedCols.indexOf(columnName);
                 $scope.selectedCols.splice(index, 1);
-                $scope.metricCols.splice(index, 1);
+                //taking it from fastInsight response so no need to manipulate here
+                //$scope.metricCols.splice(index, 1);
                 //var sel = document.querySelectorAll('col#'+columnName)[0].classList.remove('active');
               }
            if($scope.selectedCols.length > 0){
@@ -403,7 +405,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         var startTime = new Date().getTime();
         ApiFactory.deepInsight.save({
             "workflowid": $scope.workflowid,
-            "metric": $scope.metricCols[0],
+            "metric": $scope.metricCols,
             "objective":$scope.objective == '' ? 'Not Specified' :$scope.objective,
             "optionalConf":{
                 "attributes": $scope.kpiData,
@@ -412,10 +414,15 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                 "minRatioMetric": $scope.riskRatio.val
             }
         }, function (response) {
-            $scope.respTime = (new Date().getTime() - startTime) / 1000;
-            $scope.deepExplanationList = response.expl.nlgExplanation;
-            $scope.deepExplanationHeader = response.expl.header;
-            $scope.hideBusy2();
+            if( response.expl.nlgExplanation != null){
+                $scope.respTime = (new Date().getTime() - startTime) / 1000;
+                $scope.deepExplanationList = response.expl.nlgExplanation;
+                $scope.deepExplanationHeader = response.expl.header;
+                $scope.hideBusy2();
+            }else{
+                $scope.hideBusy2();
+            }
+            
         })
     }
 
@@ -425,16 +432,6 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
        /*  var scollable = '#scroll' + id + cid; */
         var data = eval(data);
         if(data.p.graphType == 'area'){
-            // Get the model
-            var model = $parse(graphId);
-            // Assigns a value to it
-            model.assign($scope, true);
-           /*  $(scollable).resizable({
-                stop: function( event, ui ) { 
-                    $scope.resize= true;
-                    $scope.addAreaChart(data, graphId);
-                }
-            }); */
             $scope.addAreaChart(data, graphId);
         }
         else if(data.p.graphType == 'bar'){
@@ -495,6 +492,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         }, function (response) {
             $('#myModal').modal('show')
            /*  $('#myModal').modal('toggle') */
+           $scope.metricCols =  response.kpidata[0].kpicolname;
             $scope.kpiData =[];
             if(response.kpidata[0].pearsonfeatures != undefined && response.kpidata[0].pearsonfeatures != null && response.kpidata[0].pearsonfeatures.length > 0){
                 angular.forEach(response.kpidata[0].pearsonfeatures, function(key, name) {

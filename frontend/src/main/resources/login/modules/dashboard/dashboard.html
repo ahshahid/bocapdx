@@ -177,7 +177,7 @@
 
       <!-- influncerTab Start -->
       <div class="panel panel-gray tab-pane"  role="tabpanel" ng-show="influncerTab"  id="influncer">
-        <div class=" selected-list">
+          <div class=" selected-list">
           <h6>Insights based on 
             <i  ng-click="editPopup()" class="icon-pencil pull-right" ></i></h6>
           <ul class="column-list-selected" >
@@ -276,7 +276,8 @@
 
       <!-- Deep Explanation Tab Start -->
       <div class="panel panel-gray tab-pane"  role="tabpanel" ng-hide="!deepExplanationTab"  id="deepExplanation">
-        <div class=" selected-list">
+        <!-- 
+          <div class=" selected-list">
           <h6>Explanations based on 
             <i ng-click="editPopup('deepExplanation')" class="icon-pencil pull-right"></i></h6>
           <ul class="column-list-selected" >
@@ -289,8 +290,6 @@
             <div class="range-wrap"> <span class="bubble rare-class">{{rareEvent.val}}</span>
               <input type="range" min="{{minRareEvent}}" ng-disabled="true" max="{{maxRareEvent}}" step="{{stepRareEvent}}" ng-init="change(rareEvent.val,'rare-class')" ng-model="rareEvent.val" class="slider" id="rareEvent">
             </div>
-            <!-- <input type="range" min="{{minRareEvent}}" ng-disabled="true" max="{{maxRareEvent}}" step="{{stepRareEvent}}" ng-model="rareEvent.val" class="slider" id="rareEvent"> -->
-            <!-- <input type="range" min="1" max="100" ng-disabled="true" ng-model="rareEvent" value="{{rareEvent}}"  class="slider" id="rareEvents" tooltip-placement="top" uib-tooltip="{{rareEvent}}"> -->
             <div class="range pull-left">
               <span class="left-text">{{minRareEvent}}</span>
               <span class="label left-text">Very Rare</span>
@@ -305,8 +304,6 @@
             <div class="range-wrap"> <span class="bubble risk-class">{{riskRatio.val}}</span>
               <input type="range" min="{{minRiskRatio}}" max="{{maxRiskRatio}}" ng-disabled="true" step="{{stepRiskRatio}}" ng-init="change(riskRatio.val,'risk-class')" ng-model="riskRatio.val" class="slider" id="riskRatio" >
             </div>
-            <!-- <input type="range" min="{{minRiskRatio}}" ng-disabled="true" max="{{maxRiskRatio}}" step="{{stepRiskRatio}}" ng-model="riskRatio.val" class="slider" id="riskRatio" tooltip-placement="top" uib-tooltip="{{riskRatio.val}}" > -->
-            <!-- <input type="range" min="100" max="500" ng-disabled="true" ng-model="riskRatio" class="slider" id="riskRatios" tooltip-placement="top" uib-tooltip="{{riskRatio}}" > -->
             <div class="range pull-left">
               <span class="left-text">{{minRiskRatio}}</span>
               <span class="label left-text">Low</span>
@@ -316,11 +313,12 @@
               <span class="label right-text">Very High</span>
             </div>
           </div>
-        </div>
+        </div> -->
         <!-- Charts Section start-->
         <div class="chart-panel ">
           <h4 style="margin-left: 10px;">{{deepExplanationHeader}}</h4>
           <a class="link-share"><img src="../../assets/Icon 3_Left Nav_Metabase.png" width="30px"> </a>
+          <a class="link-share icon-edit-btn"> <i ng-click="editPopup('deepExplanation')" class="icon-pencil pull-right"></i></a>
           <div ng-repeat="deepEx in deepExplanationList track by $index">
           <!-- <div class="auto-panel">
             <div class="charts-details">

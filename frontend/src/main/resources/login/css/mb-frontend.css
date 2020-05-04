@@ -421,9 +421,11 @@ ul.column-list-selected li label{
 }
 .chart-panel{
     float: left;
-    width: calc(100% - 210px);
+    width: 100%;
     display: block;
     margin-top: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 .selected-list  h6 {
     font-size: 14px;
@@ -800,6 +802,15 @@ ul.column-list-selected li label{
         float: right;
         margin-right: 20px;
         cursor: pointer;
+    }
+    .chart-panel a.link-share.icon-edit-btn {
+        margin-top: 15px;
+        margin-right: 24px;
+        color: #212e3c;
+        text-decoration: none;
+    }
+    .chart-panel a.link-share.icon-edit-btn i{
+        font-size: 24px;
     }
     p.more {
         margin-bottom: 0 !important;
