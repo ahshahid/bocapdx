@@ -25,6 +25,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     $scope.deepExplanationTab = false;
     $scope.deepExplanation = false;
     $rootScope.loading =  false;
+    $scope.isDatasetHidden = false;
     $scope.rareEvent = {
         val: 0.01
     }
@@ -46,6 +47,10 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
 
     $scope.init = function(){
         $scope.hideLoader(); 
+    }
+
+    $scope.toggleDatasetColumn = function(){
+        $scope.isDatasetHidden = !$scope.isDatasetHidden;
     }
 
     $scope.showLoader = function(){

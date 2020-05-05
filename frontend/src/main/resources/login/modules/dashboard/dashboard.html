@@ -77,7 +77,15 @@
       <div class="row">
         
       <!-- Sidebar start -->
-      <div class="data-set-column no-padding-left no-padding-right" class="md-toolbar-tools">
+      <div  ng-hide="!isDatasetHidden" class="data-set-column no-padding-left no-padding-right" style="width: 30px;">
+        <div class="sidebar-menu toggle-others">
+          <a class="arr-fwd" ng-click="toggleDatasetColumn()">
+            <i class="icon-forward pull-right blue-color" ></i>
+          </a>
+          <span class="verticle-txt">Datasets</span>
+          </div>
+      </div>
+      <div class="data-set-column no-padding-left no-padding-right" ng-hide="isDatasetHidden">
         <div class="sidebar-menu toggle-others">
 			
             <div class="sidebar-menu-inner">	
@@ -88,7 +96,7 @@
                           Datasets
                         </a>
                     </div>
-                    <a ng-click="refreshTables()"><i class="icon-backward pull-right blue-color" ></i></a>
+                    <a ng-click="toggleDatasetColumn()"><i class="icon-backward pull-right blue-color" ></i></a>
                     <input type="text" placeholder="Search Datasets" class="theme-style">
                 </header>
                 
@@ -103,7 +111,7 @@
       </div>
       <!-- Sidebar Ends -->
 
-    <div class="tab-container">
+    <div class="tab-container " ng-class="{'colappsed-dataset': isDatasetHidden === true}">
       <!-- Tab headers Start -->
       <ul class="nav nav-tabs" id="tabId"  role="tablist">
         <li role="presentation" class="worksheetClass active" >
