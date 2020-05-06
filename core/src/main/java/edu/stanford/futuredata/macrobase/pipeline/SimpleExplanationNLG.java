@@ -57,6 +57,49 @@ public class SimpleExplanationNLG implements Explanation {
 
     }
 
+    /***
+     *Maybe empty.. Display as a Note box. perhaps like a alert
+     */
+    @JsonProperty("alert")
+    public String getAlertText() {
+        StringBuffer outputText = new StringBuffer();
+        int count = explainObj.getResults().size();
+        if (count == 0) {
+            outputText.append("Oops. The analysis did not generate any explanations. " +
+                    "We suggest dropping the support and/or risk ratio(sliders) and try again.");
+            return outputText.toString();
+        } else if (count > 10) {
+            outputText.append("Well, turns out your analysis generated quite a few explanations. " +
+                    "While our NLG in the future will summarize all these effectively, for now," +
+                    " we present the most important ones. You could change 'Support' for more common" +
+                    " patterns and try again." );
+        }
+        return outputText.toString();
+    }
+
+    @JsonProperty("title")
+    public String getTitleText() {
+        return "Analysis Objective :: " + conf.get("objective", " Not specified");
+    }
+
+    @JsonProperty("preamble")
+    public String getPreambleText() { // content below the Title (header2)
+        StringBuffer outputText = new StringBuffer();
+        int count = explainObj.getResults().size();
+        outputText.append("The FastInsights explanation engine generated " + count + " specific facts/explanations that drive your objective." +
+                " We compared all attribute combinations within the outlier set (defined by - where " + getPredicateString() +
+                " ) to the inlier set identifying statistically significant combinations of attributes," +
+                " or explanations, relevant to desired outcome. " +
+                " \n" +
+                " We also stored all these explanations in a table named --> " + outputTable + " <-- \n" +
+                " You can join/filer using these explanations in your exploratory analytics" +
+                " in metabase ( http://<FastInsights Server host/IP>:3000 ) or other tools. \n\n" +
+                " ... Here are the most important explanations (ranked by risk/chance ratio) ... "
+        );
+        return outputText.toString();
+    }
+
+    //TODO : get the client to use alert/title & preamble
     @JsonProperty("header")
     public String getNlgHeaderText() {
         try {
@@ -66,6 +109,8 @@ public class SimpleExplanationNLG implements Explanation {
             return "Error in getting NLG text";
         }
     }
+
+
 
     /*@JsonProperty("rawExplanation")*/
     public Explanation rawExplanation() {
@@ -92,70 +137,17 @@ public class SimpleExplanationNLG implements Explanation {
         if (detailedOutput) {
             outputText.append(this.explainObj.prettyPrint());
         }
-        int count = explainObj.getResults().size();
-        if (count == 0) {
-            outputText.append("Oops. The analysis did not generate any explanations. " +
-                "We suggest looking for more rare event patterns and try again.");
-            return outputText.toString();
-        }
-        else if (count > 10) {
-            outputText.append("Well, turns out your analysis generated quite a few explanations. " +
-                "While our NLG in the future will summarize all these effectively, for now," +
-                " we present the most important ones. You could change 'Support' for more common" +
-                " patterns and try again. You can view all the explanations here(URL).");
-        }
-
-       outputText.append("\n\nYour OBJECTIVE :: " + conf.get("objective", "Not specified") );
-        outputText.append("\nAnalysis for your objective meant we had to carry out statistical analysis and " +
-            "comparison of records where \"" + getPredicateString() + "\" with the rest. \n");
-
-        outputText.append("Good news. The FastInsights engine produced " + count + " specific facts that " +
-            "drive your objective. Here are the important ones(upto 10)  ...\n");
-
+        outputText.append(getAlertText());
+        outputText.append('\n');
+        outputText.append(getTitleText());
+        outputText.append('\n');
+        outputText.append(getPreambleText());
         return outputText.toString();
     }
 
-    /***
-     * Header1 : Maybe empty.. Display as a Note box. perhaps like a alert
-     * Header2: The title for the report
-     * Header3: The report preamble
-     * The actual explanations in natural language text and charts follow the preamble ..
-     */
-    private String getHeader1() throws Exception {  // MAYBE NOT OUTPUT ANYTHING
-        StringBuffer outputText = new StringBuffer();
-        int count = explainObj.getResults().size();
-        if (count == 0) {
-            outputText.append("Oops. The analysis did not generate any explanations. " +
-                    "We suggest dropping the support and/or risk ratio(sliders) and try again.");
-            return outputText.toString();
-        } else if (count > 10) {
-            outputText.append("Well, turns out your analysis generated quite a few explanations. " +
-                    "While our NLG in the future will summarize all these effectively, for now," +
-                    " we present the most important ones. You could change 'Support' for more common" +
-                    " patterns and try again." );
-        }
-        return outputText.toString();
-    }
 
-    private String getHeader2() throws Exception {  // this is equivalent to the title of the report
-        return "Analysis Objective :: " + conf.get("objective", " Not specified");
-    }
 
-    private String getHeader3() throws Exception { // content below the Title (header2)
-        StringBuffer outputText = new StringBuffer();
-        int count = explainObj.getResults().size();
-        outputText.append("The FastInsights explanation engine generated " + count + " specific facts/explanations that drive your objective." +
-                " We compared all attribute combinations within the outlier set (defined by - where " + getPredicateString() +
-                " ) to the inlier set identifying statistically significant combinations of attributes," +
-                " or explanations, relevant to desired outcome. " +
-                " \n" +
-                " We also stored all these explanations in a table named --> " + outputTable + " <-- \n" +
-                " You can join/filer using these explanations in your exploratory analytics" +
-                " in metabase ( http://<FastInsights Server host/IP>:3000 ) or other tools. \n\n" +
-                " ... Here are the most important explanations (ranked by risk/chance ratio) ... "
-        );
-        return outputText.toString();
-    }
+
 
 
     public String prettyPrint() {
@@ -298,7 +290,7 @@ public class SimpleExplanationNLG implements Explanation {
                 Math.round(this.explainObj.numOutliers()) + ").";
     }
 
-    private String getPredicateString() throws Exception{
+    private String getPredicateString() {
         String s = "";
         if (conf.get("classifier").equals("predicate")) {
             s += conf.get("metric", "unknown").trim();
