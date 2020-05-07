@@ -45,6 +45,12 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     $scope.outlierFilter = '';
     $scope.objective = '';
 
+    $scope.deepExplanationList = [];
+    //$scope.deepExplanationHeader ='';
+    $scope.deepExplanationAlert = '';
+    $scope.deepExplanationTitle = '';
+    $scope.deepExplanationPreamble = '';
+    
     $scope.init = function(){
         $scope.hideLoader(); 
     }
@@ -403,8 +409,7 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         }
 
     }
-    $scope.deepExplanationList = [];
-    $scope.deepExplanationHeader ='';
+   
     $scope.getDeepExplaination = function(){
         $scope.showBusy2();
         var startTime = new Date().getTime();
@@ -422,7 +427,10 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             if( response.expl.nlgExplanation != null){
                 $scope.respTime = (new Date().getTime() - startTime) / 1000;
                 $scope.deepExplanationList = response.expl.nlgExplanation;
-                $scope.deepExplanationHeader = response.expl.header;
+                // $scope.deepExplanationHeader = response.expl.header;
+                $scope.deepExplanationAlert = response.expl.alert;
+                $scope.deepExplanationTitle = response.expl.title;
+                $scope.deepExplanationPreamble = response.expl.preamble;
                 $scope.hideBusy2();
             }else{
                 $scope.hideBusy2();

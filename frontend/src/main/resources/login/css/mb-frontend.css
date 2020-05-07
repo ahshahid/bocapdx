@@ -800,17 +800,21 @@ ul.column-list-selected li label{
     .chart-panel a.link-share{
         display: block;
         float: right;
-        margin-right: 20px;
         cursor: pointer;
+        border: 1px solid #8e9c9b;
+        border-radius: 4px;
+        padding: 4px;
     }
     .chart-panel a.link-share.icon-edit-btn {
-        margin-top: 15px;
-        margin-right: 24px;
-        color: #212e3c;
+        margin-right: 10px;
+        color: #8e9c9b;
         text-decoration: none;
+        background: #fff;
+        width: 25px;
+        height: 25px;
     }
     .chart-panel a.link-share.icon-edit-btn i{
-        font-size: 24px;
+        font-size: 15px;
     }
     p.more {
         margin-bottom: 0 !important;
@@ -911,4 +915,61 @@ ul.column-list-selected li label{
         float: right;
         color: #8E9C9C;
         font-size: 17px;
+    }
+    .alert-message, .deep-preamble{
+        background: #fff;
+        width: calc(100% - 20px);
+        margin-left: 10px;
+        -webkit-box-shadow: 2px 2px 3px 3px rgba(0,0,0,0.1);
+        -moz-box-shadow: 2px 2px 3px 3px rgba(0,0,0,0.1);
+        box-shadow: 2px 2px 3px 3px rgba(0,0,0,0.1);
+        padding: 10px 15px;
+        margin-top: 20px;
+    }
+    .alert-message{
+        padding: 0;
+        position: relative;
+        display: flex;
+    }
+    .alert-message span{
+        background: #f89948;
+        color: #FFF;
+    }
+    .alert__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        width: 60px;
+        background: #f0ac38;
+        height: 100%;
+        position: absolute;
+    }
+    .alert__icon i.icon-warning-sign{
+        color: #FFF;
+        font-size: 20px;
+    }
+    h4.alert__title {
+        width: 100%;
+        padding-left: 75px;
+        padding-right: 15px;
+        font-weight: 900;
+    }
+    .deep-preamble {
+       display: block;
+        margin-top: 20px;
+        margin-left: 10px;
+        padding:10px 15px ;
+        margin-bottom: 10px;
+    }
+    .deep-title {
+        font-size: 15px;
+        margin-bottom: 10px;
+    }
+    .deep-title div{
+        display: block;
+        float: right;
+    }
+    .deep-explain {
+        display: flex;
     }
