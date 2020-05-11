@@ -973,3 +973,18 @@ ul.column-list-selected li label{
     .deep-explain {
         display: flex;
     }
+    .share-pin .reg{
+        display: block !important;
+    }
+    .rollover-img a img.hover, .link-obj .hover,.share-pin .hover{
+        display: none !important;
+    }
+    .rollover-img a:hover img.reg, .link-obj:hover img.reg, .share-pin:hover img.reg{
+        display: none !important;
+    }
+    .rollover-img a:hover img.hover, .link-obj:hover img.hover, .share-pin:hover img.hover{
+        display: block !important;
+    }
+    a{
+        cursor: pointer;
+    }

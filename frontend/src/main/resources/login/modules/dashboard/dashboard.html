@@ -11,34 +11,39 @@
               </div>
             </div>
         </header>
-        <ul id="main-menu" class="main-menu">
+        <ul id="main-menu" class="main-menu rollover-img">
             <li>
                 <a ng-href="/#!/dashboard">
-                    <img src="../../assets/Icon 1_Left Nav_Pinboard.png">
+                    <img class="reg" src="../../assets/Icon 1_Left Nav_Pinboard.png">
+                    <img class="hover" src="../../assets/Icon 1_Left Nav_Pinboard_Selected.png">
                     <span class="title">Pinboard</span>
                 </a>
             </li>
             <li>
                 <a ng-href="/#!/dashboard">
-                  <img src="../../assets/Icon 2_Left Nav_Objective.png">
+                  <img class="reg" src="../../assets/Icon 2_Left Nav_Objective.png">
+                  <img class="hover" src="../../assets/Icon 2_Left Nav_Objective_Selected.png">
                   <span class="title">Your Objectives</span>
                 </a>
             </li>
             <li>
                 <a target="_blank" href="http://localhost:3000/">
-                  <img src="../../assets/Icon 3_Left Nav_Metabase.png">
+                  <img class="reg" src="../../assets/Icon 3_Left Nav_Metabase.png">
+                  <img class="hover" src="../../assets/Icon 3_Left Nav_Metabase_Selected.png">
                   <span class="title">Explore with Metabase</span>
                 </a>
             </li>
             <li>
                 <a ng-href="/#!/dashboard">
-                  <img src="../../assets/Icon 4_Left Nav_Settings.png">
+                  <img class="reg" src="../../assets/Icon 4_Left Nav_Settings.png">
+                  <img class="hover" src="../../assets/Icon 4_Left Nav_Settings_Selected.png">
                   <span class="title">Settings</span>
                 </a>
             </li>
             <li>
               <a ng-href="/#!/dashboard">
-                  <img src="../../assets/Icon 5_Left Nav_Help.png">
+                  <img class="reg" src="../../assets/Icon 5_Left Nav_Help.png">
+                  <img class="hover" src="../../assets/Icon 5_Left Nav_Help_Selected.png">
                   <span class="title">Help</span>
               </a>
           </li>
@@ -57,16 +62,31 @@
                 <i class="icon-reorder more-option"></i>
                 <p class="custom-text-p"><span>My Objective </span>
                   <input type="text" class="form-control pull-left" ng-model="objective" placeholder="Enter your objective here"> 
-                    <a class="link-obj"><img src="../../assets/Icon 8_Increase.png" width="40"></a>
-                    <a class="link-obj"><img src="../../assets/Icon 9_Decrease.png" width="40"></a>
+                    <a class="link-obj">
+                      <img class="reg" src="../../assets/Icon 8_Increase.png" width="40">
+                      <img class="hover" src="../../assets/Icon 8_Increase_Selected.png" width="40">
+                    </a>
+                    <a class="link-obj">
+                      <img class="reg" src="../../assets/Icon 9_Decrease.png" width="40">
+                      <img class="hover" src="../../assets/Icon 9_Decrease_Selected.png" width="40">
+                    </a>
                   <!-- <i class="icon-long-arrow-up active"></i>
                   <i class="icon-long-arrow-down"></i> -->
                 </p>
               </div>
             </form>
             <ul class="nav navbar-nav navbar-right custom-color">
-              <li><a ><img class="img-icon" src="../../assets/Icon 10_Share.png"></a></li>
-              <li><a ><img class="img-icon" src="../../assets/Icon 1_Left Nav_Pinboard.png"></a></li>
+              <li><a class="share-pin">
+                <img class="img-icon reg" src="../../assets/Icon 10_Share.png">
+                <img class="img-icon hover" src="../../assets/Icon 10_Share_On Hover.png">
+                </a>
+              </li>
+              <li>
+                <a class="share-pin">
+                  <img class="img-icon reg" src="../../assets/Icon 1_Left Nav_Pinboard.png">
+                  <img class="img-icon hover" src="../../assets/Icon 1_Left Nav_Pinboard_Selected.png">
+                </a>
+              </li>
             </ul>
           </div><!-- /.navbar-collapse -->
         </div><!-- /.container-fluid -->
@@ -293,7 +313,10 @@
             <div class="deep-title">
               <b>{{deepExplanationTitle}}</b>
               <div >
-                <a class="link-share"><img style="display: block;" src="../../assets/Icon 3_Left Nav_Metabase.png" width="15px"> </a>
+                <a class="link-share share-pin">
+                  <img class="reg" style="display: block;" src="../../assets/Icon 3_Left Nav_Metabase.png" width="15px"> 
+                  <img class="hover" style="display: block;" src="../../assets/Icon 3_Left Nav_Metabase_Selected.png" width="15px"> 
+                </a>
                 <a class="link-share icon-edit-btn"> <i ng-click="editPopup('deepExplanation')" class="icon-pencil pull-right"></i></a>
               </div>
             </div>
@@ -316,9 +339,18 @@
               <p class="more"><a class="more-link">Explain Further</a></p>
               </div>
                 <div class="controls">
-                  <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
-                  <a class="img-links"><img src="../../assets/Icon 23_Like.png" width="20px"> </a>
-                  <a class="img-links"><img src="../../assets/Icon 24_Dislike.png" width="20px"> </a>
+                  <a class="img-links share-pin">
+                    <img class="reg" src="../../assets/Icon 22_More Actions.png" width="20px">
+                    <img class="hover" src="../../assets/Icon 22_More Actions_On Hover.png" width="20px">
+                  </a>
+                  <a class="img-links share-pin">
+                    <img class="reg" src="../../assets/Icon 23_Like.png" width="20px">
+                    <img class="hover" src="../../assets/Icon 23_Like_Selected.png" width="20px">
+                  </a>
+                  <a class="img-links share-pin">
+                    <img class="reg" src="../../assets/Icon 24_Dislike.png" width="20px">
+                    <img class="hover" src="../../assets/Icon 24_Dislike_Selected.png" width="20px">
+                  </a>
                 </div>
             </div>
             

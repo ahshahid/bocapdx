@@ -105,6 +105,8 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         }, function (response) {
             $scope.hideLoader();
              $scope.tables = response.results;
+        },function(err){
+            $scope.hideLoader();
         })
     }
     
@@ -436,6 +438,8 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                 $scope.hideBusy2();
             }
             
+        },function(err){
+            $scope.hideBusy2();
         })
     }
 
