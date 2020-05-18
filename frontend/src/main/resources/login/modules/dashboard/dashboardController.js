@@ -52,8 +52,14 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     $scope.deepExplanationPreamble = '';
     
     $scope.init = function(){
+        $('#worksheet').resizable({
+            stop: function( event, ui ) { 
+            }
+        });
         $scope.hideLoader(); 
     }
+
+    
 
     $scope.toggleDatasetColumn = function(){
         $scope.isDatasetHidden = !$scope.isDatasetHidden;
@@ -127,6 +133,15 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             }, function (response) {
                 $scope.columnList = response.schema.columns;
                 $scope.workflowid = response.workflowid;
+                if(response.table != undefined){
+                    if(response.table.joinlist){
+                        $scope.joinlistParentcol = response.table.joinlist[0].parentcol;
+                        $scope.joinlistJoincol = response.table.joinlist[0].joincol;
+                        $scope.joinlistJointype = response.table.joinlist[0].jointype;
+                    }
+                    
+                }
+                
                 var newJson=[]
                 angular.forEach(response.schema.columns, function(value,key) {
                     var name =value.name
@@ -161,6 +176,11 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                     $scope.isRowRes = true;
                     $scope.createWorkSheetTables(table);
                     $scope.hideLoader();
+                    if($scope.workSheetTables.length > 1){
+                        setTimeout(function(){
+                            $scope.lineConnector();
+                        }, 100)
+                    }
                 }, function(err){
                     $scope.hideLoader();
                 });
@@ -170,15 +190,24 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         }else{
             $scope.toggleTableSelection(table);
             $scope.hideLoader();
-        }
-            
-           
-
-            
-            
+        }      
     }
 // Todo Implement the json logic
-
+    $scope.lineConnector = function(){
+        
+        angular.forEach($scope.workSheetTables, function(value,key) {
+            $('#form'+key).connections({to: '#form'+(key+1), 'class': 'demo', borderClasses: {
+                top: 'connection-border-top',
+                right: 'connection-border-right',
+                bottom: 'connection-border-bottom',
+                left: 'connection-border-left'
+            }});
+        })
+       
+         $('.demo').html(function() { return '<span>' + $scope.joinlistJointype + '<span class="join left">'+$scope.joinlistParentcol+'</span><span class="join right">'+$scope.joinlistJoincol+'</span></span>' });
+        $.repeat().add('connection').each($).connections('update').wait(0);
+          
+    }
     $scope.applyOutlier = function(){
         $('#outlierModel').modal('hide');
     }

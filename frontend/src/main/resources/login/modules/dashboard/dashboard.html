@@ -157,7 +157,7 @@
       <div class="panel panel-gray worksheet-tab tab-pane active"  role="tabpanel" ng-show="worksheetTab" id="worksheetTab">
         
         <div class="panel-body"  id="worksheet" drop-on-me callback-fn="getData(table,true)" style="position: relative;">
-          <div class="table-details " ng-repeat="table in workSheetTables" ng-if="worksheet"  ng-draggable='dragOptions' style="cursor: move;">
+          <div class="table-details draggable1" id="form{{$index}}" ng-repeat="table in workSheetTables" ng-if="worksheet"  ng-draggable='dragOptions' style="cursor: move;">
            <p>{{table.name}}</p>
             <p>Columns: {{table.colCount}}<br>
               Rows: {{table.rowCount}}
