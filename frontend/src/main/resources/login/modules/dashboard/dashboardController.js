@@ -131,6 +131,10 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             ApiFactory.schema.save({
                 table: $scope.jsonSchema
             }, function (response) {
+                if(response.errorMessage != null){
+                    $scope.hideLoader();
+                    return;
+                }
                 $scope.columnList = response.schema.columns;
                 $scope.workflowid = response.workflowid;
                 if(response.table != undefined){
@@ -165,6 +169,10 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                 ApiFactory.getRows.save({
                     workflowid: $scope.workflowid
                 }, function (response) {
+                    if(response.errorMessage != null){
+                        $scope.hideLoader();
+                        return;
+                    }
                     var data = response.rows;
                     $scope.rowCount = response.rowCount;
                    $scope.convertKeyValueJson($scope.schemaCols, response.rows);
@@ -455,10 +463,13 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                 "minRatioMetric": $scope.riskRatio.val
             }
         }, function (response) {
+            if(response.errorMessage != null){
+                $scope.hideBusy2();
+                return;
+            }
             if( response.expl.nlgExplanation != null){
                 $scope.respTime = (new Date().getTime() - startTime) / 1000;
                 $scope.deepExplanationList = response.expl.nlgExplanation;
-                // $scope.deepExplanationHeader = response.expl.header;
                 $scope.deepExplanationAlert = response.expl.alert;
                 $scope.deepExplanationTitle = response.expl.title;
                 $scope.deepExplanationPreamble = response.expl.preamble;
@@ -475,7 +486,6 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
     $scope.runDeepExplaination = function(data, id, cid){
         $scope.showBusy2();
         var graphId = 'graph' + id + '_' + cid;
-       /*  var scollable = '#scroll' + id + cid; */
         var data = eval(data);
         if(data.p.graphType == 'area'){
             $scope.addAreaChart(data, graphId);
@@ -531,13 +541,16 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
                 }
             }
         })
-       // $scope.selectedCols =[];
+
         ApiFactory.getInsight.save({
             "workflowid": $scope.workflowid,
             "kpicols": $scope.selectedCols
         }, function (response) {
+            if(response.errorMessage != null){
+                $scope.hideBusy1();
+                return;
+            }
             $('#myModal').modal('show')
-           /*  $('#myModal').modal('toggle') */
            $scope.metricCols =  response.kpidata[0].kpicolname;
             $scope.kpiData =[];
             if(response.kpidata[0].pearsonfeatures != undefined && response.kpidata[0].pearsonfeatures != null && response.kpidata[0].pearsonfeatures.length > 0){
@@ -594,49 +607,21 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         }
     }
     
-    $scope.rawChartDate = [
-      ['Year', 'Sales', 'Expenses', 'Profit'],
-      ['2014', 1000, 400, 200],
-      ['2015', 1170, 460, 250],
-      ['2016', 660, 1120, 300],
-      ['2017', 1030, 540, 350],
-      ['2018', 545, 222, 253],
-      ['2019', 312, 540, 444],
-      ['2020', 700, 544, 222],
-      ['2021', 921, 440, 150],
-      ['2022', 880, 510, 310],
-      ['2023', 400, 880, 450],
-      ['2024', 250, 230, 310],
-      ['2025', 180, 450, 350],
-      ['2026', 150, 580, 312]
-    ]
-    /* we may not use
-    $scope.compileChartData = function(data){
-        $scope.compiledData = [];
-        $scope.compiledData.push([data.features[0], $scope.metricCols[0]]);
-        angular.forEach(data.graphs[0].dataPoints, function(key,value) {
-                $scope.compiledData.push([key.feature, parseFloat(key.metric)]);
-        });
-    } */
-
+    $scope.rawChartDate = []
+   
     $scope.addBarChart = function(deepData,id){
         if($scope.resize){
             drawChart();
             $scope.resize = false;
         }
         if(deepData){
-           // $scope.compileChartData(deepData);
             $scope.rawChartDate = deepData;
         }
         google.charts.load('current', {'packages':['corechart']});
-        //google.charts.setOnLoadCallback(drawChart);
         google.setOnLoadCallback(function() { drawChart(deepData); });
 
-        //function drawChart() {
         function drawChart(datum) {
-            //var data = new google.visualization.DataTable($scope.rawChartDate,0.6);
             var data = new google.visualization.DataTable(datum,0.6);
-            /* var data = google.visualization.arrayToDataTable($scope.rawChartDate); */
             var hAxisTtl= datum.p.hAxis_title;
             var vAxisTtl= datum.p.vAxis_title;
             var options = {
@@ -669,18 +654,13 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
             $scope.resize = false;
         }
         if(deepData){
-            //$scope.compileChartData(deepData);
             $scope.rawChartDate = deepData;
         }
         google.charts.load('current', {'packages':['corechart']});
-        //google.charts.setOnLoadCallback(drawChart);
         google.setOnLoadCallback(function() { drawChart(deepData); });
 
-        //function drawChart() {
         function drawChart(datum) {
-            //var data = new google.visualization.DataTable($scope.rawChartDate,0.6);
-            var data = new google.visualization.DataTable(datum,0.6);
-            /* var data = google.visualization.arrayToDataTable($scope.rawChartDate); */
+          var data = new google.visualization.DataTable(datum,0.6);
 
           var hAxisTtl= datum.p.hAxis_title;
           var vAxisTtl= datum.p.vAxis_title;
@@ -718,7 +698,6 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(drawChart);
         if(deepData){
-            //$scope.compileChartData(deepData);
             $scope.rawChartDate = deepData;
         }
         function drawChart() {
@@ -767,7 +746,6 @@ app.controller('dashboardController', ['$scope', '$rootScope', '$http', 'ApiFact
         var data = new google.visualization.DataTable($scope.rawChartDate);
 
         var options = {
-        /*   title: 'Company Performance', */
           curveType: 'function',
           colors:['#0BE880','#0FBCF9', '#EBAD52', '#EA4C87'],
           legend: { position: 'bottom' },

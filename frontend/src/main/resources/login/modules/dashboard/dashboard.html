@@ -297,8 +297,7 @@
       <div class="panel panel-gray tab-pane"  role="tabpanel" ng-hide="!deepExplanationTab"  id="deepExplanation">
         <!-- Charts Section start-->
         <div class="chart-panel ">
-          <!-- <h4 style="margin-left: 10px;">{{deepExplanationHeader}}</h4> -->
-          <div class="alert-message" aria-label="Warning alert">
+          <div ng-if="deepExplanationAlert" class="alert-message" aria-label="Warning alert">
             <div class="alert__icon">
               <i class="icon-warning-sign" aria-hidden="true"></i>
             </div>
@@ -320,9 +319,7 @@
                 <a class="link-share icon-edit-btn"> <i ng-click="editPopup('deepExplanation')" class="icon-pencil pull-right"></i></a>
               </div>
             </div>
-            <div class="deep-explain">
-              {{deepExplanationPreamble}}
-             
+            <div class="deep-explain" ng-bind-html="deepExplanationPreamble">             
             </div>
           </div>
           <div ng-repeat="deepEx in deepExplanationList track by $index">

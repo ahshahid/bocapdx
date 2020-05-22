@@ -972,6 +972,7 @@ ul.column-list-selected li label{
     }
     .deep-explain {
         display: flex;
+        white-space: pre-wrap;
     }
     .share-pin .reg{
         display: block !important;
