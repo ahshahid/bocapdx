@@ -43,8 +43,9 @@ public class JoinTablesResponseTester {
   public void testResponse() throws Exception {
     HttpPost httpPost = null;
     HttpGet httpGet = null;
-    final String kpiCol = "Churn";//"telecom_churn_billing_churn";
-    final String pred = "churn = 1";
+    final String kpiCol = "outcome";//"telecom_churn_billing_churn";//"Churn";//
+    //final String pred = "telecom_churn_billing_churn = 1";
+    final String pred = "outcome = 1";
     try {
       CookieStore cookieStore = new BasicCookieStore();
       HttpContext httpContext = new BasicHttpContext();
@@ -68,14 +69,15 @@ public class JoinTablesResponseTester {
 
 
       ObjectMapper objectMapper = new ObjectMapper();
-      String table1 = "telecom_churn_billing";
-      String table2 = "telecom_churn_networkq";
+      //String table1 = "telecom_churn_billing";//"telco_billing";//
+      String table1 = "diabetes_ext";//"telco_billing";//
+      String table2 = "telecom_churn_networkq";//"telco_demographics";//
 
       // Test schema fetch
       String schemaUrl = "http://" + host + ":9090/api/schema";
       httpPost = new HttpPost(schemaUrl);
       httpPost.addHeader("content-type", "application/json;charset=UTF-8");
-     // data = new StringEntity("{\"table\":{\"name\":\"" +  table1 + "\", \"joinlist\":[{\"table\":{\"name\":\"" + table2 +"\"}}]}}");
+      //data = new StringEntity("{\"table\":{\"name\":\"" +  table1 + "\", \"joinlist\":[{\"table\":{\"name\":\"" + table2 +"\"}}]}}");
       data = new StringEntity("{\"table\":{\"name\":\"" +  table1 + "\"}}");
 
       httpPost.addHeader("User-Agent", "Apache HTTPClient");

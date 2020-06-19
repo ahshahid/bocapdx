@@ -49,7 +49,8 @@ public class TableData {
 
   private static ExecutorService executorService = Executors.newCachedThreadPool();
 
-
+  private static String correlationFromStoreQuery = "select pearson, chiSquare, annova from %1$s " +
+          "where tableName = '%2$s' and kpiColumn = '%3$s'";
 
   private static String storeQuantileDiscretes = "exec scala\n" +
       "import org.apache.spark.sql._;" +
@@ -481,6 +482,7 @@ public class TableData {
   private Function<String, DependencyData> depedencyComputer = kpi -> {
     try {
       ColumnData kpiCol = columnMappings.get(kpi.toLowerCase());
+      DependencyData ddFromStore = getDependencyDataFromStore(kpiCol.name);
       DependencyData dd = new DependencyData(kpiCol.name, kpiCol.ft);
       if (kpiCol.ft.equals(FeatureType.continuous)) {
         // identify which are continuous or categorical cols which can use pearson corr directly
@@ -610,6 +612,13 @@ public class TableData {
     } catch(Exception e) {
       throw new RuntimeException(e);
     }
+
+  }
+
+  private DependencyData getDependencyDataFromStore(String kpiCol) throws SQLException {
+    
+    String query = String.format(QUERY_DEEP_METRIC_CONTI, unbinnedMetricCol, featureCol, tableName);
+    ResultSet rs = ingester.executeQuery(query);
 
   }
 
