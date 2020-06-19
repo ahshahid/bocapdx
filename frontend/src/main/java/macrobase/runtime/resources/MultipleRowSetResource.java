@@ -51,7 +51,7 @@ public class MultipleRowSetResource extends BaseResource {
 
             // Need a CSV ingester. Changing so it's not fixed during construction (used to be final, but changed as
             // this is set in AnalyzeResource after construction)
-            configuredIngester = conf.getString(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseDefaults.DATA_LOADER_TYPE.toString());
+            String configuredIngester = conf.getString(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseDefaults.DATA_LOADER_TYPE.toString());
 
             DataIngester loader = getLoader();
             List<RowSet> lr = new ArrayList<RowSet>();
