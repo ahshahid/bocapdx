@@ -20,7 +20,7 @@
         var data = new google.visualization.DataTable(dataArr[index], 0.6);
 
         // Set chart options
-        var options = {'title':'XXXX',
+        var options = {
                        'width':400,
                        'height':300};
 

@@ -49,7 +49,9 @@ public class TableData {
 
   private static ExecutorService executorService = Executors.newCachedThreadPool();
 
-
+  private static String correlationFromStoreQuery = "select pearson, chiSquare, annova from %1$s " +
+          "where tableName = '%2$s' and kpiColumn = '%3$s'";
+  private static String correlationInsertStoreQuery = "insert into %1$s values ('%2$s', '%3$s', %4$s, %5$s, %6$s)";
 
   private static String storeQuantileDiscretes = "exec scala\n" +
       "import org.apache.spark.sql._;" +
@@ -481,100 +483,147 @@ public class TableData {
   private Function<String, DependencyData> depedencyComputer = kpi -> {
     try {
       ColumnData kpiCol = columnMappings.get(kpi.toLowerCase());
-      DependencyData dd = new DependencyData(kpiCol.name, kpiCol.ft);
-      if (kpiCol.ft.equals(FeatureType.continuous)) {
-        // identify which are continuous or categorical cols which can use pearson corr directly
-        List<ColumnData> pearsonAmenable = columnMappings.values().stream().filter(cd ->
-                !cd.possiblePrimaryKey && !cd.name.equalsIgnoreCase(kpi) && !cd.skip && (cd.ft.equals(FeatureType.continuous) ||
-                        (cd.ft.equals(FeatureType.categorical) && cd.numDistinctValues == 2 && (cd.sqlType == Types.SMALLINT ||
-                                cd.sqlType == Types.INTEGER || cd.sqlType == Types.BIGINT || cd.sqlType == Types.DOUBLE
-                                || cd.sqlType == Types.FLOAT)))
-        ).collect(Collectors.toList());
-        if (!pearsonAmenable.isEmpty()) {
-          double[] corrs = kpiContToCont.apply(kpiCol, pearsonAmenable);
-          for (int i = 0; i < corrs.length; ++i) {
-            dd.addToPearson(pearsonAmenable.get(i).name, corrs[i]);
-          }
-        }
-
-        List<ColumnData> annovaAmenable = columnMappings.values().stream().filter(cd ->
-                !cd.possiblePrimaryKey && !cd.name.equalsIgnoreCase(kpi) && !cd.skip && cd.ft.equals(FeatureType.categorical) &&
-                        cd.numDistinctValues != 2).collect(Collectors.toList());
-        if (!annovaAmenable.isEmpty()) {
-          SQLIngester ingester = ingesterThreadLocal.get();
-          String tab = this.getTableOrView();
-          String q1 = "select avg(%1$s) from %2$s";
-          ResultSet rs = ingester.executeQuery(String.format(q1, kpiCol.name, tab));
-          int colType = rs.getMetaData().getColumnType(1);
-          rs.next();
-          double overAllMean;
-          if (colType == Types.DECIMAL) {
-            overAllMean = rs.getBigDecimal(1).doubleValue();
-          } else {
-            overAllMean = rs.getDouble(1);
+      DependencyData ddFromStore = getDependencyDataFromStore(kpiCol);
+      if (ddFromStore != null) {
+        return ddFromStore;
+      } else {
+        StringBuilder pearsonBuilder = new StringBuilder();
+        StringBuilder chiBuilder = new StringBuilder();
+        StringBuilder anovaBuilder = new StringBuilder();
+        DependencyData dd = new DependencyData(kpiCol.name, kpiCol.ft);
+        if (kpiCol.ft.equals(FeatureType.continuous)) {
+          // identify which are continuous or categorical cols which can use pearson corr directly
+          List<ColumnData> pearsonAmenable = columnMappings.values().stream().filter(cd ->
+                  !cd.possiblePrimaryKey && !cd.name.equalsIgnoreCase(kpi) && !cd.skip && (cd.ft.equals(FeatureType.continuous) ||
+                          (cd.ft.equals(FeatureType.categorical) && cd.numDistinctValues == 2 && (cd.sqlType == Types.SMALLINT ||
+                                  cd.sqlType == Types.INTEGER || cd.sqlType == Types.BIGINT || cd.sqlType == Types.DOUBLE
+                                  || cd.sqlType == Types.FLOAT)))
+          ).collect(Collectors.toList());
+          if (!pearsonAmenable.isEmpty()) {
+            double[] corrs = kpiContToCont.apply(kpiCol, pearsonAmenable);
+            for (int i = 0; i < corrs.length; ++i) {
+              dd.addToPearson(pearsonAmenable.get(i).name, corrs[i]);
+              pearsonBuilder.append(pearsonAmenable.get(i).name).append('=').append(corrs[i]).append(',');
+            }
           }
 
-          String q2 = "select  cast (sum(cast((%1$s - %2$f) * (%1$s - %2$f) as double)) as double) from %3$s";
-          rs = ingester.executeQuery(String.format(q2, kpiCol.name, overAllMean, tab));
-          rs.next();
-          double ssTotal = rs.getDouble(1);
+          List<ColumnData> annovaAmenable = columnMappings.values().stream().filter(cd ->
+                  !cd.possiblePrimaryKey && !cd.name.equalsIgnoreCase(kpi) && !cd.skip && cd.ft.equals(FeatureType.categorical) &&
+                          cd.numDistinctValues != 2).collect(Collectors.toList());
+          if (!annovaAmenable.isEmpty()) {
+            SQLIngester ingester = ingesterThreadLocal.get();
+            String tab = this.getTableOrView();
+            String q1 = "select avg(%1$s) from %2$s";
+            ResultSet rs = ingester.executeQuery(String.format(q1, kpiCol.name, tab));
+            int colType = rs.getMetaData().getColumnType(1);
+            rs.next();
+            double overAllMean;
+            if (colType == Types.DECIMAL) {
+              overAllMean = rs.getBigDecimal(1).doubleValue();
+            } else {
+              overAllMean = rs.getDouble(1);
+            }
 
-          for (ColumnData cd : annovaAmenable) {
-            double corr = catToCont.apply(cd, kpiCol, overAllMean, ssTotal);
-            dd.addToAnova(cd.name, corr);
+            String q2 = "select  cast (sum(cast((%1$s - %2$f) * (%1$s - %2$f) as double)) as double) from %3$s";
+            rs = ingester.executeQuery(String.format(q2, kpiCol.name, overAllMean, tab));
+            rs.next();
+            double ssTotal = rs.getDouble(1);
+
+            for (ColumnData cd : annovaAmenable) {
+              double corr = catToCont.apply(cd, kpiCol, overAllMean, ssTotal);
+              dd.addToAnova(cd.name, corr);
+              anovaBuilder.append(cd.name).append('=').append(corr).append(',');
+            }
           }
-        }
 
-        List<ColumnData> biserialAmenable = columnMappings.values().stream().filter(cd ->
-                !cd.possiblePrimaryKey && !cd.name.equalsIgnoreCase(kpi) && !cd.skip &&
-                        cd.ft.equals(FeatureType.categorical) && cd.numDistinctValues == 2 && !(cd.sqlType == Types.SMALLINT ||
-                        cd.sqlType == Types.INTEGER || cd.sqlType == Types.BIGINT || cd.sqlType == Types.DOUBLE
-                        || cd.sqlType == Types.FLOAT)
-        ).collect(Collectors.toList());
-        if (!biserialAmenable.isEmpty()) {
-          for (ColumnData cd : biserialAmenable) {
-            double corr = biserial.apply(cd, kpiCol);
-            dd.addToPearson(cd.name, corr);
+          List<ColumnData> biserialAmenable = columnMappings.values().stream().filter(cd ->
+                  !cd.possiblePrimaryKey && !cd.name.equalsIgnoreCase(kpi) && !cd.skip &&
+                          cd.ft.equals(FeatureType.categorical) && cd.numDistinctValues == 2 && !(cd.sqlType == Types.SMALLINT ||
+                          cd.sqlType == Types.INTEGER || cd.sqlType == Types.BIGINT || cd.sqlType == Types.DOUBLE
+                          || cd.sqlType == Types.FLOAT)
+          ).collect(Collectors.toList());
+          if (!biserialAmenable.isEmpty()) {
+            for (ColumnData cd : biserialAmenable) {
+              double corr = biserial.apply(cd, kpiCol);
+              dd.addToPearson(cd.name, corr);
+              pearsonBuilder.append(cd.name).append('=').append(corr).append(',');
+            }
           }
-        }
 
-      } else if (kpiCol.ft.equals(FeatureType.categorical)) {
-        // get all the categorical cols
-        List<ColumnData> deps = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
-                && !ele.possiblePrimaryKey && !ele.skip && ele.ft.equals(FeatureType.categorical)).collect(Collectors.toList());
-        Map<String, Double> corrData = categoricalToCategorical.apply(kpiCol, deps);
-        for (Map.Entry<String, Double> entry : corrData.entrySet()) {
-          dd.addToChiSqCorrelation(entry.getKey(), entry.getValue());
-        }
-        // get all the continous cols
-        List<ColumnData> contiCols = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
-                && !ele.possiblePrimaryKey && !ele.skip && ele.ft.equals(FeatureType.continuous)).collect(Collectors.toList());
-        if (!contiCols.isEmpty()) {
-          if (kpiCol.numDistinctValues == 2) {
-            if (kpiCol.sqlType == Types.SMALLINT ||
-                    kpiCol.sqlType == Types.INTEGER || kpiCol.sqlType == Types.BIGINT || kpiCol.sqlType == Types.DOUBLE
-                    || kpiCol.sqlType == Types.FLOAT) {
-              double[] corrs = kpiContToCont.apply(kpiCol, contiCols);
-              for (int i = 0; i < corrs.length; ++i) {
-                dd.addToPearson(contiCols.get(i).name, corrs[i]);
+        } else if (kpiCol.ft.equals(FeatureType.categorical)) {
+          // get all the categorical cols
+          List<ColumnData> deps = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
+                  && !ele.possiblePrimaryKey && !ele.skip && ele.ft.equals(FeatureType.categorical)).collect(Collectors.toList());
+          Map<String, Double> corrData = categoricalToCategorical.apply(kpiCol, deps);
+          for (Map.Entry<String, Double> entry : corrData.entrySet()) {
+            dd.addToChiSqCorrelation(entry.getKey(), entry.getValue());
+            chiBuilder.append(entry.getKey()).append('=').append(entry.getValue()).append(',');
+          }
+          // get all the continous cols
+          List<ColumnData> contiCols = columnMappings.values().stream().filter(ele -> !ele.name.equalsIgnoreCase(kpi)
+                  && !ele.possiblePrimaryKey && !ele.skip && ele.ft.equals(FeatureType.continuous)).collect(Collectors.toList());
+          if (!contiCols.isEmpty()) {
+            if (kpiCol.numDistinctValues == 2) {
+              if (kpiCol.sqlType == Types.SMALLINT ||
+                      kpiCol.sqlType == Types.INTEGER || kpiCol.sqlType == Types.BIGINT || kpiCol.sqlType == Types.DOUBLE
+                      || kpiCol.sqlType == Types.FLOAT) {
+                double[] corrs = kpiContToCont.apply(kpiCol, contiCols);
+                for (int i = 0; i < corrs.length; ++i) {
+                  dd.addToPearson(contiCols.get(i).name, corrs[i]);
+                  pearsonBuilder.append(contiCols.get(i).name).append('=').append(corrs[i]).append(',');
+                }
+              } else {
+                // biserial
+                contiCols.stream().forEach(contiCol -> {
+                  double corr = biserial.apply(kpiCol, contiCol);
+                  dd.addToPearson(contiCol.name, corr);
+                  pearsonBuilder.append(contiCol.name).append('=').append(corr).append(',');
+                });
               }
             } else {
-              // biserial
               contiCols.stream().forEach(contiCol -> {
-                double corr = biserial.apply(kpiCol, contiCol);
-                dd.addToPearson(contiCol.name, corr);
+                double corr = catToCont.apply(kpiCol, contiCol, Double.NaN, Double.NaN);
+                dd.addToAnova(contiCol.name, corr);
+                anovaBuilder.append(contiCol.name).append('=').append(corr).append(',');
               });
             }
-          } else {
-            contiCols.stream().forEach(contiCol -> {
-              double corr = catToCont.apply(kpiCol, contiCol, Double.NaN, Double.NaN);
-              dd.addToAnova(contiCol.name, corr);
-            });
           }
+
+        }
+        // insert the dd into table
+        String pearsonStr = null;
+        String chiStr = null;
+        String anovaStr = null;
+        if (pearsonBuilder.length() > 0) {
+          pearsonBuilder.deleteCharAt(pearsonBuilder.length() - 1);
+          pearsonBuilder.insert(0, '\'');
+          pearsonBuilder.append('\'');
+          pearsonStr = pearsonBuilder.toString();
         }
 
+        if (chiBuilder.length() > 0) {
+          chiBuilder.deleteCharAt(chiBuilder.length() - 1);
+          chiBuilder.insert(0, '\'');
+          chiBuilder.append('\'');
+          chiStr = chiBuilder.toString();
+        }
+
+        if (anovaBuilder.length() > 0) {
+          anovaBuilder.deleteCharAt(anovaBuilder.length() - 1);
+          anovaBuilder.insert(0, '\'');
+          anovaBuilder.append('\'');
+          anovaStr = anovaBuilder.toString();
+        }
+        String tableName = this.getTableOrView();
+        if (tableName.startsWith(MacroBaseDefaults.BOCA_SHADOW_TABLE_PREFIX)) {
+          tableName = tableName.substring(MacroBaseDefaults.BOCA_SHADOW_TABLE_PREFIX.length());
+        }
+        String insertDml =  String.format(correlationInsertStoreQuery, MacroBaseDefaults.BOCA_CORRELATION_TABLE,
+               tableName, kpiCol.name, pearsonStr, chiStr, anovaStr);
+        SQLIngester ingester = ingesterThreadLocal.get();
+        ingester.executeSQL(insertDml);
+        return dd;
       }
-      return dd;
     } catch(SQLException sqle) {
       throw new RuntimeException((sqle));
     }
@@ -611,6 +660,67 @@ public class TableData {
       throw new RuntimeException(e);
     }
 
+  }
+
+  private DependencyData getDependencyDataFromStore(ColumnData kpiCol) throws SQLException {
+    String tableName = this.getTableOrView();
+    if (tableName.startsWith(MacroBaseDefaults.BOCA_SHADOW_TABLE_PREFIX)) {
+      tableName = tableName.substring(MacroBaseDefaults.BOCA_SHADOW_TABLE_PREFIX.length());
+    }
+
+    String query = String.format(correlationFromStoreQuery, MacroBaseDefaults.BOCA_CORRELATION_TABLE,
+            tableName, kpiCol.name);
+    SQLIngester ingester = ingesterThreadLocal.get();
+    ResultSet rs = ingester.executeQuery(query);
+    if (rs.next()) {
+      String pearson = rs.getString(1);
+      if (rs.wasNull()) {
+        pearson = null;
+      }
+      String chiSquare = rs.getString(2);
+      if (rs.wasNull()) {
+        chiSquare = null;
+      }
+      String annova = rs.getString(3);
+      if (rs.wasNull()) {
+        annova = null;
+      }
+
+      DependencyData dd = new DependencyData(kpiCol.name, kpiCol.ft);
+      if (pearson != null) {
+         addtoDependenyMaps(pearson, dd, 0);
+      }
+
+      if (chiSquare != null) {
+        addtoDependenyMaps(chiSquare, dd, 1);
+      }
+
+      if (annova != null) {
+        addtoDependenyMaps(annova, dd, 2);
+      }
+      return dd;
+
+    } else {
+      return null;
+    }
+
+  }
+
+  private static void addtoDependenyMaps(String data, DependencyData dd, int type) {
+    StringTokenizer stz = new StringTokenizer(data, ",");
+    while(stz.hasMoreTokens()) {
+      String tok = stz.nextToken();
+      int equalIndex = tok.indexOf("=");
+      String key = tok.substring(0, equalIndex);
+      String val = tok.substring(equalIndex + 1);
+      if (type == 0) {
+        dd.addToPearson(key, Double.parseDouble(val));
+      } else if (type == 1) {
+        dd.addToChiSqCorrelation(key, Double.parseDouble(val));
+      } else {
+        dd.addToAnova(key, Double.parseDouble(val));
+      }
+    }
   }
 
   private static DataTable getResponseForDeepInsights(String tableName, String featureCol, int actualFeatureColType,

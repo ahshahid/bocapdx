@@ -50,7 +50,8 @@ public class RowSetResource extends BaseResource {
         try {
             conf.set(MacroBaseConf.DB_URL, request.pgUrl);
             conf.set(MacroBaseConf.BASE_QUERY, request.baseQuery);
-            configuredIngester = conf.getString(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseDefaults.DATA_LOADER_TYPE.toString());
+
+            String configuredIngester = conf.getString(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseDefaults.DATA_LOADER_TYPE.toString());
 
             HashMap<String, String> preds = new HashMap<>();
             request.columnValues.stream().forEach(a -> preds.put(a.column, a.value));

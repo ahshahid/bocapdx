@@ -10,6 +10,8 @@ import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
+import macrobase.ingest.SQLIngester;
 import macrobase.runtime.command.MacroBasePipelineCommand;
 import macrobase.runtime.resources.*;
 import org.eclipse.jetty.server.session.SessionHandler;
@@ -65,6 +67,12 @@ public class MacroBaseServer extends Application<MacroBaseConf> {
         environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(new LoggingFeature(java.util.logging.Logger.getLogger(LoggingFeature.DEFAULT_LOGGER_NAME), Level.SEVERE, LoggingFeature.Verbosity.PAYLOAD_ANY,
                 1000));
-
+        MacroBaseConf confNew = configuration.copy();
+        confNew.set(MacroBaseConf.DB_USER, "app");
+        confNew.set(MacroBaseConf.DB_PASSWORD, "app");
+        SQLIngester ingester = (SQLIngester) BaseResource.getLoader(confNew);
+        String ddl = "create table if not exists " + MacroBaseDefaults.BOCA_CORRELATION_TABLE +
+                " (tableName String, kpiColumn String, pearson String, chiSquare String, annova String) using row";
+        ingester.executeSQL(ddl);
     }
 }

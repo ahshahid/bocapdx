@@ -67,13 +67,14 @@ public class FastInsightResource extends BaseResource {
 
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
-  public FastInsightResponse getSchema(FastInsightRequest fir) {
+  public FastInsightResponse getFastInsights(FastInsightRequest fir) {
     FastInsightResponse response = new FastInsightResponse();
     HttpSession ss = request.getSession();
     try {
       SQLIngester ingester =  (SQLIngester)ss.getAttribute(MacroBaseConf.SESSION_INGESTER);
 
       final TableData tdOrig = TableManager.getTableData(fir.workflowid);
+
       TableData currentTd = tdOrig;
 
       response.kpidata = new ArrayList<>(fir.kpicols.size());
