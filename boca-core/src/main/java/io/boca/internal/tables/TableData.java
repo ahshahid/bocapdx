@@ -51,7 +51,7 @@ public class TableData {
 
   private static String correlationFromStoreQuery = "select pearson, chiSquare, annova from %1$s " +
           "where tableName = '%2$s' and kpiColumn = '%3$s'";
-  private static String correlationInsertStoreQuery = "insert into %1$s values ('%2$s', '%3$s', '%4$s', '%5$s', '%6$s')";
+  private static String correlationInsertStoreQuery = "insert into %1$s values ('%2$s', '%3$s', %4$s, %5$s, %6$s)";
 
   private static String storeQuantileDiscretes = "exec scala\n" +
       "import org.apache.spark.sql._;" +
@@ -596,16 +596,22 @@ public class TableData {
         String anovaStr = null;
         if (pearsonBuilder.length() > 0) {
           pearsonBuilder.deleteCharAt(pearsonBuilder.length() - 1);
+          pearsonBuilder.insert(0, '\'');
+          pearsonBuilder.append('\'');
           pearsonStr = pearsonBuilder.toString();
         }
 
         if (chiBuilder.length() > 0) {
           chiBuilder.deleteCharAt(chiBuilder.length() - 1);
+          chiBuilder.insert(0, '\'');
+          chiBuilder.append('\'');
           chiStr = chiBuilder.toString();
         }
 
         if (anovaBuilder.length() > 0) {
           anovaBuilder.deleteCharAt(anovaBuilder.length() - 1);
+          anovaBuilder.insert(0, '\'');
+          anovaBuilder.append('\'');
           anovaStr = anovaBuilder.toString();
         }
         String tableName = this.getTableOrView();
