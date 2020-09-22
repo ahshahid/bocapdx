@@ -11,7 +11,7 @@ public class BasicBatchPipelineTest {
         PipelineConfig conf = PipelineConfig.fromYamlFile(
                 "src/test/resources/tiny_conf.yaml"
         );
-        BasicBatchPipeline p = new BasicBatchPipeline(conf);
+        BasicBatchPipeline p = new  BasicBatchPipeline(conf);
         Explanation e = p.results();
         assertEquals(3.0, e.numTotal(), 1e-10);
     }

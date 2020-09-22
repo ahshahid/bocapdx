@@ -1,0 +1,51 @@
+pipeline: "BasicBatchPipeline"
+
+objective: "Increase Bank telemarketing conversion rate"
+
+inputURI: "jdbc:snappydata://34.70.196.110:1527"
+
+baseTable: "bank_marketing_ext"
+
+classifier: "predicate"
+metric: "y"
+predicate: "=="
+cutoff: "yes"
+
+#classifier: "percentile"
+#metric: "rent"
+#cutoff: 10.0
+
+
+summarizer: "aplinear"
+#summarizer: "fpgrowth"
+# summarizer: "countmeanshift"
+########
+## fpgrowth doesn't test with attribute combinations ... need to fix ...
+########
+
+attributes:
+  - "age"
+  - "job"
+  - "marital"
+  - "education"
+#  - "default"  .... doesn't work ... snappy reserved word?
+#  - "housing" ...... doesn't work ... weird snappy error
+  - "loan"
+  - "contact"
+  - "month"
+  - "day_of_week"
+  - "duration"
+  - "campaign"
+  - "pdays"
+  - "previous"
+  - "poutcome"
+  - "emp_var_rate"
+  - "cons_price_idx"
+  - "cons_conf_idx"
+  - "euribor3m"
+  - "nr_employed"
+
+ratioMetric: "globalratio"
+minRatioMetric: 1.5
+minSupport: 0.1
+

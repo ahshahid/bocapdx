@@ -17,7 +17,12 @@ public class MacroBaseDefaults {
 
     public static final Boolean USE_PERCENTILE = true;
     public static final Boolean USE_ZSCORE = false;
-
+    public static final String BOCA_PREFIX = "fastinsights";
+    public static final String BOCA_VIEWS_PREFIX = BOCA_PREFIX + "_view_";
+    public static final String BOCA_ALIAS_PREFIX = BOCA_PREFIX + "_tbl_";
+    public static final String BOCA_SHADOW_TABLE_PREFIX = BOCA_PREFIX + "_prepped_";
+    public static final String BOCA_SHADOW_TABLE_UNBINNED_COL_PREFIX = BOCA_PREFIX + "_unprepped_";
+    public static final String BOCA_CORRELATION_TABLE = BOCA_PREFIX + "_correlations";
     // streaming defaults
     public static final Integer WARMUP_COUNT = 10000;
     public static final Integer TUPLE_BATCH_SIZE = 10000;
@@ -45,15 +50,20 @@ public class MacroBaseDefaults {
     public static final Integer TRUNCATE_K = 10;
 
     // loader defaults
-    public static final DataIngesterType DATA_LOADER_TYPE = DataIngesterType.POSTGRES_LOADER;
+    //public static final DataIngesterType DATA_LOADER_TYPE = DataIngesterType.POSTGRES_LOADER;
+    public static final DataIngesterType DATA_LOADER_TYPE = DataIngesterType.SPARKSQL_LOADER;
     public static final Integer TIME_COLUMN = null;
     public static final MacroBaseConf.TransformType TRANSFORM_TYPE = MacroBaseConf.TransformType.MAD_OR_MCD;
     public static final CSVIngester.Compression CSV_COMPRESSION = CSVIngester.Compression.UNCOMPRESSED;
 
-    public static final String DB_USER = System.getProperty("user.name");
-    public static final String DB_PASSWORD = "";
-    public static final String DB_NAME = "postgres";
-    public static final String DB_URL = "localhost";
+    //public static final String DB_USER = System.getProperty("user.name");
+    //public static final String DB_PASSWORD = "";
+    //public static final String DB_NAME = "postgres";
+    //public static final String DB_URL = "localhost";
+    public static final String DB_USER = "app";
+    public static final String DB_PASSWORD = "app";
+    public static final String DB_NAME = "";
+    public static final String DB_URL = "34.70.196.110:1527";//"10.80.141.102:1527";
     public static final Integer DB_CACHE_CHUNK_SIZE = 1000000;
 
     public static final Double OUTLIER_STATIC_THRESHOLD = 3.0;

@@ -1,0 +1,18 @@
+<div ng-controller="loginController">
+    <div class="col-md-6">
+    <img class="login-img" src="../../assets/6_Login screen_Graphic with Logo.png" alt="Login screen">
+    </div>
+    <div class="col-md-6">
+        <div class="panel-heading login-panel-heading">
+            <h5>Welcome</h5>
+            Sign in to begin
+        </div>
+            <div class="panel-body no-padding-top">
+                        <div class="login-panel">
+                            <input ng-model="username" placeholder="Username" class="theme-style username">
+                            <input ng-model="password" placeholder="Password" class="theme-style password">
+                            <button ng-click="login()" class="btn btn-light">Sign In</button>
+                        </div>
+            </div>
+    </div>
+</div>

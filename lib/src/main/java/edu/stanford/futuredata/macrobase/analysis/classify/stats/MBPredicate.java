@@ -15,6 +15,8 @@ public class MBPredicate {
             switch (str) {
                 case "==":
                     return EQUALS;
+                case "=":
+                    return EQUALS;
                 case "!=":
                     return NOT_EQUALS;
                 case "<":

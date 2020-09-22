@@ -1,0 +1,57 @@
+pipeline: "BasicBatchPipeline"
+
+objective: "Reduce churn"
+
+inputURI: "jdbc:snappydata://10.80.141.102:1527"
+
+baseTable: "telecom_churn_billing_prepped"
+
+classifier: "predicate"
+metric: "churn"
+predicate: "=="
+cutoff: "1"
+
+extraPredicate: "where age1 > 0 and age2 > 0"
+
+
+summarizer: "aplinear"
+#summarizer: "fpgrowth"
+# summarizer: "countmeanshift"
+########
+## fpgrowth doesn't test with attribute combinations ... need to fix ...
+########
+
+attributes:
+  - "crclscod"
+  - "uniqsubs"
+  - "rev_range"
+#
+  - "adjqty"
+  - "adjrev_bin"
+  - "avgmou"
+  - "avgrev"
+  - "eqpdays"
+  - "mou_mean"
+  - "ovrrev_mean"
+  - "rev_mean"
+#
+  - "totcalls"
+  - "totmrc_mean"
+  - "totrev"
+  - "avg3mou"
+  - "avg3qty"
+  - "avg6mou"
+  - "avg6qty"
+  - "datovr_mean"
+  - "datovr_range"
+  - "mou_range"
+  - "roam_mean"
+  - "actvsubs"
+  - "age1"
+  - "age2"
+  - "area"
+  - "asl_flag"
+
+ratioMetric: "globalratio"
+minRatioMetric: 1.5
+minSupport: 0.01

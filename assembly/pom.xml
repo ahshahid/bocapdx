@@ -33,6 +33,22 @@
                     <createDependencyReducedPom>true</createDependencyReducedPom>
                     <filters>
                         <filter>
+                            <artifact>*:macrobase-core:*</artifact>
+                            <excludes>
+                                <exclude>com/fasterxml/jackson/**/*</exclude>
+                                <exclude>org/slf4j/**/*</exclude>
+                            </excludes>
+                        </filter>
+                        <filter>
+                            <artifact>io.snappydata:snappydata-jdbc_2.11</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                               <exclude>org/slf4j/**/*</exclude>
+                            </excludes>
+                        </filter>
+                           <filter>
                             <artifact>*:*</artifact>
                             <excludes>
                                 <exclude>META-INF/*.SF</exclude>

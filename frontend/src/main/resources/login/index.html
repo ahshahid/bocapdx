@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<!-- Lib imports -->
+<script src="js/angular.min.js"></script>
+<script src="js/angular-resource.min.js"></script>
+<script src="js/angular-route.min.js"></script>
+<script src="js/angular-ui-router.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/jquery-ui.min.js"></script>
+<script src="js/ui-bootstrap-tpls-2.5.0.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/ngStorage.min.js"></script>
+<script src="js/plotly.min.js"></script>
+<script src="js/ng-table.min.js"></script>
+<script src="js/angular-sanitize.js"></script>
+<script type="text/javascript" src="js/loader.js"></script>
+<script type="text/javascript" src="js/jquery-timing.min.js"></script>
+<script type="text/javascript" src="js/connector.js"></script>
+
+<link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="css/mb-frontend.css">
+<link rel="stylesheet" href="modules/login/sidebar.css">
+<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+<link rel="stylesheet" href="css/ng-table.css">
+<!-- Project imports -->
+<script src="modules/config.js"></script>
+<script src="routing/routing.js"></script>
+<script src="services/apiServices.js"></script>
+<script src="directive/drag.js"></script>
+<!-- controller Import -->
+<script src="modules/login/loginController.js"></script>
+<script src="modules/dashboard/dashboardController.js"></script>
+
+<head>
+    <link rel="icon" href="assets/Fast Insights Logo_Only Symbol.png" type="image/gif" sizes="16x16 32x32">
+    <title>FastInsights</title>
+</head>
+
+<body  ng-app="bocaApp">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- <div  ng-show="isAuthenticated" class="col-md-12 no-padding-left">
+                
+                <data class="col-md-10 no-padding-left" ui-view></ui-view>
+            </div> -->
+            <div class="col-md-12 no-padding-left  no-padding-right">
+                <data class="col-md-12  no-padding-left no-padding-right" ui-view></ui-view>
+            </div>
+        </div>
+        
+    </div> 
+    <div class="loader" ng-if="loading">
+        <img src="../../assets/Loader-GIF.gif" width="100px">
+        <p>Loading...</p>
+      </div>
+
+    <div class="loader" ng-if="correlating">
+        <img src="../../assets/Loader-GIF.gif" width="100px">
+        <p>Finding correlations...</p>
+    </div>
+    <div class="loader" ng-if="findFacts">
+        <img src="../../assets/Loader-GIF.gif" width="100px">
+        <p>Finding most relevant facts...</p>
+    </div>
+
+</body>
+</html>

@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import java.util.*;
@@ -64,11 +65,34 @@ public class MacroBaseConf extends Configuration {
     public static final String DB_URL = "macrobase.loader.db.url";
     public static final String DB_CACHE_DIR = "macrobase.loader.db.cacheDirectory";
     public static final String DB_CACHE_CHUNK_SIZE = "macrobase.loader.db.cacheChunkSizeTuples";
-
+    public static final String DB_DRIVER = "macrobase.loader.db.dbdriver";
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
     public static final String CSV_COMPRESSION = "macrobase.loader.csv.compression";
+    public static final String SESSION_INGESTER = "macrobase.loader.ingester";
 
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
+
+    public static final String ORIGINAL_METRIC_COL_KEY = "originalMetricColumn";
+    public static final String WORKFLOWID_KEY = "workflowid";
+    public static final String OBJECTIVE_KEY = "objective";
+    public static final String BASE_TABLE_KEY = "baseTable";
+    public static final String METRIC_KEY = "metric";
+    public static final String SUMMARIZER_KEY = "summarizer";
+    public static final String PROVIDED_CONN_KEY = "providedConnection";
+    public static final String PRED_KEY = "predicate";
+    public static final String EXTRA_PRED_KEY = "extraPredicate";
+    public static final String CLASSIFIER_KEY = "classifier";
+    public static final String CUT_OFF_KEY = "cutoff";
+    public static final String ATTRIBUTES_KEY = "attributes";
+    public static final String MAX_ORDER_KEY = "maxOrder";
+    public static final String MIN_SUPPORT_KEY = "minSupport";
+    public static final String MIN_RATIO_KEY = "minRatioMetric";
+    public static final String[] optionalParams = {"inputURI", EXTRA_PRED_KEY, CLASSIFIER_KEY,
+        CUT_OFF_KEY, "includeHi", "includeLo", PRED_KEY, ATTRIBUTES_KEY, "ratioMetric",  MIN_RATIO_KEY,
+        MIN_SUPPORT_KEY, MAX_ORDER_KEY};
+    public static final String CLASSIFIER_PERCENTILE = "percentile";
+    public static final String CLASSIFIER_PRED = "predicate";
+    public static final String CLASSIFIER_CMS = "countmeanshift";
 
     private final DatumEncoder datumEncoder;
 
@@ -108,6 +132,8 @@ public class MacroBaseConf extends Configuration {
             return new CSVIngester(this);
         } else if (ingesterType == DataIngesterType.POSTGRES_LOADER) {
             return new PostgresIngester(this);
+        } else if (ingesterType == DataIngesterType.SPARKSQL_LOADER) {
+            return new SparkSQLIngester(this);
         } else if (ingesterType == DataIngesterType.CACHING_POSTGRES_LOADER) {
             return new DiskCachingIngester(this, new PostgresIngester(this));
         } else if (ingesterType == DataIngesterType.MYSQL_LOADER) {
@@ -210,7 +236,8 @@ public class MacroBaseConf extends Configuration {
         POSTGRES_LOADER,
         CACHING_POSTGRES_LOADER,
         MYSQL_LOADER,
-        CACHING_MYSQL_LOADER
+        CACHING_MYSQL_LOADER,
+        SPARKSQL_LOADER;
     }
 
 
@@ -371,4 +398,11 @@ public class MacroBaseConf extends Configuration {
                 .filter(e -> e.startsWith("macrobase"))
                 .forEach(e -> set(e, System.getProperty(e)));
     }
+
+    public MacroBaseConf copy() {
+      MacroBaseConf newObj = new MacroBaseConf();
+      newObj._conf.putAll(this._conf);
+      return newObj;
+    }
+
 }

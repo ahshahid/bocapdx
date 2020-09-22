@@ -19,10 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -63,9 +60,9 @@ public abstract class SQLIngester extends DataIngester {
         dbUser = conf.getString(MacroBaseConf.DB_USER, MacroBaseDefaults.DB_USER);
         dbPassword = conf.getString(MacroBaseConf.DB_PASSWORD, MacroBaseDefaults.DB_PASSWORD);
         dbName = conf.getString(MacroBaseConf.DB_NAME, MacroBaseDefaults.DB_NAME);
-        baseQuery = conf.getString(MacroBaseConf.BASE_QUERY);
+        baseQuery = "";//conf.getString(MacroBaseConf.BASE_QUERY);
         dbUrl = conf.getString(MacroBaseConf.DB_URL, MacroBaseDefaults.DB_URL);
-        timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
+        timeColumn = 0;//conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
 
         if (connection != null) {
             this.connection = connection;
@@ -92,6 +89,11 @@ public abstract class SQLIngester extends DataIngester {
         return sql.replaceAll(";", "");
     }
 
+    public Connection getConnection() throws SQLException {
+        this.initializeConnection();
+        return this.connection;
+    }
+
     public Schema getSchema(String baseQuery)
             throws SQLException {
         initializeConnection();
@@ -100,14 +102,39 @@ public abstract class SQLIngester extends DataIngester {
         String sql = String.format("%s LIMIT 1", removeSqlJunk(removeLimit(baseQuery)));
         ResultSet rs = stmt.executeQuery(sql);
 
+       return this.getSchema(rs);
+    }
+
+    public Schema getSchema(ResultSet rs) throws SQLException {
+
+
         List<Schema.SchemaColumn> columns = Lists.newArrayList();
 
         for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
-            columns.add(new Schema.SchemaColumn(rs.getMetaData().getColumnName(i),
-                    rs.getMetaData().getColumnTypeName(i)));
+            columns.add(new Schema.SchemaColumn(rs.getMetaData().getColumnName(i).toLowerCase(),
+                rs.getMetaData().getColumnTypeName(i),
+                rs.getMetaData().getColumnType(i)));
         }
 
         return new Schema(columns);
+    }
+
+
+    public List<String> getTables()
+        throws SQLException {
+        initializeConnection();
+
+        DatabaseMetaData dmd = connection.getMetaData();
+        ResultSet rs = dmd.getTables(null, this.dbUser, "%", null );
+        List<String> tables = new ArrayList<>();
+        while(rs.next()) {
+            String tableOrView = rs.getString(3).toLowerCase();
+            if (!tableOrView.startsWith(MacroBaseDefaults.BOCA_PREFIX)) {
+                tables.add(tableOrView);
+            }
+        }
+        tables.sort((t1, t2) -> t1.compareTo(t2));
+        return  tables;
     }
 
     public String getRowsSql(String baseQuery,
@@ -160,8 +187,48 @@ public abstract class SQLIngester extends DataIngester {
         return new RowSet(rows);
     }
 
+    public ResultSet executeQuery(String query) throws SQLException {
+        initializeConnection();
+        // TODO handle time column here
+
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(query);
+        return rs;
+
+    }
+
+    public void executeSQL(String ddl) throws SQLException {
+        initializeConnection();
+        // TODO handle time column here
+
+        Statement stmt = connection.createStatement();
+        stmt.execute(ddl);
+
+    }
+
     private void initializeConnection() throws SQLException {
         if (connection == null) {
+            // TODO Skip using DropWizard JDBC util as it keeps doing health checks on the connection ..
+            // .. causing too many SQL queries on Spark
+            try {
+                Class.forName("io.snappydata.jdbc.ClientDriver"); // fix later
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
+
+            Properties p = new Properties();
+            if (dbUser != null) {
+                p.setProperty("user", this.dbUser);
+            }
+            if (dbPassword != null) {
+                p.setProperty("password", dbPassword);
+            }
+
+
+            this.connection = DriverManager.getConnection(String.format("%s//%s/%s", getJDBCUrlPrefix(), dbUrl, dbName), p);
+
+            /******
             DataSourceFactory factory = new DataSourceFactory();
 
             factory.setDriverClass(getDriverClass());
@@ -177,12 +244,13 @@ public abstract class SQLIngester extends DataIngester {
 
             source = factory.build(MacroBase.metrics, dbName);
             this.connection = source.getConnection();
+             ******/
         }
     }
 
     private void initializeResultSet() throws SQLException {
         initializeConnection();
-
+        /*
         if (resultSet == null) {
             String targetColumns = StreamSupport.stream(
                     Iterables.concat(attributes, metrics).spliterator(), false)
@@ -203,7 +271,7 @@ public abstract class SQLIngester extends DataIngester {
             for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); ++i) {
                 conf.getEncoder().recordAttributeName(i, resultSet.getMetaData().getColumnName(i));
             }
-        }
+        } */
     }
 
     @Override

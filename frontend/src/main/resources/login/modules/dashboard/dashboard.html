@@ -1,0 +1,525 @@
+<div ng-controller="dashboardController" ng-init="init()">
+  <!-- Sidebar -->
+  <div class="sidebar-menu toggle-others main-sidebar">
+			
+    <div class="sidebar-menu-inner">	
+        
+        <header>
+            <div class="logo">
+              <div class="navbar-header">
+                <a class="navbar-brand" ng-href="/#!/dashboard"><img src="../../assets/Fast-Insights-Logo.png"></a>
+              </div>
+            </div>
+        </header>
+        <ul id="main-menu" class="main-menu rollover-img">
+            <li>
+                <a ng-href="/#!/dashboard">
+                    <img class="reg" src="../../assets/Icon 1_Left Nav_Pinboard.png">
+                    <img class="hover" src="../../assets/Icon 1_Left Nav_Pinboard_Selected.png">
+                    <span class="title">Pinboard</span>
+                </a>
+            </li>
+            <li>
+                <a ng-href="/#!/dashboard">
+                  <img class="reg" src="../../assets/Icon 2_Left Nav_Objective.png">
+                  <img class="hover" src="../../assets/Icon 2_Left Nav_Objective_Selected.png">
+                  <span class="title">Your Objectives</span>
+                </a>
+            </li>
+            <li>
+                <a target="_blank" href="http://localhost:3000/">
+                  <img class="reg" src="../../assets/Icon 3_Left Nav_Metabase.png">
+                  <img class="hover" src="../../assets/Icon 3_Left Nav_Metabase_Selected.png">
+                  <span class="title">Explore with Metabase</span>
+                </a>
+            </li>
+            <li>
+                <a ng-href="/#!/dashboard">
+                  <img class="reg" src="../../assets/Icon 4_Left Nav_Settings.png">
+                  <img class="hover" src="../../assets/Icon 4_Left Nav_Settings_Selected.png">
+                  <span class="title">Settings</span>
+                </a>
+            </li>
+            <li>
+              <a ng-href="/#!/dashboard">
+                  <img class="reg" src="../../assets/Icon 5_Left Nav_Help.png">
+                  <img class="hover" src="../../assets/Icon 5_Left Nav_Help_Selected.png">
+                  <span class="title">Help</span>
+              </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  <!-- End sidebar -->
+  <!-- Header start -->
+    <nav class="navbar navbar-boca">
+        <div class="container-fluid">
+            
+        <!-- Collect the nav links, forms, and other content for toggling -->
+          <div class="" id="bs-example-navbar-collapse-1">
+            <form class="navbar-form navbar-left" role="search">
+              <div class="form-group">
+                <i class="icon-reorder more-option"></i>
+                <p class="custom-text-p"><span>My Objective </span>
+                  <input type="text" class="form-control pull-left" ng-model="objective" placeholder="Enter your objective here"> 
+                    <a class="link-obj">
+                      <img class="reg" src="../../assets/Icon 8_Increase.png" width="40">
+                      <img class="hover" src="../../assets/Icon 8_Increase_Selected.png" width="40">
+                    </a>
+                    <a class="link-obj">
+                      <img class="reg" src="../../assets/Icon 9_Decrease.png" width="40">
+                      <img class="hover" src="../../assets/Icon 9_Decrease_Selected.png" width="40">
+                    </a>
+                  <!-- <i class="icon-long-arrow-up active"></i>
+                  <i class="icon-long-arrow-down"></i> -->
+                </p>
+              </div>
+            </form>
+            <ul class="nav navbar-nav navbar-right custom-color">
+              <li><a class="share-pin">
+                <img class="img-icon reg" src="../../assets/Icon 10_Share.png">
+                <img class="img-icon hover" src="../../assets/Icon 10_Share_On Hover.png">
+                </a>
+              </li>
+              <li>
+                <a class="share-pin">
+                  <img class="img-icon reg" src="../../assets/Icon 1_Left Nav_Pinboard.png">
+                  <img class="img-icon hover" src="../../assets/Icon 1_Left Nav_Pinboard_Selected.png">
+                </a>
+              </li>
+            </ul>
+          </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+    </nav>
+      <!-- Header Ends -->
+      
+      <!-- main container -->
+      <div class="row">
+        
+      <!-- Sidebar start -->
+      <div  ng-hide="!isDatasetHidden" class="data-set-column no-padding-left no-padding-right" style="width: 30px;">
+        <div class="sidebar-menu toggle-others">
+          <a class="arr-fwd" ng-click="toggleDatasetColumn()">
+            <i class="icon-forward pull-right blue-color" ></i>
+          </a>
+          <span class="verticle-txt">Datasets</span>
+          </div>
+      </div>
+      <div class="data-set-column no-padding-left no-padding-right" ng-hide="isDatasetHidden">
+        <div class="sidebar-menu toggle-others">
+			
+            <div class="sidebar-menu-inner">	
+                
+                <header class="logo-env">
+                    <div class="logo">
+                        <a ng-href="/#!/dashboard" class="logo-expanded">
+                          Datasets
+                        </a>
+                    </div>
+                    <a ng-click="toggleDatasetColumn()"><i class="icon-backward pull-right blue-color" ></i></a>
+                    <input type="text" placeholder="Search Datasets" class="theme-style">
+                </header>
+                
+                <ul id="data-table" class="main-menu" drop-on-me >
+                    <li ng-click="getData(table); $event.preventDefault()" ng-repeat="table in tableNames track by $index">
+                        <input type="checkbox" id="{{table}}" ng-model="myTable.selected[table]" class="pull-right" >
+                        <label drag-me for="{{table}}" id="{{table}}" class="title"  tooltip-placement="top" uib-tooltip="{{table}}"><span>{{table}}</span></label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+      </div>
+      <!-- Sidebar Ends -->
+
+    <div class="tab-container " ng-class="{'colappsed-dataset': isDatasetHidden === true}">
+      <!-- Tab headers Start -->
+      <ul class="nav nav-tabs" id="tabId"  role="tablist">
+        <li role="presentation" class="worksheetClass active" >
+          <a  aria-controls="worksheetTab" role="tab" data-toggle="tab" data-target="#worksheetTab" ng-click="goToTab('worksheet')">My Worksheet</a>
+        </li>
+        <li role="presentation" class="influcerClass" ng-hide="!influncer">
+          <a aria-controls="influncer" role="tab" data-target="#influncer" data-toggle="tab" ng-click="goToTab('influncer')">Influencer Insights</a>
+          <button type="button" class="close"  ng-click="closeTab('influncer')">
+            <span>&times;</span>
+          </button>
+        </li>
+        <li role="presentation" class="deepClass" ng-hide="!deepExplanationTabLink">
+          <a aria-controls="deepExplanation" role="tab" data-target="#deepExplanation" data-toggle="tab" ng-click="goToTab('deepExplanation','link')">Deep Explanations</a>
+          <button type="button" class="close"  ng-click="closeTab('deepExplanationTabLink')">
+            <span>&times;</span>
+          </button>
+        </li>
+      </ul>
+      <!-- Tab headers End -->
+
+      <!-- worksheetTab Start -->
+      <div class="tab-content">
+      <div class="panel panel-gray worksheet-tab tab-pane active"  role="tabpanel" ng-show="worksheetTab" id="worksheetTab">
+        
+        <div class="panel-body"  id="worksheet" drop-on-me callback-fn="getData(table,true)" style="position: relative;">
+          <div class="table-details draggable1" id="form{{$index}}" ng-repeat="table in workSheetTables" ng-if="worksheet"  ng-draggable='dragOptions' style="cursor: move;">
+           <p>{{table.name}}</p>
+            <p>Columns: {{table.colCount}}<br>
+              Rows: {{table.rowCount}}
+            </p>
+          </div>
+          <div class="table-drop-message" ng-if="!worksheet">
+            <p>Drag and Drop tables from the left panel or select with the help of checkoboxes to add to the worksheet</p>
+          </div>
+        </div>
+        <div class="row-search-panel">
+          <p class="custom-text-p">
+          <input type="text" class="theme-style" placeholder="Search Columns" ></p>
+          <!-- Single button -->
+          <div class="filters">
+            <button ng-disabled="!isColumnSelected" type="button" class="btn mar-top-10" >
+              <img src="../../assets/Icon 11_Auto Classify_Disabled.png" >Auto-classify Outliers
+            </button>
+              <button ng-disabled="!isColumnSelected" type="button"  data-toggle="modal" data-target="#outlierModel" class="btn mar-top-10 right-btn">
+                <img src="../../assets/Icon 12_Outlier Filter_Disabled.png" >Outlier Filter <!-- <span class="caret"></span> -->
+              </button>
+          </div>
+          <button ng-disabled="!isColumnSelected" type="button" ng-click="updateColumnList('deepExplanation')" class="btn blue-btn pull-right mar-top-10" >
+            Deep Explanations
+          </button>
+          <button ng-disabled="!isColumnSelected" type="button" ng-click="updateColumnList('instantInsight')" class="btn blue-btn pull-right mar-top-10" style="margin-right: 20px;">
+            Influencer Insights
+          </button>
+          
+        </div>
+        <div class="panel-body table-rows-section" >
+          <div  ng-if="schemaCols.length > 0">
+            <table class="table table-bordered" show-filter="false" ng-table-dynamic="schemaRows with schemaCols" >
+              <colgroup>
+                <col ng-repeat="column in columnList" id="{{column.name}}">
+                </colgroup>
+                <tr ng-repeat="data in $data track by $index">
+                    <td ng-repeat="d in data">{{d}}<!-- {{d}} --></td>
+                  <!--  <td filter="{ $in: 'number'}" sortable="'type'">{{data[1]}}</td> -->
+                </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- worksheetTab End -->
+
+      <!-- influncerTab Start -->
+      <div class="panel panel-gray tab-pane"  role="tabpanel" ng-show="influncerTab"  id="influncer">
+        <!-- Charts  -->
+        <div class="chart-panel ">
+          <h4 style="margin-left: 10px;">We looked into 12555522 rows of data in 135 secs to find out results on 8 factors affecting the most.</h4>
+          <div id="barChartContainer">
+            <div class="charts-details">
+              <div class="discription">
+              <h6>Chart titles goes here</h6>
+              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce tempus eu erat eu hendrerit.
+                Nullam vulputate sagittis mauris, quis laoreet lacus hendrerit ut. Etiam gravida bibendum lacus 
+                ac eleifend.</p>
+              </div>
+                <div class="controls">
+                  <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 23_Like.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 24_Dislike.png" width="20px"> </a>
+                </div>
+            </div>
+            <div id="barChart" style="width: 100%; height: calc(100% - 75px);"></div>
+          </div>
+          <div id="areaChartContainer">
+            <div class="charts-details">
+              <div class="discription">
+              <h6>Chart titles goes here</h6>
+              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce tempus eu erat eu hendrerit.
+                Nullam vulputate sagittis mauris, quis laoreet lacus hendrerit ut. Etiam gravida bibendum lacus 
+                ac eleifend.</p>
+              </div>
+                <div class="controls">
+                  <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 23_Like.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 24_Dislike.png" width="20px"> </a>
+                </div>
+            </div>
+            <div id="areaChart" style="width: 100%; height: calc(100% - 75px);"></div>
+          </div>
+          <div id="lineChartContainer">
+            <div class="charts-details">
+              <div class="discription">
+              <h6>Chart titles goes here</h6>
+              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce tempus eu erat eu hendrerit.
+                Nullam vulputate sagittis mauris, quis laoreet lacus hendrerit ut. Etiam gravida bibendum lacus 
+                ac eleifend.</p>
+              </div>
+                <div class="controls">
+                  <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 23_Like.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 24_Dislike.png" width="20px"> </a>
+                </div>
+            </div>
+            <div id="lineChart" style="width: 100%; height: calc(100% - 75px);"></div>
+          </div>
+          <div id="pieChartContainer">
+            <div class="charts-details">
+              <div class="discription">
+              <h6>Chart titles goes here</h6>
+              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce tempus eu erat eu hendrerit.
+                Nullam vulputate sagittis mauris, quis laoreet lacus hendrerit ut. Etiam gravida bibendum lacus 
+                ac eleifend.</p>
+              </div>
+                <div class="controls">
+                  <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 23_Like.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 24_Dislike.png" width="20px"> </a>
+                </div>
+            </div>
+            <div id="pieChart" style="width: 100%; height: calc(100% - 75px);"></div>
+          </div>
+          <div id="bubbleChartContainer">
+            <div class="charts-details">
+              <div class="discription">
+              <h6>Chart titles goes here</h6>
+              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce tempus eu erat eu hendrerit.
+                Nullam vulputate sagittis mauris, quis laoreet lacus hendrerit ut. Etiam gravida bibendum lacus 
+                ac eleifend.</p>
+              </div>
+                <div class="controls">
+                  <a class="img-links"><img src="../../assets/Icon 22_More Actions.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 23_Like.png" width="20px"> </a>
+                  <a class="img-links"><img src="../../assets/Icon 24_Dislike.png" width="20px"> </a>
+                </div>
+            </div>
+            <div id="bubbleChart" style="width: 100%; height: calc(100% - 75px);"></div>
+          </div>
+        </div>
+        <!-- Charts  End-->
+        </div>
+      <!-- influncerTab End -->
+
+      <!-- Deep Explanation Tab Start -->
+      <div class="panel panel-gray tab-pane"  role="tabpanel" ng-hide="!deepExplanationTab"  id="deepExplanation">
+        <!-- Charts Section start-->
+        <div class="chart-panel ">
+          <div ng-if="deepExplanationAlert" class="alert-message" aria-label="Warning alert">
+            <div class="alert__icon">
+              <i class="icon-warning-sign" aria-hidden="true"></i>
+            </div>
+            <h4 class="alert__title">
+              <span class="pf-screen-reader"></span>{{deepExplanationAlert}}</h4>
+          </div>
+          <!-- <div class="alert-message"><span>
+            <i class="icon-warning-sign pull-right"></i>
+          </span>{{deepExplanationAlert}}</div> -->
+          
+          <div class="deep-preamble">
+            <div class="deep-title">
+              <b>{{deepExplanationTitle}}</b>
+              <div >
+                <a class="link-share share-pin">
+                  <img class="reg" style="display: block;" src="../../assets/Icon 3_Left Nav_Metabase.png" width="15px"> 
+                  <img class="hover" style="display: block;" src="../../assets/Icon 3_Left Nav_Metabase_Selected.png" width="15px"> 
+                </a>
+                <a class="link-share icon-edit-btn"> <i ng-click="editPopup('deepExplanation')" class="icon-pencil pull-right"></i></a>
+              </div>
+            </div>
+            <div class="deep-explain" ng-bind-html="deepExplanationPreamble">             
+            </div>
+          </div>
+          <div ng-repeat="deepEx in deepExplanationList track by $index">
+          <div class="auto-panel" id="scroll{{$index}}">
+            <div class="charts-details">
+              <div class="discription graph-description">
+                <p class="deep-p">{{deepEx.explanationStr}}</p>
+              <div ng-repeat="graph in deepEx.graphs"  ng-init="runDeepExplaination(graph, $parent.$index, $index)" id="graph{{$parent.$index}}_{{$index}}" style="width: 100%; min-height: 350px;position: relative;">
+              <div class="loader">
+                <img src="../../assets/Loader-GIF.gif" width="100px">
+                <p>Loading graph...</p>
+              </div>
+              </div>
+              <p class="more"><a class="more-link">Explain Further</a></p>
+              </div>
+                <div class="controls">
+                  <a class="img-links share-pin">
+                    <img class="reg" src="../../assets/Icon 22_More Actions.png" width="20px">
+                    <img class="hover" src="../../assets/Icon 22_More Actions_On Hover.png" width="20px">
+                  </a>
+                  <a class="img-links share-pin">
+                    <img class="reg" src="../../assets/Icon 23_Like.png" width="20px">
+                    <img class="hover" src="../../assets/Icon 23_Like_Selected.png" width="20px">
+                  </a>
+                  <a class="img-links share-pin">
+                    <img class="reg" src="../../assets/Icon 24_Dislike.png" width="20px">
+                    <img class="hover" src="../../assets/Icon 24_Dislike_Selected.png" width="20px">
+                  </a>
+                </div>
+            </div>
+            
+          </div>
+        </div>
+          
+        </div>
+        <!-- Charts Section End-->
+        </div>
+      </div>
+        <!-- Deep Explanation Tab Ends -->
+    </div>
+    </div>
+
+
+    <!-- Model(Popup) start -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 ng-if="!deepExplanation"  class="modal-title" id="myModalLabel">Influencer Insights based on</h4>
+            <h4 ng-if="deepExplanation" class="modal-title" id="myModalLabel">Deep Explanations based on</h4>
+          </div>
+          <div class="modal-body">
+            <p class="pop-head">We selected the following columns based on correlations to the desired outcome ...</p>
+            <div class="column">
+              <h3>Available Columns</h3>
+              </div>
+              <div class="column mar-left-4">
+                <h3>Chosen Columns</h3>
+                </div>
+            <!-- <input type="text" style="margin-top: 0; margin-bottom: 15px;" placeholder="Search Columns" class="theme-style"> -->
+           <div class="column">
+             <ul class="column-list">
+              <li ng-click="addColumn(cols); $event.preventDefault()" ng-repeat="cols in colsForSelection track by $index">
+                  <input type="checkbox" id="{{cols}}Test" ng-model="selectedColumns.selected[cols]" class="pull-right" >
+                  <label for="{{cols}}Test" id="{{cols}}Test" class="title"><span>{{cols}}</span></label>
+              </li>
+            </ul>
+              <div class="slider-container" ng-if="deepExplanation">
+                <label>Rare Patterns</label>
+                <span class="editLink"><a class="link" data-toggle="modal" data-target="#rareEventModel">Edit Range</a></span>
+                <div class="range-wrap"> <span class="bubble rare-class">{{rareEvent.val}}</span>
+                  <input type="range" min="{{minRareEvent}}" max="{{maxRareEvent}}" step="{{stepRareEvent}}" ng-change="change(rareEvent.val,'rare-class')" ng-model="rareEvent.val" class="slider" id="rareEvent">
+                </div>
+                
+                <div class="range pull-left">
+                  <span class="left-text">{{minRareEvent}}</span>
+                  <span class="label left-text">Very Rare</span>
+                </div>
+                <div class="range pull-right">
+                  <span class="right-text">{{maxRareEvent}}</span>
+                  <span class="label right-text">Very Common</span>
+                </div>
+              </div>
+              <button type="button" class="btn popup-btn pull-right" data-dismiss="modal">Cancel</button>
+              <!-- <button type="button" class="btn popup-btn pull-right" ng-if="deepExplanation"  data-dismiss="modal">Cancel</button> -->
+           </div>
+           <div class="column mar-left-4">
+            <ul class="column-list" >
+              <li  ng-repeat="cols in kpiData track by $index">
+                  <label for="{{cols}}" id="{{cols}}" class="title"><span>{{cols}}</span></label>
+                  <button type="button" class="close"  ng-click="removeColumn(cols); $event.preventDefault()">
+                    <span>&times;</span>
+                  </button>
+              </li>
+            </ul>
+            <div class="slider-container" ng-if="deepExplanation">
+              <label>Risk / Chance Ratio</label>
+              <span class="editLink"><a class="link" data-toggle="modal" data-target="#riskRationModel">Edit Range</a></span>
+              <div class="range-wrap"> <span class="bubble risk-class">{{riskRatio.val}}</span>
+                <input type="range" min="{{minRiskRatio}}" max="{{maxRiskRatio}}" step="{{stepRiskRatio}}" ng-change="change(riskRatio.val,'risk-class')" ng-model="riskRatio.val" class="slider" id="riskRatio" >
+              </div>
+              <div class="range pull-left">
+                <span class="left-text">{{minRiskRatio}}</span>
+                <span class="label left-text">Low</span>
+              </div>
+              <div class="range pull-right">
+                <span class="right-text">{{maxRiskRatio}}</span>
+                <span class="label right-text">Very High</span>
+              </div>
+            </div>
+            <button type="button" class="btn popup-btn red-bg pull-left" ng-if="!deepExplanation" ng-click="goToTab('influncer')">Submit</button>
+            <button type="button" class="btn popup-btn red-bg pull-left" ng-if="deepExplanation" ng-click="goToTab('deepExplanation')">Get Facts</button>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Model(Popup) End -->
+
+    <!-- outlier popup start-->
+    <div class="modal fade" id="outlierModel" tabindex="-1" role="dialog" aria-labelledby="outlier">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Outlier Filter</h4>
+          </div>
+          <div class="modal-body">
+            <input type="text" ng-model="outlierFilter" style="margin-top: 35px; margin-bottom: 15px;" placeholder="Type" class="theme-style">
+           <div class="column">
+              <button type="button" class="btn popup-btn pull-right" data-dismiss="modal" >Cancel</button>
+           </div>
+           <div class="column mar-left-4">
+            <button type="button" class="btn popup-btn red-bg pull-left" ng-click="applyOutlier()">Apply</button>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- outlier popup end-->
+
+    <!-- Rare event edit pop end-->
+    <div class="modal fade" id="rareEventModel" tabindex="3" role="dialog" aria-labelledby="rareEventModel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Rare Pattern Range</h4>
+          </div>
+          <div class="modal-body">
+            <div class="column">
+              <h3>Start Value</h3>
+              <input type="number" ng-model="minRareEventEdit" style="margin-top: 0; margin-bottom: 15px;" placeholder="Type" class="theme-style">
+           </div>
+           <div class="column mar-left-4">
+              <h3>End Value</h3>
+              <input type="number" ng-model="maxRareEventEdit" style="margin-top: 0; margin-bottom: 15px;" placeholder="Type" class="theme-style">
+          </div>
+            
+           <div class="column">
+              <button type="button" class="btn popup-btn pull-right" data-dismiss="modal" >Cancel</button>
+           </div>
+           <div class="column mar-left-4">
+            <button type="button" class="btn popup-btn red-bg pull-left" ng-click="applyRareEventRange()">Apply</button>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Rare event edit pop end-->
+
+    <!-- Risk Ratio edit pop end-->
+    <div class="modal fade" id="riskRationModel" tabindex="-2" role="dialog" aria-labelledby="riskRationModel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Risk / Chance Ratio Range</h4>
+          </div>
+          <div class="modal-body">
+            <div class="column">
+              <h3>Start Value</h3>
+              <input type="text" ng-model="minRiskRatioEdit" style="margin-top: 0; margin-bottom: 15px;" placeholder="Type" class="theme-style">
+           </div>
+           <div class="column mar-left-4">
+              <h3>End Value</h3>
+              <input type="text" ng-model="maxRiskRatioEdit" style="margin-top: 0; margin-bottom: 15px;" placeholder="Type" class="theme-style">
+          </div>
+            
+           <div class="column">
+              <button type="button" class="btn popup-btn pull-right" data-dismiss="modal" >Cancel</button>
+           </div>
+           <div class="column mar-left-4">
+            <button type="button" class="btn popup-btn red-bg pull-left" ng-click="applyRiskRatioRange()">Apply</button>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Risk Ratio edit pop end-->
+</div>
+

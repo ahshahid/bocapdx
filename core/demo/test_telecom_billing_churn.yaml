@@ -1,0 +1,55 @@
+
+pipeline: "BasicBatchPipeline"
+objective: "reduce churn"
+
+inputURI: "jdbc:snappydata://34.70.196.110:1527"
+
+baseTable: "telecom_churn_billing_prepped"
+
+classifier: "predicate"
+metric: "churn"
+predicate: "=="
+cutoff: "1"
+
+#extraPredicate: "where age1 > 0 and age2 > 0 and  hnd_webcap != 'NA' and mailresp !='NA' "
+#extraPredicate: "where mou_mean < 4.0 "
+extraPredicate: "where eqpdays > 320 and eqpdays < 340 "
+
+
+summarizer: "aplinear"
+#summarizer: "fpgrowth"
+# summarizer: "countmeanshift"
+########
+## fpgrowth doesn't test with attribute combinations ... need to fix ...
+########
+
+attributes:
+  - "adjmou_bin"
+  - "adjqty_d_bin"
+  - "adjrev_bin"
+  - "avgmou_bin"
+  - "avgqty_bin"
+  - "avgrev_bin"
+  - "eqpdays_d_bin"
+  - "mou_mean_d_bin"
+  - "ovrrev_mean_d_bin"
+  - "rev_mean_d_bin"
+  - "rev_range_d_bin"
+#
+  - "totcalls_d_bin"
+  - "totmrc_mean_d_bin"
+  - "totrev_bin"
+#  - "avg3mou"
+#  - "avg3qty"
+#  - "avg6mou"
+#  - "avg6qty"
+  - "datovr_mean"
+  - "datovr_range"
+#  - "mou_range"
+  - "roam_mean"
+
+ratioMetric: "globalratio"
+minRatioMetric: 1.5
+minSupport: 0.01
+maxOrder: 2
+
